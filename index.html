@@ -75,6 +75,14 @@ tr:last-child td{border-bottom:none;}
 .semana-nav .sem-label{font-size:14px;font-weight:500;color:#1a3a2a;}
 .add-act-btn{background:#1a3a2a;color:#fff;border:none;padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:5px;}
 .add-act-btn:hover{background:#235438;}
+.cnc-opt{padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;background:#f5f5f0;color:#444;border:1px solid #ddd;transition:all .15s;user-select:none;}
+.cnc-opt:hover{background:#faeeda;border-color:#ba7517;color:#633806;}
+.cnc-opt.sel{background:#e24b4a;color:#fff;border-color:#c0392b;}
+.instrucciones-lp{background:#e8f5e9;border:.5px solid #a5d6a7;border-radius:10px;padding:14px 16px;margin-bottom:14px;font-size:12px;color:#1a3a2a;line-height:1.8;}
+.instrucciones-lp h4{font-size:13px;font-weight:500;margin-bottom:8px;color:#1a3a2a;}
+.inst-paso{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.inst-num{background:#1a3a2a;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;margin-top:1px;}
+.inst-txt{font-size:12px;color:#2e7d32;line-height:1.5;}
 .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
 .modal.open{display:flex;}
 .modal-box{background:#fff;border-radius:12px;padding:20px;max-width:420px;width:90%;}
@@ -152,6 +160,14 @@ tr:last-child td{border-bottom:none;}
 
   <!-- PLAN SEMANAL -->
   <div id="lp-plan">
+    <div class="instrucciones-lp">
+      <h4>📖 ¿Cómo funciona el Last Planner? — Léelo una vez y ya lo sabrás siempre</h4>
+      <div class="inst-paso"><div class="inst-num">1</div><div class="inst-txt"><strong>Lunes por la mañana:</strong> El residente y su equipo definen qué actividades se van a comprometer terminar esta semana. Se agregan con el botón <strong>"+ Agregar actividad"</strong>. Solo se promete lo que SÍ se puede hacer — no lo que sería ideal.</div></div>
+      <div class="inst-paso"><div class="inst-num">2</div><div class="inst-txt"><strong>Cada día (al terminar el turno):</strong> Para cada actividad haz clic en el día de hoy:<br>✅ = Se completó lo prometido para hoy<br>❌ = No se completó — <strong>inmediatamente aparece la pregunta: ¿por qué?</strong><br>⬜ = No estaba programado para hoy</div></div>
+      <div class="inst-paso"><div class="inst-num">3</div><div class="inst-txt"><strong>Cuando marcas ❌:</strong> Aparece automáticamente una ventana para seleccionar la <strong>Causa de No Cumplimiento (CNC)</strong>. Esto es OBLIGATORIO en Lean — sin saber por qué no se pudo, no se puede mejorar. Selecciona la causa real, no la más cómoda.</div></div>
+      <div class="inst-paso"><div class="inst-num">4</div><div class="inst-txt"><strong>Viernes o sábado:</strong> El sistema calcula automáticamente el <strong>PPC (Percent Plan Complete)</strong> = actividades cumplidas ÷ actividades prometidas × 100. <strong>Meta: ≥ 80%.</strong> Si estamos abajo, revisamos las CNC en la reunión del lunes siguiente.</div></div>
+      <div class="inst-paso"><div class="inst-num">5</div><div class="inst-txt"><strong>Reunión semanal de planificación (lunes ~30 min):</strong> Se revisa el PPC de la semana anterior, se analizan las CNC más frecuentes, se levantan o agregan restricciones, y se define el nuevo plan de la semana. Este ciclo es el corazón del Last Planner System.</div></div>
+    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
       <div class="semana-nav">
         <button onclick="cambiarSem(-1)">◀</button>
@@ -305,6 +321,42 @@ tr:last-child td{border-bottom:none;}
         <tr><td>EST-05</td><td>Sem 5 (27 abr–3 may)</td><td style="text-align:right;">$171,053</td><td style="text-align:right;">$8,596,255</td><td><span class="badge gris">Por presentar</span></td></tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- MODAL CNC -->
+<div class="modal" id="modalCNC">
+  <div class="modal-box" style="max-width:480px;">
+    <h3 style="color:#e24b4a;">🚫 ¿Por qué no se cumplió?</h3>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;line-height:1.6;">
+      Selecciona <strong>una o más causas</strong>. Esto es clave en Lean Construction — sin saber el <em>por qué</em> no podemos mejorar.<br>
+      Puedes seleccionar más de una si aplican varias causas.
+    </p>
+    <input type="hidden" id="cncActId">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+      <div class="cnc-opt" data-cat="Falta de material" onclick="toggleCNCOpt(this,'Falta de material')">📦 Falta de material</div>
+      <div class="cnc-opt" data-cat="Falta de mano de obra" onclick="toggleCNCOpt(this,'Falta de mano de obra')">👷 Falta de mano de obra</div>
+      <div class="cnc-opt" data-cat="Falta de equipo o herramienta" onclick="toggleCNCOpt(this,'Falta de equipo o herramienta')">🔧 Falta de equipo/herramienta</div>
+      <div class="cnc-opt" data-cat="Trabajo previo no terminado" onclick="toggleCNCOpt(this,'Trabajo previo no terminado')">⏳ Trabajo previo no terminado</div>
+      <div class="cnc-opt" data-cat="Restricción no liberada" onclick="toggleCNCOpt(this,'Restricción no liberada')">🔒 Restricción no liberada</div>
+      <div class="cnc-opt" data-cat="Falta de información o planos" onclick="toggleCNCOpt(this,'Falta de información o planos')">📋 Falta de info / planos</div>
+      <div class="cnc-opt" data-cat="Problema de diseño" onclick="toggleCNCOpt(this,'Problema de diseño')">📐 Problema de diseño</div>
+      <div class="cnc-opt" data-cat="Condiciones climáticas" onclick="toggleCNCOpt(this,'Condiciones climáticas')">🌧 Clima</div>
+      <div class="cnc-opt" data-cat="Problema de seguridad" onclick="toggleCNCOpt(this,'Problema de seguridad')">⚠️ Seguridad</div>
+      <div class="cnc-opt" data-cat="Cambio de prioridad" onclick="toggleCNCOpt(this,'Cambio de prioridad')">🔄 Cambio de prioridad</div>
+      <div class="cnc-opt" data-cat="Otra causa" onclick="toggleCNCOpt(this,'Otra causa')">✏️ Otra causa</div>
+    </div>
+    <div id="cncOtroWrap" style="display:none;margin-bottom:12px;">
+      <label style="font-size:12px;color:#666;display:block;margin-bottom:4px;">Describe la causa:</label>
+      <input type="text" id="cncOtro" placeholder="Ej: Accidente en zona de trabajo" style="width:100%;padding:8px 10px;border:.5px solid #ddd;border-radius:6px;font-size:13px;">
+    </div>
+    <div style="background:#faeeda;border-radius:8px;padding:10px 12px;font-size:12px;color:#633806;margin-bottom:12px;line-height:1.5;">
+      💡 <strong>¿Para qué sirve esto?</strong> Al final de la semana analizamos qué causas se repiten más (Pareto de CNC) y tomamos acciones para eliminarlas. Si siempre falta material, hay que mejorar el proceso de compras. Si siempre hay restricciones sin liberar, hay que anticiparlas en el Look Ahead.
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="document.getElementById('modalCNC').classList.remove('open');buildPlan();">Omitir por ahora</button>
+      <button class="btn-guardar" onclick="guardarCNC()">Guardar causa</button>
+    </div>
   </div>
 </div>
 
@@ -467,17 +519,34 @@ function toggleCheck(id,dia){
 }
 
 function mostrarCNCModal(id){
-  // Simple prompt de CNC
-  const causa=prompt('¿Cuál es la causa de no cumplimiento?\n\n'+CNC_CATS.map((c,i)=>`${i+1}. ${c}`).join('\n')+'\n\nEscribe el número:');
-  if(causa){
-    const idx=parseInt(causa)-1;
-    if(idx>=0&&idx<CNC_CATS.length){
-      const acts=planData[semActual]||[];
-      const act=acts.find(a=>a.id===id);
-      if(act&&!act.cnc.includes(CNC_CATS[idx]))act.cnc.push(CNC_CATS[idx]);
-      buildPlan();
-    }
+  document.getElementById('cncActId').value=id;
+  document.querySelectorAll('.cnc-opt').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('cncOtro').value='';
+  document.getElementById('cncOtroWrap').style.display='none';
+  document.getElementById('modalCNC').classList.add('open');
+}
+
+function toggleCNCOpt(el,cat){
+  el.classList.toggle('sel');
+  if(cat==='Otra causa'){
+    document.getElementById('cncOtroWrap').style.display=el.classList.contains('sel')?'block':'none';
   }
+}
+
+function guardarCNC(){
+  const id=parseInt(document.getElementById('cncActId').value);
+  const acts=planData[semActual]||[];
+  const act=acts.find(a=>a.id===id);
+  if(!act)return;
+  const sels=Array.from(document.querySelectorAll('.cnc-opt.sel')).map(b=>b.dataset.cat);
+  const otro=document.getElementById('cncOtro').value.trim();
+  sels.forEach(c=>{
+    const val=c==='Otra causa'&&otro?otro:c;
+    if(!act.cnc.includes(val))act.cnc.push(val);
+  });
+  document.getElementById('modalCNC').classList.remove('open');
+  buildPlan();
+  if(document.getElementById('lp-diario').style.display!=='none')buildDiario();
 }
 
 function updatePPCHeader(ppc){
