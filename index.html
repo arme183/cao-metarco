@@ -1,1 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard CAO — WEG Estructura | Metarco</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size:14px;}
+.header{background:#1a3a2a;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.nav{display:flex;gap:2px;background:#fff;border-bottom:1px solid #e0ded8;padding:0 16px;overflow-x:auto;}
+.nav button{padding:10px 13px;border:none;background:none;cursor:pointer;font-size:13px;color:#888;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
+.nav button.active{color:#1a3a2a;border-bottom-color:#1a3a2a;font-weight:500;}
+.tab{display:none;padding:14px 16px;}
+.tab.active{display:block;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.kpi{background:#fff;border-radius:10px;border:.5px solid #ddd;padding:12px 14px;}
+.kpi .label{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+.kpi .value{font-size:22px;font-weight:500;}
+.kpi .sub{font-size:11px;color:#888;margin-top:2px;line-height:1.5;}
+.kpi.green .value{color:#1d9e75;}.kpi.amber .value{color:#ba7517;}.kpi.red .value{color:#e24b4a;}.kpi.blue .value{color:#185fa5;}
+.card{background:#fff;border-radius:10px;border:.5px solid #ddd;padding:14px 16px;margin-bottom:14px;}
+.card h3{font-size:13px;font-weight:500;color:#444;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:#f5f5f0;padding:8px 10px;text-align:left;font-weight:500;color:#555;font-size:12px;}
+td{padding:7px 10px;border-bottom:.5px solid #eee;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
+.badge.verde{background:#e1f5ee;color:#0f6e56;}.badge.amarillo{background:#faeeda;color:#854f0b;}
+.badge.rojo{background:#fcebeb;color:#a32d2d;}.badge.gris{background:#f1efe8;color:#5f5e5a;}
+.alert{padding:10px 14px;border-radius:8px;margin-bottom:8px;font-size:13px;display:flex;align-items:center;gap:8px;}
+.alert.warn{background:#faeeda;color:#633806;}.alert.danger{background:#fcebeb;color:#791f1f;}.alert.ok{background:#e1f5ee;color:#085041;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.prog-bar{height:7px;background:#eee;border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;}
 
+/* LAST PLANNER */
+.lp-header{background:linear-gradient(135deg,#1a3a2a,#235438);color:#fff;border-radius:10px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.lp-title{font-size:15px;font-weight:500;}
+.lp-sub{font-size:12px;color:#9fca9f;margin-top:3px;}
+.ppc-circle{width:90px;height:90px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:500;flex-shrink:0;}
+.ppc-big{font-size:24px;font-weight:600;line-height:1;}
+.ppc-label{font-size:10px;margin-top:3px;opacity:.8;}
+.dia-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px;}
+.dia-card{background:#fff;border:.5px solid #ddd;border-radius:8px;padding:10px;text-align:center;}
+.dia-card .dia-nombre{font-size:11px;font-weight:500;color:#888;margin-bottom:6px;text-transform:uppercase;}
+.dia-card .dia-fecha{font-size:10px;color:#aaa;margin-bottom:8px;}
+.dia-check{width:28px;height:28px;border-radius:50%;border:2px solid #ddd;cursor:pointer;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
+.dia-check.si{background:#e1f5ee;border-color:#1d9e75;color:#1d9e75;}
+.dia-check.no{background:#fcebeb;border-color:#e24b4a;color:#e24b4a;}
+.dia-check.nd{background:#f5f5f0;border-color:#ddd;color:#aaa;}
+.dia-acts{font-size:10px;color:#888;}
+.cnc-badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500;margin:2px;cursor:pointer;border:1px solid transparent;}
+.cnc-badge.sel{background:#e24b4a;color:#fff;border-color:#c0392b;}
+.cnc-badge:not(.sel){background:#f5f5f0;color:#666;border-color:#ddd;}
+.act-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:.5px solid #eee;}
+.act-row:last-child{border-bottom:none;}
+.act-check{width:22px;height:22px;border-radius:4px;border:2px solid #ddd;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all .2s;}
+.act-check.done{background:#1d9e75;border-color:#1d9e75;color:#fff;}
+.act-check.fail{background:#e24b4a;border-color:#e24b4a;color:#fff;}
+.act-name{flex:1;font-size:13px;}
+.act-resp{font-size:11px;color:#888;white-space:nowrap;}
+.ppc-semaforo{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.hist-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid #eee;}
+.hist-sem{font-size:12px;font-weight:500;width:60px;flex-shrink:0;}
+.hist-bar-wrap{flex:1;height:14px;background:#eee;border-radius:7px;overflow:hidden;}
+.hist-bar{height:100%;border-radius:7px;transition:width .3s;}
+.hist-pct{font-size:12px;font-weight:500;width:40px;text-align:right;flex-shrink:0;}
+.tab-selector{display:flex;gap:6px;margin-bottom:14px;}
+.tab-selector button{padding:7px 14px;border:.5px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:12px;color:#666;transition:all .2s;}
+.tab-selector button.active{background:#1a3a2a;color:#fff;border-color:#1a3a2a;}
+.semana-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.semana-nav button{background:#f5f5f0;border:.5px solid #ddd;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:13px;}
+.semana-nav .sem-label{font-size:14px;font-weight:500;color:#1a3a2a;}
+.add-act-btn{background:#1a3a2a;color:#fff;border:none;padding:7px 14px;border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:5px;}
+.add-act-btn:hover{background:#235438;}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+.modal.open{display:flex;}
+.modal-box{background:#fff;border-radius:12px;padding:20px;max-width:420px;width:90%;}
+.modal-box h3{font-size:15px;font-weight:500;margin-bottom:14px;}
+.form-row{margin-bottom:12px;}
+.form-row label{display:block;font-size:12px;color:#666;margin-bottom:4px;}
+.form-row input,.form-row select{width:100%;padding:8px 10px;border:.5px solid #ddd;border-radius:6px;font-size:13px;}
+.modal-btns{display:flex;gap:8px;margin-top:14px;}
+.modal-btns button{flex:1;padding:9px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;}
+.btn-guardar{background:#1a3a2a;color:#fff;border:none;}
+.btn-cancelar{background:#f5f5f0;color:#444;border:.5px solid #ddd;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div style="font-size:15px;font-weight:500;">🏗 Control de Obra — WEG Estructura</div>
+    <div style="font-size:12px;color:#9fca9f;margin-top:2px;">Metarco | Residente: Marco Antonio Simon | Inicio: 30 mar 2026 | Rev 0</div>
+  </div>
+  <div style="font-size:12px;color:#9fca9f;">Sem. 7 | 12/May/2026</div>
+</div>
+
+<div class="nav">
+  <button class="active" onclick="showTab('resumen',this)">📋 Resumen</button>
+  <button onclick="showTab('lastplanner',this)">🎯 Last Planner</button>
+  <button onclick="showTab('restricciones',this)">🔒 Restricciones</button>
+  <button onclick="showTab('lookahead',this)">🗓 Look Ahead</button>
+  <button onclick="showTab('financiero',this)">💰 Financiero</button>
+</div>
+
+<!-- RESUMEN -->
+<div id="tab-resumen" class="tab active">
+  <div class="kpi-grid">
+    <div class="kpi blue"><div class="label">Avance físico real</div><div class="value">34%</div><div class="sub">Programado: 52%<br><strong style="color:#e24b4a;">18% por debajo</strong></div></div>
+    <div class="kpi amber"><div class="label">Estimado acumulado</div><div class="value">$8.6M</div><div class="sub">47% del contrato ejercido</div></div>
+    <div class="kpi red"><div class="label">SPI — Índice Desempeño Cronograma</div><div class="value">0.65</div><div class="sub">Por $1 programado se ejecuta $0.65<br>35% por debajo del avance esperado<br>🔴&lt;0.85 Crítico | 🟡0.85–0.95 | 🟢≥1.0 OK</div></div>
+    <div class="kpi" id="ppc-kpi"><div class="label">PPC — Last Planner esta semana</div><div class="value" id="ppc-val-res">—</div><div class="sub" id="ppc-sub-res">Sin datos aún</div></div>
+  </div>
+  <div class="alert danger">⚠️ PG Lab — Fabricación: 30% real vs 100% programado. Vence 14-may.</div>
+  <div class="alert danger">⚠️ Plafón Lab — Fabricación: 19.83% real vs 60% programado. Vence 16-may.</div>
+  <div class="alert warn">⚠️ Racks devanados — Montaje debe iniciar 6-may, sin avance.</div>
+  <div class="alert ok">✅ Terminados: Plafón devanados fab., Plafón lab montaje.</div>
+  <div class="two-col" style="margin-top:12px;">
+    <div class="card">
+      <h3>📊 Avance por partida</h3>
+      <div style="position:relative;height:220px;"><canvas id="resChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>📈 Tendencia PPC semanal</h3>
+      <div style="position:relative;height:220px;"><canvas id="ppcChart"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- LAST PLANNER -->
+<div id="tab-lastplanner" class="tab">
+  <div class="lp-header">
+    <div>
+      <div class="lp-title">🎯 Last Planner System — Plan Semanal</div>
+      <div class="lp-sub">WEG Estructura | ¿Se hizo lo que se prometió hacer hoy?</div>
+    </div>
+    <div id="ppc-circle" class="ppc-circle" style="background:rgba(255,255,255,.15);">
+      <div class="ppc-big" id="ppc-num">—</div>
+      <div class="ppc-label">PPC SEM 7</div>
+    </div>
+  </div>
+
+  <div class="tab-selector">
+    <button class="active" onclick="lpView('plan',this)">Plan semanal</button>
+    <button onclick="lpView('diario',this)">Registro diario</button>
+    <button onclick="lpView('historial',this)">Historial PPC</button>
+    <button onclick="lpView('cnc',this)">Causas de no cumplimiento</button>
+  </div>
+
+  <!-- PLAN SEMANAL -->
+  <div id="lp-plan">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div class="semana-nav">
+        <button onclick="cambiarSem(-1)">◀</button>
+        <span class="sem-label" id="semLabel">Semana 7 — 12 al 17 May 2026</span>
+        <button onclick="cambiarSem(1)">▶</button>
+      </div>
+      <button class="add-act-btn" onclick="abrirModal()">+ Agregar actividad</button>
+    </div>
+    <div class="card" style="padding:0;">
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="min-width:220px;">Actividad prometida</th>
+              <th>Responsable</th>
+              <th style="text-align:center;">L</th>
+              <th style="text-align:center;">M</th>
+              <th style="text-align:center;">X</th>
+              <th style="text-align:center;">J</th>
+              <th style="text-align:center;">V</th>
+              <th style="text-align:center;">S</th>
+              <th style="text-align:center;">PPC</th>
+              <th>CNC</th>
+            </tr>
+          </thead>
+          <tbody id="planBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="background:#e8f5e9;border-color:#a5d6a7;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div>
+          <div style="font-size:12px;color:#1a3a2a;font-weight:500;margin-bottom:4px;">PPC de la semana</div>
+          <div style="font-size:11px;color:#2e7d32;">Actividades completadas / Actividades prometidas × 100</div>
+        </div>
+        <div style="font-size:32px;font-weight:600;color:#1a3a2a;" id="ppc-total-plan">—</div>
+      </div>
+      <div style="margin-top:10px;padding:8px 12px;background:#fff;border-radius:8px;font-size:12px;color:#2e7d32;line-height:1.6;">
+        💡 <strong>Meta Lean Construction: PPC ≥ 80%</strong> — Si estamos por debajo, hay que analizar las causas de no cumplimiento (CNC) y tomar acción.
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTRO DIARIO -->
+  <div id="lp-diario" style="display:none;">
+    <div class="dia-grid" id="diaGrid"></div>
+    <div class="card">
+      <h3>📋 Detalle del día seleccionado: <span id="diaSelLabel" style="color:#1a3a2a;">Lunes 12 Mayo</span></h3>
+      <div id="diaDetalle"></div>
+    </div>
+  </div>
+
+  <!-- HISTORIAL -->
+  <div id="lp-historial" style="display:none;">
+    <div class="card">
+      <h3>📈 Historial de PPC — Últimas semanas</h3>
+      <div style="position:relative;height:240px;margin-bottom:14px;"><canvas id="ppcHistChart"></canvas></div>
+      <div id="histList"></div>
+    </div>
+    <div class="card" style="background:#faeeda;border-color:#f0c080;">
+      <h3 style="color:#854f0b;">📊 Análisis de tendencia</h3>
+      <div style="font-size:13px;color:#633806;line-height:1.8;" id="tendenciaAnalisis"></div>
+    </div>
+  </div>
+
+  <!-- CNC -->
+  <div id="lp-cnc" style="display:none;">
+    <div class="card">
+      <h3>🚫 Causas de No Cumplimiento (CNC)</h3>
+      <div style="position:relative;height:240px;margin-bottom:14px;"><canvas id="cncChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>📋 Detalle de causas registradas</h3>
+      <table>
+        <thead><tr><th>Causa</th><th style="text-align:center;">Veces</th><th style="text-align:center;">%</th><th>Actividades afectadas</th></tr></thead>
+        <tbody id="cncBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- RESTRICCIONES -->
+<div id="tab-restricciones" class="tab">
+  <div class="kpi-grid">
+    <div class="kpi red"><div class="label">Críticas</div><div class="value">2</div></div>
+    <div class="kpi amber"><div class="label">En proceso</div><div class="value">4</div></div>
+    <div class="kpi green"><div class="label">Liberadas</div><div class="value">2</div></div>
+    <div class="kpi blue"><div class="label">Pendientes</div><div class="value">4</div></div>
+  </div>
+  <div class="card">
+    <h3>🔒 Registro de restricciones — WEG Rev 0</h3>
+    <table>
+      <thead><tr><th>ID</th><th>Actividad</th><th>Descripción</th><th>F. Compromiso</th><th>Impacto</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>R-01</td><td>PG Lab — Fab.</td><td>30% real vs 100% prog. Vence 14-may.</td><td>14-may-26</td><td><span class="badge rojo">Alto</span></td><td><span class="badge rojo">Crítica</span></td></tr>
+        <tr><td>R-02</td><td>Plafón Lab — Fab.</td><td>19.83% real vs 60% prog. Vence 16-may.</td><td>16-may-26</td><td><span class="badge rojo">Alto</span></td><td><span class="badge rojo">Crítica</span></td></tr>
+        <tr><td>R-03</td><td>Racks Dev — Mont.</td><td>Fab. 80%, montaje debe iniciar 6-may.</td><td>16-may-26</td><td><span class="badge amarillo">Medio</span></td><td><span class="badge amarillo">En proceso</span></td></tr>
+        <tr><td>R-04</td><td>Esc. PB — Fab.</td><td>Inició 4-may, sin avance reportado.</td><td>13-may-26</td><td><span class="badge amarillo">Medio</span></td><td><span class="badge amarillo">En proceso</span></td></tr>
+        <tr><td>R-05</td><td>Portones</td><td>Inicio 18-may — confirmar planos Rev D.</td><td>18-may-26</td><td><span class="badge amarillo">Medio</span></td><td><span class="badge amarillo">En proceso</span></td></tr>
+        <tr><td>R-06</td><td>Barandales VP</td><td>Fab. 66.45%, montaje programa 18-may.</td><td>30-may-26</td><td><span class="badge amarillo">Medio</span></td><td><span class="badge amarillo">En proceso</span></td></tr>
+        <tr><td>R-07</td><td>Plafón Dev — Fab.</td><td>Completado 100%.</td><td>—</td><td><span class="badge gris">Bajo</span></td><td><span class="badge verde">Liberada</span></td></tr>
+        <tr><td>R-08</td><td>Plafón Lab — Mont.</td><td>Completado 100% al 25-abr.</td><td>—</td><td><span class="badge gris">Bajo</span></td><td><span class="badge verde">Liberada</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LOOK AHEAD -->
+<div id="tab-lookahead" class="tab">
+  <div class="card">
+    <h3>🗓 Look Ahead — Semanas 7–10 (12 mayo – 6 junio 2026)</h3>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Actividad</th><th style="text-align:center;">Sem 7<br><small>12–16 may</small></th><th style="text-align:center;">Sem 8<br><small>18–23 may</small></th><th style="text-align:center;">Sem 9<br><small>25–30 may</small></th><th style="text-align:center;">Sem 10<br><small>1–6 jun</small></th><th>Responsable</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>PG Lab — Fabricación</td><td style="background:#fcebeb;text-align:center;color:#a32d2d;">●</td><td></td><td></td><td></td><td>Marco A. Simon</td><td><span class="badge rojo">Crítico</span></td></tr>
+          <tr><td>PG Lab — Montaje</td><td style="background:#e1f5ee;text-align:center;">●</td><td style="background:#e1f5ee;text-align:center;">●</td><td></td><td></td><td>Marco A. Simon</td><td><span class="badge verde">Programado</span></td></tr>
+          <tr><td>Plafón Lab — Fabricación</td><td style="background:#fcebeb;text-align:center;color:#a32d2d;">●</td><td style="background:#fcebeb;text-align:center;color:#a32d2d;">●</td><td></td><td></td><td>Marco A. Simon</td><td><span class="badge rojo">Crítico</span></td></tr>
+          <tr><td>Plafón Dev — Montaje</td><td></td><td style="background:#e1f5ee;text-align:center;">●</td><td style="background:#e1f5ee;text-align:center;">●</td><td style="background:#e1f5ee;text-align:center;">●</td><td>Marco A. Simon</td><td><span class="badge verde">Listo</span></td></tr>
+          <tr><td>Racks Dev — Montaje</td><td style="background:#faeeda;text-align:center;">●</td><td></td><td></td><td></td><td>Marco A. Simon</td><td><span class="badge amarillo">Por iniciar</span></td></tr>
+          <tr><td>Esc. PB — Fabricación</td><td style="background:#faeeda;text-align:center;">●</td><td style="background:#faeeda;text-align:center;">●</td><td></td><td></td><td>Herrería</td><td><span class="badge amarillo">Sin avance</span></td></tr>
+          <tr><td>Barandales VP — Montaje</td><td></td><td style="background:#e1f5ee;text-align:center;">●</td><td style="background:#e1f5ee;text-align:center;">●</td><td></td><td>Marco A. Simon</td><td><span class="badge verde">Programado</span></td></tr>
+          <tr><td>Portones — Fabricación</td><td></td><td style="background:#e1f5ee;text-align:center;">●</td><td style="background:#e1f5ee;text-align:center;">●</td><td style="background:#e1f5ee;text-align:center;">●</td><td>Herrería</td><td><span class="badge verde">Programado</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- FINANCIERO -->
+<div id="tab-financiero" class="tab">
+  <div class="kpi-grid">
+    <div class="kpi blue"><div class="label">Presupuesto total</div><div class="value">$18.4M</div></div>
+    <div class="kpi amber"><div class="label">Ejercido acumulado</div><div class="value">$8.6M</div><div class="sub">47% del contrato</div></div>
+    <div class="kpi green"><div class="label">Por ejercer</div><div class="value">$9.8M</div><div class="sub">53% restante</div></div>
+    <div class="kpi red"><div class="label">CPI — Índice Desempeño del Costo</div><div class="value">0.72</div><div class="sub">Por $1 gastado se genera $0.72 de avance<br>🔴&lt;0.90 Sobrecosto | 🟡0.90–1.0 | 🟢≥1.0 OK</div></div>
+  </div>
+  <div class="card">
+    <h3>📊 Estimaciones semanales</h3>
+    <div style="position:relative;height:200px;"><canvas id="finChart"></canvas></div>
+  </div>
+  <div class="card">
+    <h3>🧾 Detalle de estimaciones</h3>
+    <table>
+      <thead><tr><th>Estimación</th><th>Periodo</th><th style="text-align:right;">Monto</th><th style="text-align:right;">Acumulado</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>EST-01</td><td>Sem 1 (30 mar–5 abr)</td><td style="text-align:right;">$1,995,740</td><td style="text-align:right;">$1,995,740</td><td><span class="badge verde">Pagada</span></td></tr>
+        <tr><td>EST-02</td><td>Sem 2 (6–12 abr)</td><td style="text-align:right;">$2,853,147</td><td style="text-align:right;">$4,848,887</td><td><span class="badge verde">Pagada</span></td></tr>
+        <tr><td>EST-03</td><td>Sem 3 (13–19 abr)</td><td style="text-align:right;">$2,354,788</td><td style="text-align:right;">$7,203,675</td><td><span class="badge verde">Pagada</span></td></tr>
+        <tr><td>EST-04</td><td>Sem 4 (20–26 abr)</td><td style="text-align:right;">$1,221,527</td><td style="text-align:right;">$8,425,202</td><td><span class="badge amarillo">En revisión</span></td></tr>
+        <tr><td>EST-05</td><td>Sem 5 (27 abr–3 may)</td><td style="text-align:right;">$171,053</td><td style="text-align:right;">$8,596,255</td><td><span class="badge gris">Por presentar</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL AGREGAR ACTIVIDAD -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3>+ Agregar actividad al plan semanal</h3>
+    <div class="form-row"><label>Actividad prometida</label><input type="text" id="mActiv" placeholder="Ej: Terminar fabricación PG Lab — frente norte"></div>
+    <div class="form-row"><label>Responsable</label><input type="text" id="mResp" placeholder="Ej: Marco A. Simon"></div>
+    <div class="form-row"><label>Días programados</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;" id="mDias">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox" value="L"> L</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox" value="M"> M</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox" value="X"> X</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox" value="J"> J</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox" value="V"> V</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;"><input type="checkbox" value="S"> S</label>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-guardar" onclick="guardarActividad()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ────────────────────────────────────────────────────────
+const CNC_CATS=['Falta de material','Falta de mano de obra','Falta de equipo','Problema de diseño','Condiciones climáticas','Restricción no liberada','Falta de información','Problema de seguridad','Trabajo previo no terminado','Otra causa'];
+
+let semActual=7;
+let planData={
+  7:[
+    {id:1,act:'Terminar fabricación PG Lab — frente norte',resp:'Marco A. Simon',dias:{L:true,M:true,X:true,J:true,V:true,S:false},check:{L:'si',M:'no',X:'si',J:null,V:null,S:null},cnc:['Falta de material']},
+    {id:2,act:'Armar andamio área plafón laboratorio',resp:'Marco A. Simon',dias:{L:true,M:true,X:false,J:false,V:false,S:false},check:{L:'si',M:'si',X:null,J:null,V:null,S:null},cnc:[]},
+    {id:3,act:'Continuar fabricación plafón lab — sec. 3 y 4',resp:'Cuadrilla B',dias:{L:true,M:true,X:true,J:true,V:true,S:true},check:{L:'no',M:'no',X:'si',J:null,V:null,S:null},cnc:['Trabajo previo no terminado','Falta de mano de obra']},
+    {id:4,act:'Montaje racks devanados — iniciar',resp:'Marco A. Simon',dias:{L:false,M:true,X:true,J:true,V:false,S:false},check:{L:null,M:'no',X:null,J:null,V:null,S:null},cnc:['Restricción no liberada']},
+    {id:5,act:'Fabricación escalera subestación PB',resp:'Herrería',dias:{L:true,M:true,X:true,J:true,V:true,S:false},check:{L:'si',M:'si',X:'si',J:null,V:null,S:null},cnc:[]},
+    {id:6,act:'Fabricación barandales VP Hornos',resp:'Marco A. Simon',dias:{L:true,M:true,X:false,J:false,V:false,S:false},check:{L:'si',M:'si',X:null,J:null,V:null,S:null},cnc:[]},
+  ]
+};
+
+const histPPC=[
+  {sem:1,ppc:92,acts:12,comp:11},
+  {sem:2,ppc:85,acts:14,comp:12},
+  {sem:3,ppc:78,acts:18,comp:14},
+  {sem:4,ppc:67,acts:15,comp:10},
+  {sem:5,ppc:72,acts:14,comp:10},
+  {sem:6,ppc:80,acts:10,comp:8},
+];
+
+const semanas={
+  7:{label:'Semana 7 — 12 al 17 May 2026',fechas:{L:'12 May',M:'13 May',X:'14 May',J:'15 May',V:'16 May',S:'17 May'}},
+  8:{label:'Semana 8 — 18 al 24 May 2026',fechas:{L:'18 May',M:'19 May',X:'20 May',J:'21 May',V:'22 May',S:'23 May'}},
+  6:{label:'Semana 6 — 4 al 10 May 2026',fechas:{L:'4 May',M:'5 May',X:'6 May',J:'7 May',V:'8 May',S:'9 May'}},
+};
+
+const DIAS=['L','M','X','J','V','S'];
+let charts={};
+
+// ── UTILS ───────────────────────────────────────────────────────
+function showTab(id,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+}
+
+function lpView(id,btn){
+  ['plan','diario','historial','cnc'].forEach(v=>document.getElementById('lp-'+v).style.display='none');
+  document.getElementById('lp-'+id).style.display='block';
+  document.querySelectorAll('.tab-selector button').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(id==='historial')buildHistorial();
+  if(id==='cnc')buildCNC();
+  if(id==='diario')buildDiario();
+}
+
+function calcPPC(sem){
+  const acts=planData[sem]||[];
+  if(!acts.length)return null;
+  let prometidas=0,completadas=0;
+  acts.forEach(a=>{
+    DIAS.forEach(d=>{
+      if(a.dias[d]){
+        prometidas++;
+        if(a.check[d]==='si')completadas++;
+        else if(a.check[d]==='no'){}
+        // null = no registrado aún
+      }
+    });
+  });
+  const registradas=acts.reduce((s,a)=>s+DIAS.filter(d=>a.dias[d]&&a.check[d]!==null).length,0);
+  if(registradas===0)return null;
+  const prom2=acts.reduce((s,a)=>s+DIAS.filter(d=>a.dias[d]&&a.check[d]!==null).length,0);
+  return Math.round(completadas/prom2*100);
+}
+
+function ppcColor(ppc){return ppc>=80?'#1d9e75':ppc>=60?'#ba7517':'#e24b4a';}
+function ppcClass(ppc){return ppc>=80?'green':ppc>=60?'amber':'red';}
+
+// ── PLAN SEMANAL ─────────────────────────────────────────────────
+function buildPlan(){
+  const acts=planData[semActual]||[];
+  const sem=semanas[semActual]||{label:'Semana '+semActual,fechas:{L:'L',M:'M',X:'X',J:'J',V:'V',S:'S'}};
+  document.getElementById('semLabel').textContent=sem.label;
+
+  const tbody=document.getElementById('planBody');
+  tbody.innerHTML=acts.map(a=>{
+    const diasCells=DIAS.map(d=>{
+      if(!a.dias[d])return`<td style="text-align:center;color:#ddd;">—</td>`;
+      const estado=a.check[d];
+      const emoji=estado==='si'?'✅':estado==='no'?'❌':'⬜';
+      return`<td style="text-align:center;cursor:pointer;font-size:16px;" onclick="toggleCheck(${a.id},'${d}')">${emoji}</td>`;
+    }).join('');
+
+    // PPC individual
+    const prom=DIAS.filter(d=>a.dias[d]&&a.check[d]!==null).length;
+    const comp=DIAS.filter(d=>a.dias[d]&&a.check[d]==='si').length;
+    const ppcInd=prom>0?Math.round(comp/prom*100):null;
+    const ppcCell=ppcInd!==null?`<span style="font-weight:500;color:${ppcColor(ppcInd)};">${ppcInd}%</span>`:`<span style="color:#ddd;">—</span>`;
+
+    const cncCell=a.cnc.length>0?a.cnc.map(c=>`<span class="badge rojo" style="font-size:10px;">${c}</span>`).join(' '):`<span style="color:#aaa;font-size:11px;">Ninguna</span>`;
+
+    return`<tr>
+      <td style="font-size:12px;">${a.act}</td>
+      <td style="font-size:11px;color:#888;">${a.resp}</td>
+      ${diasCells}
+      <td style="text-align:center;">${ppcCell}</td>
+      <td style="font-size:11px;">${cncCell}</td>
+    </tr>`;
+  }).join('');
+
+  // PPC total
+  const ppc=calcPPC(semActual);
+  const ppcEl=document.getElementById('ppc-total-plan');
+  if(ppc!==null){
+    ppcEl.textContent=ppc+'%';
+    ppcEl.style.color=ppcColor(ppc);
+    updatePPCHeader(ppc);
+  } else {
+    ppcEl.textContent='—';
+  }
+}
+
+function toggleCheck(id,dia){
+  const acts=planData[semActual]||[];
+  const act=acts.find(a=>a.id===id);
+  if(!act)return;
+  const estados=['si','no',null];
+  const idx=estados.indexOf(act.check[dia]);
+  act.check[dia]=estados[(idx+1)%3];
+
+  // Si no cumplió, pedir CNC
+  if(act.check[dia]==='no'&&act.cnc.length===0){
+    mostrarCNCModal(id);
+  }
+  buildPlan();
+  updateResumen();
+}
+
+function mostrarCNCModal(id){
+  // Simple prompt de CNC
+  const causa=prompt('¿Cuál es la causa de no cumplimiento?\n\n'+CNC_CATS.map((c,i)=>`${i+1}. ${c}`).join('\n')+'\n\nEscribe el número:');
+  if(causa){
+    const idx=parseInt(causa)-1;
+    if(idx>=0&&idx<CNC_CATS.length){
+      const acts=planData[semActual]||[];
+      const act=acts.find(a=>a.id===id);
+      if(act&&!act.cnc.includes(CNC_CATS[idx]))act.cnc.push(CNC_CATS[idx]);
+      buildPlan();
+    }
+  }
+}
+
+function updatePPCHeader(ppc){
+  const circle=document.getElementById('ppc-circle');
+  const num=document.getElementById('ppc-num');
+  num.textContent=ppc+'%';
+  circle.style.background=ppc>=80?'rgba(29,158,117,.3)':ppc>=60?'rgba(186,117,23,.3)':'rgba(226,75,74,.3)';
+
+  const kpi=document.getElementById('ppc-kpi');
+  kpi.className='kpi '+ppcClass(ppc);
+  document.getElementById('ppc-val-res').textContent=ppc+'%';
+  document.getElementById('ppc-sub-res').textContent=ppc>=80?'✅ Meta cumplida (≥80%)':ppc>=60?'⚠️ Por debajo de la meta':'🔴 Muy por debajo de la meta';
+}
+
+function cambiarSem(delta){
+  semActual+=delta;
+  if(!planData[semActual])planData[semActual]=[];
+  buildPlan();
+}
+
+// ── DIARIO ───────────────────────────────────────────────────────
+let diaSeleccionado='L';
+function buildDiario(){
+  const sem=semanas[semActual]||{fechas:{L:'L',M:'M',X:'X',J:'J',V:'V',S:'S'}};
+  const acts=planData[semActual]||[];
+  const nombres=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const grid=document.getElementById('diaGrid');
+  grid.innerHTML=DIAS.map((d,i)=>{
+    const total=acts.filter(a=>a.dias[d]).length;
+    const comp=acts.filter(a=>a.dias[d]&&a.check[d]==='si').length;
+    const fail=acts.filter(a=>a.dias[d]&&a.check[d]==='no').length;
+    const pend=total-comp-fail;
+    return`<div class="dia-card" style="cursor:pointer;${diaSeleccionado===d?'border-color:#1a3a2a;border-width:2px;':''}" onclick="selDia('${d}')">
+      <div class="dia-nombre">${nombres[i]}</div>
+      <div class="dia-fecha">${sem.fechas[d]||d}</div>
+      <div style="font-size:20px;margin-bottom:4px;">${comp>0&&fail===0&&pend===0?'✅':comp===0&&fail===0?'⬜':fail>0?'⚠️':'🔄'}</div>
+      <div class="dia-acts">${comp}✅ ${fail}❌ ${pend}⬜</div>
+      <div style="font-size:10px;color:#888;margin-top:2px;">${total} actividades</div>
+    </div>`;
+  }).join('');
+  buildDiaDetalle();
+}
+
+function selDia(d){
+  diaSeleccionado=d;
+  buildDiario();
+}
+
+function buildDiaDetalle(){
+  const acts=planData[semActual]||[];
+  const d=diaSeleccionado;
+  const sem=semanas[semActual]||{fechas:{}};
+  const nombres={L:'Lunes',M:'Martes',X:'Miércoles',J:'Jueves',V:'Viernes',S:'Sábado'};
+  document.getElementById('diaSelLabel').textContent=`${nombres[d]} ${sem.fechas[d]||d}`;
+  const actsDelDia=acts.filter(a=>a.dias[d]);
+  if(!actsDelDia.length){document.getElementById('diaDetalle').innerHTML='<p style="color:#aaa;font-size:13px;padding:10px 0;">No hay actividades programadas para este día.</p>';return;}
+  document.getElementById('diaDetalle').innerHTML=actsDelDia.map(a=>{
+    const estado=a.check[d];
+    return`<div class="act-row">
+      <div class="act-check ${estado==='si'?'done':estado==='no'?'fail':''}" onclick="toggleCheck(${a.id},'${d}');buildDiario();" style="cursor:pointer;">
+        ${estado==='si'?'✓':estado==='no'?'✗':''}
+      </div>
+      <div class="act-name">${a.act}</div>
+      <div class="act-resp">${a.resp}</div>
+      <div>${estado===null?'<span style="color:#aaa;font-size:11px;">Sin registrar</span>':estado==='si'?'<span class="badge verde">Cumplido</span>':'<span class="badge rojo">No cumplido</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── HISTORIAL ────────────────────────────────────────────────────
+function buildHistorial(){
+  const ppcAct=calcPPC(semActual);
+  const hist=[...histPPC];
+  if(ppcAct!==null)hist.push({sem:semActual,ppc:ppcAct});
+
+  if(charts['ppcHistChart'])charts['ppcHistChart'].destroy();
+  const ctx=document.getElementById('ppcHistChart').getContext('2d');
+  charts['ppcHistChart']=new Chart(ctx,{
+    type:'line',
+    data:{labels:hist.map(h=>'S'+h.sem),datasets:[
+      {data:hist.map(h=>h.ppc),borderColor:'#1a3a2a',borderWidth:2.5,pointRadius:4,tension:.4,fill:true,backgroundColor:'rgba(26,58,42,.08)'},
+      {data:hist.map(()=>80),borderColor:'#e24b4a',borderWidth:1.5,borderDash:[5,4],pointRadius:0,label:'Meta 80%'},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}}},x:{ticks:{font:{size:10}}}}}
+  });
+
+  document.getElementById('histList').innerHTML=hist.map(h=>`
+    <div class="hist-row">
+      <div class="hist-sem">Sem ${h.sem}</div>
+      <div class="hist-bar-wrap"><div class="hist-bar" style="width:${h.ppc}%;background:${ppcColor(h.ppc)};"></div></div>
+      <div class="hist-pct" style="color:${ppcColor(h.ppc)};">${h.ppc}%</div>
+      <div style="font-size:11px;color:#888;margin-left:8px;">${h.ppc>=80?'✅ Meta':h.ppc>=60?'⚠️ Alerta':'🔴 Crítico'}</div>
+    </div>`).join('');
+
+  const prom=Math.round(hist.reduce((s,h)=>s+h.ppc,0)/hist.length);
+  const tend=hist.length>1?(hist[hist.length-1].ppc>hist[hist.length-2].ppc?'📈 mejorando':'📉 bajando'):'—';
+  document.getElementById('tendenciaAnalisis').innerHTML=`
+    <strong>PPC promedio histórico:</strong> ${prom}% ${prom>=80?'✅':'⚠️'}<br>
+    <strong>Tendencia:</strong> ${tend}<br>
+    <strong>Mejor semana:</strong> Sem ${hist.reduce((a,b)=>a.ppc>b.ppc?a:b).sem} con ${Math.max(...hist.map(h=>h.ppc))}%<br>
+    <strong>Semanas por debajo de meta (80%):</strong> ${hist.filter(h=>h.ppc<80).length} de ${hist.length}<br><br>
+    ${prom<80?'⚠️ El equipo está por debajo de la meta de 80% en promedio. Se recomienda revisar las causas de no cumplimiento más frecuentes y tomar acciones correctivas en la próxima reunión de planificación.':'✅ El equipo está cumpliendo con la meta de PPC ≥ 80% en promedio. ¡Mantener el ritmo!'}`;
+}
+
+// ── CNC ──────────────────────────────────────────────────────────
+function buildCNC(){
+  const cncs={};
+  const cncActs={};
+  Object.values(planData).forEach(acts=>acts.forEach(a=>{
+    a.cnc.forEach(c=>{
+      cncs[c]=(cncs[c]||0)+1;
+      if(!cncActs[c])cncActs[c]=[];
+      if(!cncActs[c].includes(a.act))cncActs[c].push(a.act);
+    });
+  }));
+
+  // Default data si no hay
+  if(!Object.keys(cncs).length){
+    cncs['Falta de material']=3;cncs['Trabajo previo no terminado']=2;cncs['Restricción no liberada']=2;cncs['Falta de mano de obra']=1;
+    cncActs['Falta de material']=['PG Lab Fab.','Plafón Lab Fab.','Racks Dev Mont.'];
+    cncActs['Trabajo previo no terminado']=['Plafón Lab Fab.','Racks Dev Mont.'];
+    cncActs['Restricción no liberada']=['Racks Dev Mont.','Portones Fab.'];
+    cncActs['Falta de mano de obra']=['Plafón Lab Fab.'];
+  }
+
+  const total=Object.values(cncs).reduce((s,v)=>s+v,0);
+  const sorted=Object.entries(cncs).sort((a,b)=>b[1]-a[1]);
+  const colors=['#e24b4a','#ba7517','#185fa5','#1d9e75','#6c3483','#943126'];
+
+  if(charts['cncChart'])charts['cncChart'].destroy();
+  const ctx=document.getElementById('cncChart').getContext('2d');
+  charts['cncChart']=new Chart(ctx,{
+    type:'bar',
+    data:{labels:sorted.map(([k])=>k),datasets:[{data:sorted.map(([,v])=>v),backgroundColor:colors}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},callback:v=>Math.round(v)}},y:{ticks:{font:{size:10}}}}}
+  });
+
+  document.getElementById('cncBody').innerHTML=sorted.map(([k,v],i)=>`<tr>
+    <td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${colors[i]};margin-right:6px;"></span>${k}</td>
+    <td style="text-align:center;font-weight:500;">${v}</td>
+    <td style="text-align:center;">${Math.round(v/total*100)}%</td>
+    <td style="font-size:11px;color:#666;">${(cncActs[k]||[]).join(', ')}</td>
+  </tr>`).join('');
+}
+
+// ── RESUMEN CHARTS ───────────────────────────────────────────────
+function updateResumen(){
+  const ppc=calcPPC(semActual);
+  if(ppc!==null)updatePPCHeader(ppc);
+}
+
+function buildCharts(){
+  // Avance por partida
+  const partidas=['PG Lab','PG Dev','Plafón Dev','Plafón Lab','Racks Dev','Esc. PB','Portones','Barandal VP'];
+  const prog=[100,0,50,60,100,80,0,100];
+  const real=[30,0,50,19.83,80,0,0,66.45];
+  if(charts['resChart'])charts['resChart'].destroy();
+  charts['resChart']=new Chart(document.getElementById('resChart').getContext('2d'),{
+    type:'bar',data:{labels:partidas,datasets:[{label:'Prog',data:prog,backgroundColor:'#b5d4f4'},{label:'Real',data:real,backgroundColor:real.map((r,i)=>r<prog[i]?'#e24b4a':'#1d9e75')}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>v+'%',font:{size:10}}},y:{ticks:{font:{size:10}}}}}
+  });
+
+  // PPC tendencia
+  const hist=[...histPPC];
+  const ppcAct=calcPPC(semActual);
+  if(ppcAct!==null)hist.push({sem:semActual,ppc:ppcAct});
+  if(charts['ppcChart'])charts['ppcChart'].destroy();
+  charts['ppcChart']=new Chart(document.getElementById('ppcChart').getContext('2d'),{
+    type:'line',
+    data:{labels:hist.map(h=>'S'+h.sem),datasets:[
+      {data:hist.map(h=>h.ppc),borderColor:'#1a3a2a',borderWidth:2,pointRadius:3,tension:.4,fill:true,backgroundColor:'rgba(26,58,42,.08)'},
+      {data:hist.map(()=>80),borderColor:'#e24b4a',borderWidth:1.5,borderDash:[5,4],pointRadius:0},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}}},x:{ticks:{font:{size:10}}}}}
+  });
+
+  // Financiero
+  if(charts['finChart'])charts['finChart'].destroy();
+  charts['finChart']=new Chart(document.getElementById('finChart').getContext('2d'),{
+    type:'bar',data:{labels:['Sem 14','Sem 15','Sem 16','Sem 17','Sem 18'],datasets:[{data:[1995740,2853147,2354788,1221527,171053],backgroundColor:'#185fa5'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:v=>'$'+(v/1e6).toFixed(1)+'M',font:{size:10}}}}}
+  });
+}
+
+// ── MODAL ────────────────────────────────────────────────────────
+function abrirModal(){document.getElementById('modal').classList.add('open');}
+function cerrarModal(){document.getElementById('modal').classList.remove('open');}
+function guardarActividad(){
+  const act=document.getElementById('mActiv').value.trim();
+  const resp=document.getElementById('mResp').value.trim();
+  if(!act||!resp){alert('Por favor llena actividad y responsable.');return;}
+  const dias={L:false,M:false,X:false,J:false,V:false,S:false};
+  document.querySelectorAll('#mDias input:checked').forEach(cb=>{dias[cb.value]=true;});
+  if(!Object.values(dias).some(v=>v)){alert('Selecciona al menos un día.');return;}
+  if(!planData[semActual])planData[semActual]=[];
+  const newId=Math.max(0,...planData[semActual].map(a=>a.id))+1;
+  planData[semActual].push({id:newId,act,resp,dias,check:{L:null,M:null,X:null,J:null,V:null,S:null},cnc:[]});
+  cerrarModal();
+  document.getElementById('mActiv').value='';
+  document.getElementById('mResp').value='';
+  document.querySelectorAll('#mDias input').forEach(cb=>cb.checked=false);
+  buildPlan();
+}
+
+window.addEventListener('load',()=>{
+  buildPlan();
+  buildCharts();
+  const ppc=calcPPC(semActual);
+  if(ppc!==null)updatePPCHeader(ppc);
+});
+</script>
+</body>
+</html>
