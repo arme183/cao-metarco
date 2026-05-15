@@ -10,23 +10,56 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size:14px;}
+
+/* LOGIN */
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;background:linear-gradient(160deg,#1a3a2a,#235438);}
+.login-box{background:rgba(255,255,255,.08);border-radius:20px;padding:2.5rem 2rem;max-width:420px;width:100%;}
+.login-box h1{font-size:22px;font-weight:600;color:#fff;margin-bottom:.5rem;}
+.login-box p{color:#9fca9f;font-size:13px;margin-bottom:2rem;line-height:1.6;}
+.btn-ms{background:#fff;color:#1a3a2a;border:none;padding:14px 24px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;}
+.btn-ms:hover{background:#f0f0f0;}
+.btn-demo{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.3);padding:10px 24px;border-radius:12px;cursor:pointer;font-size:13px;width:100%;}
+
+/* UPLOAD EXCEL */
 .upload-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;}
-.upload-box{border:2px dashed #c0bdb5;border-radius:16px;padding:3rem 2rem;background:#fff;max-width:480px;width:100%;cursor:pointer;transition:border-color .2s;}
+.upload-box{border:2px dashed #c0bdb5;border-radius:16px;padding:2rem;background:#fff;max-width:480px;width:100%;cursor:pointer;}
 .upload-box:hover{border-color:#1a3a2a;}
-.upload-box h2{font-size:18px;font-weight:500;margin-bottom:.5rem;}
+.upload-box h2{font-size:17px;font-weight:500;margin-bottom:.5rem;}
 .upload-box p{color:#888;font-size:13px;margin-bottom:1.5rem;line-height:1.6;}
-.btn-upload{background:#1a3a2a;color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;}
+.btn-upload{background:#1a3a2a;color:#fff;border:none;padding:12px 24px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;margin-bottom:8px;width:100%;}
+.sp-status{padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:10px;}
+.sp-status.ok{background:#e1f5ee;color:#085041;}
+.sp-status.loading{background:#faeeda;color:#633806;}
+
+/* DASHBOARD */
 .dashboard{display:none;}
-.header{background:#1a3a2a;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
-.btn-reload{background:rgba(255,255,255,.15);color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;}
+.header{background:#1a3a2a;color:#fff;padding:0;}
+.header-main{padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.header-title{font-size:15px;font-weight:500;}
+.header-sub{font-size:12px;color:#9fca9f;margin-top:2px;}
+.sem-banner{background:#235438;padding:8px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.sem-pill{background:rgba(255,255,255,.15);border-radius:20px;padding:4px 14px;font-size:12px;color:#fff;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.sem-pill strong{font-size:14px;}
+.sem-progress{flex:1;min-width:180px;}
+.sem-prog-label{display:flex;justify-content:space-between;font-size:10px;color:#9fca9f;margin-bottom:3px;}
+.sem-bar{height:5px;background:rgba(255,255,255,.2);border-radius:3px;overflow:hidden;}
+.sem-bar-fill{height:100%;background:#9fca9f;border-radius:3px;}
+.header-actions{display:flex;align-items:center;gap:8px;}
+.btn-sm{background:rgba(255,255,255,.15);color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;}
+.btn-sm:hover{background:rgba(255,255,255,.25);}
+.user-chip{background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;font-size:12px;color:#fff;display:flex;align-items:center;gap:5px;}
+
+/* NAV */
 .nav{display:flex;gap:2px;background:#fff;border-bottom:1px solid #e0ded8;padding:0 16px;overflow-x:auto;}
-.nav button{padding:10px 13px;border:none;background:none;cursor:pointer;font-size:13px;color:#888;border-bottom:2px solid transparent;white-space:nowrap;}
+.nav button{padding:10px 13px;border:none;background:none;cursor:pointer;font-size:13px;color:#888;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
 .nav button.active{color:#1a3a2a;border-bottom-color:#1a3a2a;font-weight:500;}
+
+/* TABS */
 .tab{display:none;padding:14px 16px;}
 .tab.active{display:block;}
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
 .kpi{background:#fff;border-radius:10px;border:.5px solid #ddd;padding:12px 14px;}
-.kpi .label{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+.kpi .label{font-size:11px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
 .kpi .value{font-size:22px;font-weight:500;}
 .kpi .sub{font-size:11px;color:#888;margin-top:2px;line-height:1.5;}
 .kpi.green .value{color:#1d9e75;}.kpi.amber .value{color:#ba7517;}.kpi.red .value{color:#e24b4a;}.kpi.blue .value{color:#185fa5;}
@@ -35,271 +68,686 @@ body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size
 table{width:100%;border-collapse:collapse;font-size:13px;}
 th{background:#f5f5f0;padding:8px 10px;text-align:left;font-weight:500;color:#555;font-size:12px;}
 td{padding:7px 10px;border-bottom:.5px solid #eee;}
+tr:last-child td{border-bottom:none;}
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
 .badge.verde{background:#e1f5ee;color:#0f6e56;}.badge.amarillo{background:#faeeda;color:#854f0b;}
 .badge.rojo{background:#fcebeb;color:#a32d2d;}.badge.gris{background:#f1efe8;color:#5f5e5a;}
 .alert{padding:10px 14px;border-radius:8px;margin-bottom:8px;font-size:13px;display:flex;align-items:center;gap:8px;}
 .alert.warn{background:#faeeda;color:#633806;}.alert.danger{background:#fcebeb;color:#791f1f;}.alert.ok{background:#e1f5ee;color:#085041;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .prog-bar{height:7px;background:#eee;border-radius:4px;overflow:hidden;}
 .prog-fill{height:100%;border-radius:4px;}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
-.ev-login-btn{background:#185fa5;color:#fff;border:none;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;}
-.ev-user{display:flex;align-items:center;gap:8px;font-size:13px;color:#1a3a2a;background:#e8f5e9;padding:6px 12px;border-radius:20px;}
-.sem-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
-.sem-tab{padding:6px 14px;border:.5px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:12px;color:#666;}
-.sem-tab.active{background:#1a3a2a;color:#fff;border-color:#1a3a2a;}
-.partida-btn{padding:4px 12px;border:.5px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:11px;color:#666;margin:2px;}
-.partida-btn.active{background:#185fa5;color:#fff;border-color:#185fa5;}
-.foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
-.foto-card{background:#fff;border-radius:10px;border:.5px solid #ddd;overflow:hidden;cursor:pointer;transition:transform .2s;}
-.foto-card:hover{transform:scale(1.02);}
-.foto-img{width:100%;height:140px;object-fit:cover;background:#f5f5f0;display:flex;align-items:center;justify-content:center;font-size:40px;}
-.foto-info{padding:8px 10px;}
-.foto-nombre{font-size:11px;font-weight:500;color:#333;margin-bottom:2px;word-break:break-word;}
-.foto-meta{font-size:10px;color:#888;}
-.foto-partida{display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:500;margin-top:3px;}
-.ev-empty{text-align:center;padding:40px;color:#aaa;font-size:13px;}
-.modal-foto{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:2000;align-items:center;justify-content:center;}
-.modal-foto.open{display:flex;}
-.modal-foto-box{background:#fff;border-radius:12px;max-width:800px;width:95%;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;position:relative;}
-.modal-foto-img{width:100%;max-height:60vh;object-fit:contain;background:#000;}
-.modal-foto-info{padding:14px 16px;}
-.modal-foto-close{position:absolute;top:10px;right:10px;background:#fff;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;}
+.source-tag{display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;margin-left:6px;}
+.source-tag.sp{background:#e3f2fd;color:#185fa5;}
+.source-tag.xl{background:#e8f5e9;color:#1d9e75;}
+.ppc-meter{height:12px;background:#eee;border-radius:6px;overflow:hidden;margin-top:4px;}
+.ppc-fill{height:100%;border-radius:6px;transition:width .5s;}
+.refresh-btn{background:none;border:none;cursor:pointer;color:#185fa5;font-size:12px;padding:4px 8px;border-radius:6px;}
+.refresh-btn:hover{background:#e3f2fd;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:#1d9e75;display:inline-block;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+@media(max-width:768px){.kpi-grid{grid-template-columns:1fr 1fr;}.two-col{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
-<div class="upload-screen" id="uploadScreen">
-  <div class="upload-box" onclick="document.getElementById('fi').click()" ondragover="event.preventDefault()" ondrop="onDrop(event)">
-    <div style="font-size:52px;margin-bottom:1rem;">📊</div>
-    <h2>Dashboard CAO — WEG Estructura</h2>
-    <p>Metarco | Sistema de Control de Avance de Obra<br>Carga el archivo Excel para ver el dashboard actualizado</p>
-    <button class="btn-upload" onclick="event.stopPropagation();document.getElementById('fi').click()">📂 Seleccionar Excel CAO</button>
-    <input type="file" id="fi" accept=".xlsx,.xls" style="display:none" onchange="loadFile(this.files[0])">
-    <p style="margin-top:1rem;font-size:11px;color:#bbb;">Archivo: CAO_Control_Obra_WEG_Metarco.xlsx<br>Carpeta SharePoint: CONSTRUCCION → CAO</p>
+<!-- LOGIN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <div style="font-size:52px;margin-bottom:1rem;">🏗</div>
+    <h1>Dashboard CAO — Metarco</h1>
+    <p>Sistema de Control de Avance de Obra<br>WEG Estructura · Inicia sesión para ver datos en tiempo real</p>
+    <button class="btn-ms" onclick="loginMS()">
+      <span style="font-size:18px;">Ⓜ️</span> Entrar con cuenta Metarco
+    </button>
+    <button class="btn-demo" onclick="loginDemo()">Ver demo sin login</button>
+    <p style="color:#9fca9f;font-size:11px;margin-top:12px;">Usa tu correo @metarco.com.mx</p>
   </div>
 </div>
 
+<!-- UPLOAD EXCEL -->
+<div id="uploadScreen" class="upload-screen" style="display:none;">
+  <div class="upload-box" onclick="document.getElementById('fi').click()" ondragover="event.preventDefault()" ondrop="onDrop(event)">
+    <div style="font-size:48px;margin-bottom:1rem;">📊</div>
+    <h2>Cargar datos del programa de obra</h2>
+    <div class="sp-status ok" id="spStatusMsg">✅ Conectado a SharePoint — Last Planner y restricciones en tiempo real</div>
+    <p>Carga el Excel para ver la Curva S, Financiero y Gantt.<br><small style="color:#aaa;">Archivo: CAO_Control_Obra_WEG_Metarco.xlsx</small></p>
+    <button class="btn-upload" onclick="event.stopPropagation();document.getElementById('fi').click()">📂 Seleccionar Excel CAO</button>
+    <input type="file" id="fi" accept=".xlsx,.xls" style="display:none" onchange="loadExcel(this.files[0])">
+    <button onclick="event.stopPropagation();skipExcel()" style="background:none;border:none;color:#888;cursor:pointer;font-size:13px;margin-top:8px;width:100%;">Ver solo datos de SharePoint →</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
   <div class="header">
-    <div>
-      <div style="font-size:15px;font-weight:500;" id="hNombre">🏗 Control de Obra — WEG Estructura</div>
-      <div style="font-size:12px;color:#9fca9f;margin-top:2px;" id="hSub">Metarco</div>
+    <div class="header-main">
+      <div>
+        <div class="header-title" id="hNombre">🏗 Control de Obra — WEG Estructura</div>
+        <div class="header-sub" id="hSub">Metarco</div>
+      </div>
+      <div class="header-actions">
+        <span id="liveDot" title="Datos en tiempo real de SharePoint"><span class="live-dot"></span> <span style="font-size:11px;color:#9fca9f;">En vivo</span></span>
+        <button class="btn-sm" onclick="refrescarSP()">🔄 Actualizar</button>
+        <div class="user-chip" id="userChip">👤 Usuario</div>
+        <button class="btn-sm" onclick="cambiarExcel()">📊 Excel</button>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <span style="font-size:12px;color:#9fca9f;" id="hFecha"></span>
-      <button class="btn-reload" onclick="resetDash()">🔄 Cambiar archivo</button>
+    <div class="sem-banner">
+      <div class="sem-pill">📅 <strong id="semNum">Sem 7</strong></div>
+      <div class="sem-pill">🗓 <span id="semFechas">12–17 Mayo 2026</span></div>
+      <div class="sem-pill" id="diaHoyPill">📍 Miércoles 14 Mayo</div>
+      <div class="sem-progress">
+        <div class="sem-prog-label">
+          <span>Inicio: 30 Mar 2026</span>
+          <span id="semPctLabel">39% del proyecto</span>
+        </div>
+        <div class="sem-bar"><div class="sem-bar-fill" id="semBarFill" style="width:39%;"></div></div>
+      </div>
+      <div class="sem-pill" id="ppcPill">🎯 PPC: —</div>
     </div>
   </div>
 
   <div class="nav">
     <button class="active" onclick="showTab('resumen',this)">📋 Resumen</button>
-    <button onclick="showTab('lastplanner',this)">🎯 Last Planner</button>
-    <button onclick="showTab('curvaS',this)">📈 Curva S</button>
-    <button onclick="showTab('financiero',this)">💰 Financiero</button>
-    <button onclick="showTab('restricciones',this)">🔒 Restricciones</button>
-    <button onclick="showTab('lookahead',this)">🗓 Look Ahead</button>
-    <button onclick="showTab('evidencias',this)">📸 Evidencias</button>
+    <button onclick="showTab('lastplanner',this)">🎯 Last Planner <span class="source-tag sp">SP</span></button>
+    <button onclick="showTab('curvaS',this)">📈 Curva S <span class="source-tag xl">XL</span></button>
+    <button onclick="showTab('financiero',this)">💰 Financiero <span class="source-tag xl">XL</span></button>
+    <button onclick="showTab('restricciones',this)">🔒 Restricciones <span class="source-tag sp">SP</span></button>
+    <button onclick="showTab('lookahead',this)">🗓 Look Ahead <span class="source-tag xl">XL</span></button>
+    <button onclick="showTab('evidencias',this)">📸 Evidencias <span class="source-tag sp">SP</span></button>
   </div>
 
   <!-- RESUMEN -->
   <div id="tab-resumen" class="tab active">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12px;color:#888;">
+      <span class="source-tag sp">SP</span> Datos en tiempo real de SharePoint
+      <span class="source-tag xl">XL</span> Datos del Excel cargado
+      <button class="refresh-btn" onclick="refrescarSP()">🔄 Refrescar SharePoint</button>
+    </div>
     <div class="kpi-grid" id="kpiGrid"></div>
     <div id="alertasBox"></div>
     <div class="two-col">
-      <div class="card"><h3>📊 Avance por partida</h3><div style="position:relative;height:220px;"><canvas id="resChart"></canvas></div></div>
-      <div class="card"><h3>🚦 Semáforo</h3><table><thead><tr><th>Actividad</th><th>Real</th><th>Prog</th><th>Status</th></tr></thead><tbody id="semBody"></tbody></table></div>
+      <div class="card">
+        <h3>📊 Avance por partida <span class="source-tag xl">XL</span></h3>
+        <div style="position:relative;height:220px;"><canvas id="resChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>🎯 PPC por supervisor <span class="source-tag sp">SP</span></h3>
+        <div id="ppcSupList"><div style="color:#aaa;font-size:12px;padding:20px 0;">Cargando datos de SharePoint...</div></div>
+      </div>
     </div>
   </div>
 
-  <!-- LAST PLANNER -->
+  <!-- LAST PLANNER (SharePoint) -->
   <div id="tab-lastplanner" class="tab">
-    <div style="background:linear-gradient(135deg,#1a3a2a,#235438);color:#fff;border-radius:10px;padding:16px 20px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-      <div><div style="font-size:15px;font-weight:500;">🎯 Last Planner System</div><div style="font-size:12px;color:#9fca9f;margin-top:3px;">¿Se hizo lo que se prometió?</div></div>
-      <div style="text-align:center;background:rgba(255,255,255,.15);border-radius:50%;width:80px;height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <div style="font-size:22px;font-weight:600;">64%</div>
-        <div style="font-size:10px;color:#9fca9f;">PPC SEM 7</div>
+    <div class="card" style="background:#e3f2fd;border-color:#90caf9;">
+      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#185fa5;">
+        <span class="live-dot" style="background:#185fa5;"></span>
+        Datos en tiempo real desde SharePoint — actualizados por los supervisores desde campo
+        <button class="refresh-btn" onclick="refrescarSP()">🔄</button>
       </div>
+    </div>
+    <div class="kpi-grid" id="lpKpis"></div>
+    <div class="card">
+      <h3>📋 Actividades comprometidas — Semana <span id="lpSemLabel">7</span></h3>
+      <div id="lpActsList"></div>
     </div>
     <div class="card">
-      <h3>📖 Instrucciones — Cómo usar el Last Planner</h3>
-      <div style="font-size:12px;color:#444;line-height:2;">
-        <strong>Lunes:</strong> Define las actividades que se comprometen terminar esta semana con el botón + Agregar.<br>
-        <strong>Cada día al terminar turno:</strong> Marca ✅ si se cumplió o ❌ si no se cumplió para cada actividad del día.<br>
-        <strong>Al marcar ❌:</strong> Selecciona inmediatamente la Causa de No Cumplimiento (CNC) — es obligatorio.<br>
-        <strong>Meta semanal:</strong> PPC ≥ 80% — si estamos abajo revisamos causas en reunión del lunes.<br>
-        <strong>Reunión lunes ~30 min:</strong> Revisar PPC anterior, analizar CNC frecuentes, definir nuevo plan.
-      </div>
-    </div>
-    <div class="card">
-      <h3>📋 Plan Semanal — Semana 7 (12–17 Mayo 2026)</h3>
-      <div style="overflow-x:auto;">
-        <table>
-          <thead><tr><th>Actividad prometida</th><th>Responsable</th><th style="text-align:center;">L</th><th style="text-align:center;">M</th><th style="text-align:center;">X</th><th style="text-align:center;">J</th><th style="text-align:center;">V</th><th style="text-align:center;">S</th><th>CNC</th></tr></thead>
-          <tbody>
-            <tr><td style="font-size:12px;">Terminar fabricación PG Lab</td><td style="font-size:11px;color:#888;">Marco A. Simon</td><td style="text-align:center;">✅</td><td style="text-align:center;">❌</td><td style="text-align:center;">✅</td><td style="text-align:center;">⬜</td><td style="text-align:center;">⬜</td><td style="text-align:center;">—</td><td><span class="badge rojo" style="font-size:10px;">Falta material</span></td></tr>
-            <tr><td style="font-size:12px;">Armar andamio plafón lab</td><td style="font-size:11px;color:#888;">Marco A. Simon</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅</td><td style="text-align:center;">⬜</td><td style="text-align:center;">⬜</td><td style="text-align:center;">⬜</td><td style="text-align:center;">—</td><td style="font-size:11px;color:#aaa;">—</td></tr>
-            <tr><td style="font-size:12px;">Fabricación plafón lab sec. 3-4</td><td style="font-size:11px;color:#888;">Cuadrilla B</td><td style="text-align:center;">❌</td><td style="text-align:center;">❌</td><td style="text-align:center;">✅</td><td style="text-align:center;">⬜</td><td style="text-align:center;">⬜</td><td style="text-align:center;">—</td><td><span class="badge rojo" style="font-size:10px;">Trabajo previo</span></td></tr>
-            <tr><td style="font-size:12px;">Montaje racks devanados</td><td style="font-size:11px;color:#888;">Marco A. Simon</td><td style="text-align:center;">—</td><td style="text-align:center;">❌</td><td style="text-align:center;">⬜</td><td style="text-align:center;">⬜</td><td style="text-align:center;">⬜</td><td style="text-align:center;">—</td><td><span class="badge rojo" style="font-size:10px;">Restricción</span></td></tr>
-            <tr><td style="font-size:12px;">Fabricación escalera PB</td><td style="font-size:11px;color:#888;">Herrería</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅</td><td style="text-align:center;">✅</td><td style="text-align:center;">⬜</td><td style="text-align:center;">⬜</td><td style="text-align:center;">—</td><td style="font-size:11px;color:#aaa;">—</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card" style="background:#e8f5e9;border-color:#a5d6a7;">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div><div style="font-size:12px;color:#1a3a2a;font-weight:500;">PPC semana 7 (parcial)</div><div style="font-size:11px;color:#2e7d32;margin-top:2px;">Cumplidas ÷ Prometidas × 100</div></div>
-        <div style="font-size:28px;font-weight:600;color:#1a3a2a;">64%</div>
-      </div>
-      <div style="margin-top:8px;padding:8px 12px;background:#fff;border-radius:8px;font-size:12px;color:#854f0b;">⚠️ Por debajo de la meta del 80% — Revisar CNC en reunión del lunes.</div>
+      <h3>🚫 Causas de No Cumplimiento (CNC)</h3>
+      <div style="position:relative;height:200px;"><canvas id="cncChart"></canvas></div>
     </div>
   </div>
 
-  <!-- CURVA S -->
+  <!-- CURVA S (Excel) -->
   <div id="tab-curvaS" class="tab">
-    <div class="card"><h3>📈 Curva S — Avance físico (%)</h3><div style="display:flex;gap:14px;margin-bottom:8px;font-size:12px;color:#666;"><span>🔵 Programado</span><span>🟢 Real</span></div><div style="position:relative;height:280px;"><canvas id="curvaSChart"></canvas></div></div>
-    <div class="card"><h3>💰 Curva S — Estimaciones acumuladas</h3><div style="display:flex;gap:14px;margin-bottom:8px;font-size:12px;color:#666;"><span>🔵 Presupuesto acum.</span><span>🟠 Ejercido acum.</span></div><div style="position:relative;height:240px;"><canvas id="curvaFinChart"></canvas></div></div>
-  </div>
-
-  <!-- FINANCIERO -->
-  <div id="tab-financiero" class="tab">
-    <div class="kpi-grid" id="finKpis"></div>
-    <div class="card" id="retrasoBox"></div>
-    <div class="card"><h3>📊 Estimaciones semanales</h3><div style="position:relative;height:200px;"><canvas id="finChart"></canvas></div></div>
-    <div class="card"><h3>🧾 Detalle estimaciones</h3><table><thead><tr><th>Est.</th><th>Periodo</th><th style="text-align:right;">Monto</th><th style="text-align:right;">Acumulado</th><th>Status</th></tr></thead><tbody id="estBody"></tbody></table></div>
-  </div>
-
-  <!-- RESTRICCIONES -->
-  <div id="tab-restricciones" class="tab">
-    <div class="kpi-grid" id="restKpis"></div>
-    <div class="card"><h3>🔒 Restricciones</h3><table><thead><tr><th>ID</th><th>Descripción</th><th>Responsable</th><th>F. Compromiso</th><th>Impacto</th><th>Status</th></tr></thead><tbody id="restBody"></tbody></table></div>
-  </div>
-
-  <!-- LOOK AHEAD -->
-  <div id="tab-lookahead" class="tab">
-    <div class="card"><h3>🗓 Look Ahead — Próximas 4 semanas</h3><div style="overflow-x:auto;"><table><thead id="laHead"></thead><tbody id="laBody"></tbody></table></div></div>
-    <div class="card"><h3>🚛 Suministros críticos</h3><table><thead><tr><th>Material</th><th>Cantidad</th><th>Unidad</th><th>Proveedor</th><th>Fecha</th><th>Status</th></tr></thead><tbody id="sumBody"></tbody></table></div>
-  </div>
-
-  <!-- EVIDENCIAS -->
-  <div id="tab-evidencias" class="tab">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
-      <div>
-        <div style="font-size:15px;font-weight:500;margin-bottom:4px;">📸 Evidencias fotográficas</div>
-        <div style="font-size:12px;color:#888;">Fotos subidas desde campo — SharePoint CAO → Evidencias</div>
+    <div id="curvaSContent">
+      <div class="card" style="background:#faeeda;border-color:#f0c080;">
+        <div style="font-size:12px;color:#854f0b;">📊 Carga el Excel CAO para ver la Curva S — <button onclick="cambiarExcel()" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:12px;">Cargar Excel</button></div>
       </div>
-      <div id="evAuthBox"><button class="ev-login-btn" onclick="loginSharePoint()">🔑 Conectar con cuenta Metarco</button></div>
     </div>
-    <div id="evContent" style="display:none;">
-      <div class="sem-tabs" id="semTabs"></div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;" id="partidaFilter"></div>
-      <div id="fotoGrid" class="foto-grid"></div>
+  </div>
+
+  <!-- FINANCIERO (Excel) -->
+  <div id="tab-financiero" class="tab">
+    <div id="finContent">
+      <div class="card" style="background:#faeeda;border-color:#f0c080;">
+        <div style="font-size:12px;color:#854f0b;">💰 Carga el Excel CAO para ver datos financieros — <button onclick="cambiarExcel()" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:12px;">Cargar Excel</button></div>
+      </div>
     </div>
-    <div id="evEmpty" class="ev-empty">
-      <div style="font-size:40px;margin-bottom:12px;">🔑</div>
-      <div style="font-weight:500;margin-bottom:6px;">Conecta tu cuenta de Metarco</div>
-      <div style="font-size:12px;color:#aaa;">Haz clic en "Conectar con cuenta Metarco" para ver las fotos subidas por los supervisores desde campo.</div>
+  </div>
+
+  <!-- RESTRICCIONES (SharePoint) -->
+  <div id="tab-restricciones" class="tab">
+    <div class="card" style="background:#e3f2fd;border-color:#90caf9;">
+      <div style="font-size:12px;color:#185fa5;display:flex;align-items:center;gap:8px;">
+        <span class="live-dot" style="background:#185fa5;"></span>
+        Restricciones reportadas por supervisores desde la app — tiempo real
+      </div>
+    </div>
+    <div class="kpi-grid" id="restKpis"></div>
+    <div class="card">
+      <h3>🔒 Registro de restricciones</h3>
+      <table><thead><tr><th>Descripción</th><th>Responsable</th><th>Supervisor</th><th>F. Compromiso</th><th>Impacto</th><th>Status</th></tr></thead>
+      <tbody id="restBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- LOOK AHEAD (Excel) -->
+  <div id="tab-lookahead" class="tab">
+    <div id="laContent">
+      <div class="card" style="background:#faeeda;border-color:#f0c080;">
+        <div style="font-size:12px;color:#854f0b;">🗓 Carga el Excel CAO para ver el Look Ahead — <button onclick="cambiarExcel()" style="background:none;border:none;color:#185fa5;cursor:pointer;font-size:12px;">Cargar Excel</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EVIDENCIAS (SharePoint) -->
+  <div id="tab-evidencias" class="tab">
+    <div class="card" style="background:#e3f2fd;border-color:#90caf9;">
+      <div style="font-size:12px;color:#185fa5;display:flex;align-items:center;gap:8px;">
+        <span class="live-dot" style="background:#185fa5;"></span>
+        Fotos subidas por supervisores desde campo — SharePoint CAO → Evidencias
+      </div>
+    </div>
+    <div id="evContent">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="semTabs"></div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px;" id="partidaFilter"></div>
+      <div id="fotoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;"></div>
     </div>
   </div>
 </div>
 
 <!-- MODAL FOTO -->
-<div class="modal-foto" id="modalFoto" onclick="cerrarFoto()">
-  <div class="modal-foto-box" onclick="event.stopPropagation()">
-    <button class="modal-foto-close" onclick="cerrarFoto()">✕</button>
-    <img id="modalFotoImg" class="modal-foto-img" src="" alt="">
-    <div class="modal-foto-info">
+<div id="modalFoto" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:2000;align-items:center;justify-content:center;" onclick="this.style.display='none'">
+  <div style="background:#fff;border-radius:12px;max-width:800px;width:95%;max-height:90vh;overflow:hidden;" onclick="event.stopPropagation()">
+    <img id="modalFotoImg" style="width:100%;max-height:60vh;object-fit:contain;background:#000;" src="" alt="">
+    <div style="padding:14px 16px;">
       <div style="font-size:14px;font-weight:500;" id="modalFotoNombre"></div>
       <div style="font-size:12px;color:#888;margin-top:4px;" id="modalFotoMeta"></div>
+      <button onclick="document.getElementById('modalFoto').style.display='none'" style="margin-top:10px;background:#1a3a2a;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:13px;">Cerrar</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── AZURE CONFIG ─────────────────────────────────────────────────
-const MSAL_CONFIG={auth:{clientId:'9f85ee63-a011-4636-857e-b72128ed61e9',authority:'https://login.microsoftonline.com/3fce0139-013b-4c64-a04d-8605a9eb8088',redirectUri:'https://arme183.github.io/cao-metarco/'},cache:{cacheLocation:'sessionStorage'}};
-const SCOPES=['Files.Read','Sites.Read.All','User.Read'];
-const SITE_HOST='metarco2025.sharepoint.com';
-const SITE_PATH='/sites/MetarcoAsuntos';
-const FOLDER_PATH='/CONSTRUCCION/CONTROL DE COSTOS/CAO/Evidencias';
-const PARTIDA_COLORS={PGLab:'#185fa5',PGDev:'#1d9e75',PlafDev:'#ba7517',PlafLab:'#e24b4a',Racks:'#6c3483',EscPB:'#117a65',EscN1:'#943126',EscN2:'#c0392b',Portones:'#1a3a2a',BarVP:'#0f6e56'};
-let msalInstance=null,accessToken=null,semActiva='Sem_07',partidaActiva='Todos',fotosData=[],driveIdG=null;
-let charts={};
+// ── CONFIG ───────────────────────────────────────────────────────
+const MSAL_CFG={auth:{clientId:'9f85ee63-a011-4636-857e-b72128ed61e9',authority:'https://login.microsoftonline.com/3fce0139-013b-4c64-a04d-8605a9eb8088',redirectUri:window.location.href.split('?')[0]},cache:{cacheLocation:'sessionStorage'}};
+const SCOPES=['User.Read','Sites.Read.All','Files.Read.All'];
+const SITE_ID='173d71cd-18eb-456a-93af-7b6b3d086f9b';
+const GRAPH='https://graph.microsoft.com/v1.0';
+const OBRA='WEG Estructura';
+const SEM_ACTUAL=7;
+const TOTAL_SEMS=18;
+const FOLDER_EV='/CONSTRUCCION/CONTROL DE COSTOS/CAO/Evidencias';
+const PARTIDA_COLORS={PGLab:'#185fa5',PGDev:'#1d9e75',PlafDev:'#ba7517',PlafLab:'#e24b4a',Racks:'#6c3483',EscPB:'#117a65',Portones:'#1a3a2a',BarVP:'#0f6e56'};
+
+let msalInst=null, token=null, user=null, charts={}, siteListIds={};
+let spActividades=[], spRegistros=[], spRestricciones=[];
+let excelData={};
+let driveId=null, semActiva='Sem_07', fotosData=[];
 
 // ── AUTH ─────────────────────────────────────────────────────────
-async function loginSharePoint(){
+async function loginMS(){
   try{
-    if(!msalInstance){msalInstance=new msal.PublicClientApplication(MSAL_CONFIG);await msalInstance.initialize();}
-    const resp=await msalInstance.loginPopup({scopes:SCOPES});
-    const tr=await msalInstance.acquireTokenSilent({scopes:SCOPES,account:resp.account});
-    accessToken=tr.accessToken;
-    document.getElementById('evAuthBox').innerHTML=`<div class="ev-user">✅ ${resp.account.name}</div>`;
+    if(!msalInst){msalInst=new msal.PublicClientApplication(MSAL_CFG);await msalInst.initialize();}
+    const resp=await msalInst.loginPopup({scopes:SCOPES});
+    const tr=await msalInst.acquireTokenSilent({scopes:SCOPES,account:resp.account});
+    token=tr.accessToken;
+    user={name:resp.account.name,email:resp.account.username};
+    postLogin();
+  }catch(e){loginDemo();}
+}
+
+function loginDemo(){
+  token='DEMO';
+  user={name:'Arturo Medina (Demo)',email:'a.medina@metarco.com.mx'};
+  postLogin();
+}
+
+function postLogin(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('uploadScreen').style.display='flex';
+  document.getElementById('spStatusMsg').className='sp-status loading';
+  document.getElementById('spStatusMsg').textContent='⏳ Conectando a SharePoint...';
+  cargarSharePoint().then(()=>{
+    document.getElementById('spStatusMsg').className='sp-status ok';
+    document.getElementById('spStatusMsg').textContent='✅ SharePoint conectado — Last Planner y restricciones en tiempo real';
+  }).catch(()=>{
+    document.getElementById('spStatusMsg').className='sp-status loading';
+    document.getElementById('spStatusMsg').textContent='⚠️ Modo demo — SharePoint no disponible';
+  });
+}
+
+// ── GRAPH ─────────────────────────────────────────────────────────
+async function graphGet(url){
+  if(token==='DEMO')return{value:[]};
+  const r=await fetch(GRAPH+url,{headers:{Authorization:`Bearer ${token}`}});
+  if(!r.ok)throw new Error(r.status);
+  return r.json();
+}
+
+async function getListId(name){
+  if(siteListIds[name])return siteListIds[name];
+  const d=await graphGet(`/sites/${SITE_ID}/lists?$filter=displayName eq '${name}'&$select=id`);
+  if(!d.value?.length)throw new Error(`Lista ${name} no encontrada`);
+  siteListIds[name]=d.value[0].id;
+  return siteListIds[name];
+}
+
+// ── SHAREPOINT DATA ───────────────────────────────────────────────
+async function cargarSharePoint(){
+  try{
+    const [aId,rId,rsId]=await Promise.all([
+      getListId('CAO_Actividades'),
+      getListId('CAO_Registros_Diarios'),
+      getListId('CAO_Restricciones')
+    ]);
+    const [aData,rData,rsData]=await Promise.all([
+      graphGet(`/sites/${SITE_ID}/lists/${aId}/items?$expand=fields&$filter=fields/Obra eq '${OBRA}' and fields/Semana eq ${SEM_ACTUAL}&$top=100`),
+      graphGet(`/sites/${SITE_ID}/lists/${rId}/items?$expand=fields&$filter=fields/Obra eq '${OBRA}' and fields/Semana eq ${SEM_ACTUAL}&$top=500`),
+      graphGet(`/sites/${SITE_ID}/lists/${rsId}/items?$expand=fields&$filter=fields/Obra eq '${OBRA}'&$top=100`)
+    ]);
+    spActividades=aData.value||[];
+    spRegistros=rData.value||[];
+    spRestricciones=rsData.value||[];
+    cargarDriveId();
+  }catch(e){
+    // Demo data
+    spActividades=demoActividades();
+    spRegistros=demoRegistros();
+    spRestricciones=demoRestricciones();
+  }
+}
+
+async function cargarDriveId(){
+  try{
+    const d=await graphGet(`/sites/${SITE_ID}/drive`);
+    driveId=d.id;
     cargarEvidencias();
-  }catch(e){alert('Error al conectar: '+e.message);}
+  }catch(e){}
 }
 
-// ── EVIDENCIAS ───────────────────────────────────────────────────
+async function refrescarSP(){
+  await cargarSharePoint();
+  buildLastPlanner();buildRestricciones();buildResumen();updatePPCPill();
+}
+
+// ── DEMO DATA ─────────────────────────────────────────────────────
+function demoActividades(){return[
+  {id:'1',fields:{Nombre_Actividad:'Fabricación PG Lab — frente norte',Obra:OBRA,Partida:'PG Lab — Fabricación',Supervisor_Email:'m.simon@metarco.com.mx',Supervisor_Nombre:'Marco Simon',Meta:12,Unidad:'ml',Semana:SEM_ACTUAL,Dias_Programados:'L,M,X,J,V',Status:'Activa'}},
+  {id:'2',fields:{Nombre_Actividad:'Fabricación plafón laboratorio sec. 3-4',Obra:OBRA,Partida:'Plafón Lab — Fabricación',Supervisor_Email:'juancarlos.lopez@metarco.com.mx',Supervisor_Nombre:'Juan Carlos López',Meta:45,Unidad:'m2',Semana:SEM_ACTUAL,Dias_Programados:'L,M,X,J,V,S',Status:'Activa'}},
+  {id:'3',fields:{Nombre_Actividad:'Fabricación escalera subestación PB',Obra:OBRA,Partida:'Escalera PB — Fabricación',Supervisor_Email:'m.simon@metarco.com.mx',Supervisor_Nombre:'Marco Simon',Meta:1,Unidad:'pza',Semana:SEM_ACTUAL,Dias_Programados:'L,M,X,J,V',Status:'Activa'}},
+  {id:'4',fields:{Nombre_Actividad:'Fabricación barandales VP Hornos',Obra:OBRA,Partida:'Barandales VP — Fabricación',Supervisor_Email:'a.valiente@metarco.com.mx',Supervisor_Nombre:'Abelardo Valiente',Meta:50,Unidad:'ml',Semana:SEM_ACTUAL,Dias_Programados:'L,M,X',Status:'Activa'}},
+];}
+function demoRegistros(){return[
+  {id:'r1',fields:{Actividad_ID:'1',Supervisor_Email:'m.simon@metarco.com.mx',Supervisor_Nombre:'Marco Simon',Dia:'L',Cantidad:8,Cumplido:true,CNC:'',Observacion:'8ml sección norte',Semana:SEM_ACTUAL,Obra:OBRA}},
+  {id:'r2',fields:{Actividad_ID:'1',Supervisor_Email:'m.simon@metarco.com.mx',Supervisor_Nombre:'Marco Simon',Dia:'M',Cantidad:6,Cumplido:false,CNC:'📦 Falta de material',Observacion:'PTR llegó tarde',Semana:SEM_ACTUAL,Obra:OBRA}},
+  {id:'r3',fields:{Actividad_ID:'2',Supervisor_Email:'juancarlos.lopez@metarco.com.mx',Supervisor_Nombre:'Juan Carlos López',Dia:'L',Cantidad:20,Cumplido:false,CNC:'⏳ Trabajo previo sin terminar',Observacion:'Estructura base no lista',Semana:SEM_ACTUAL,Obra:OBRA}},
+  {id:'r4',fields:{Actividad_ID:'2',Supervisor_Email:'juancarlos.lopez@metarco.com.mx',Supervisor_Nombre:'Juan Carlos López',Dia:'M',Cantidad:18,Cumplido:false,CNC:'👷 Falta de mano de obra',Observacion:'Solo 2 soldadores',Semana:SEM_ACTUAL,Obra:OBRA}},
+  {id:'r5',fields:{Actividad_ID:'3',Supervisor_Email:'m.simon@metarco.com.mx',Supervisor_Nombre:'Marco Simon',Dia:'L',Cantidad:null,Cumplido:true,CNC:'',Observacion:'Iniciado corte',Semana:SEM_ACTUAL,Obra:OBRA}},
+  {id:'r6',fields:{Actividad_ID:'3',Supervisor_Email:'m.simon@metarco.com.mx',Supervisor_Nombre:'Marco Simon',Dia:'M',Cantidad:null,Cumplido:true,CNC:'',Observacion:'Armado alfardas',Semana:SEM_ACTUAL,Obra:OBRA}},
+  {id:'r7',fields:{Actividad_ID:'4',Supervisor_Email:'a.valiente@metarco.com.mx',Supervisor_Nombre:'Abelardo Valiente',Dia:'L',Cantidad:18,Cumplido:true,CNC:'',Observacion:'',Semana:SEM_ACTUAL,Obra:OBRA}},
+  {id:'r8',fields:{Actividad_ID:'4',Supervisor_Email:'a.valiente@metarco.com.mx',Supervisor_Nombre:'Abelardo Valiente',Dia:'M',Cantidad:16,Cumplido:true,CNC:'',Observacion:'',Semana:SEM_ACTUAL,Obra:OBRA}},
+];}
+function demoRestricciones(){return[
+  {id:'rs1',fields:{Descripcion:'Falta entrega acero fy=4200 para armado columnas',Obra:OBRA,Supervisor_Email:'m.simon@metarco.com.mx',Responsable:'Aceros MX',Fecha_Compromiso:'2026-05-20',Impacto:'Alto',Status:'En proceso',Semana:SEM_ACTUAL}},
+  {id:'rs2',fields:{Descripcion:'Planos Rev D de portones sin aprobar',Obra:OBRA,Supervisor_Email:'juancarlos.lopez@metarco.com.mx',Responsable:'Ing. Torres',Fecha_Compromiso:'2026-05-18',Impacto:'Medio',Status:'En proceso',Semana:SEM_ACTUAL}},
+  {id:'rs3',fields:{Descripcion:'Calibración equipos topografía completada',Obra:OBRA,Supervisor_Email:'a.valiente@metarco.com.mx',Responsable:'Topo. Herrera',Fecha_Compromiso:'2026-05-10',Impacto:'Bajo',Status:'Liberada',Semana:SEM_ACTUAL}},
+];}
+
+// ── EXCEL ─────────────────────────────────────────────────────────
+function onDrop(e){e.preventDefault();loadExcel(e.dataTransfer.files[0]);}
+function skipExcel(){initDashboard();}
+function cambiarExcel(){document.getElementById('uploadScreen').style.display='flex';document.getElementById('dashboard').style.display='none';}
+
+function loadExcel(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      wb.SheetNames.forEach(n=>{excelData[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:null});});
+      initDashboard();
+    }catch(err){alert('Error al leer Excel: '+err.message);}
+  };
+  r.readAsBinaryString(file);
+}
+
+// ── INIT DASHBOARD ────────────────────────────────────────────────
+function initDashboard(){
+  document.getElementById('uploadScreen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+
+  const info=(excelData['Info_Proyecto']||[]).reduce((a,r)=>{if(r?.Campo)a[r.Campo]=r.Valor;return a;},{});
+  const sem=parseInt(info.Semana_Actual)||SEM_ACTUAL;
+  const pct=Math.round(sem/TOTAL_SEMS*100);
+
+  document.getElementById('hNombre').textContent='🏗 '+(info.Nombre_Proyecto||'Control de Obra — WEG Estructura');
+  document.getElementById('hSub').textContent=`Metarco | ${info.Residente||'Marco Antonio Simon'} | ${user.name}`;
+  document.getElementById('userChip').textContent=`👤 ${user.name.split(' ')[0]}`;
+  document.getElementById('semNum').textContent=`Sem ${sem}`;
+  document.getElementById('semFechas').textContent='12–17 Mayo 2026';
+  document.getElementById('semPctLabel').textContent=`${pct}% del proyecto (sem ${sem} de ${TOTAL_SEMS})`;
+  document.getElementById('semBarFill').style.width=pct+'%';
+  document.getElementById('lpSemLabel').textContent=sem;
+
+  buildResumen(info, sem);
+  buildLastPlanner();
+  buildCurvaS(info);
+  buildFinanciero(info);
+  buildRestricciones();
+  buildLookAhead();
+  updatePPCPill();
+  cargarEvidencias();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function showTab(id,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');if(btn)btn.classList.add('active');}
+function fmtM(n){return'$'+(n/1e6).toFixed(1)+'M';}
+function fmtN(n){return'$'+Math.round(n).toLocaleString('es-MX');}
+function badge(s){const m={Completo:'verde','En proceso':'amarillo',Retraso:'rojo','Sin iniciar':'gris',Vencida:'rojo',Liberada:'verde',Pendiente:'gris',Listo:'verde',Bloqueado:'rojo',Alto:'rojo',Medio:'amarillo',Bajo:'gris',Pagada:'verde','En revisión':'amarillo','Por presentar':'gris'};return`<span class="badge ${m[s]||'gris'}">${s}</span>`;}
+function ppcColor(p){return p>=80?'#1d9e75':p>=60?'#ba7517':'#e24b4a';}
+function ppcClass(p){return p>=80?'green':p>=60?'amber':'red';}
+function mkChart(type,id,labels,datasets,opts){if(charts[id])try{charts[id].destroy();}catch(e){}const el=document.getElementById(id);if(!el)return;charts[id]=new Chart(el.getContext('2d'),{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},...opts}});}
+
+function calcPPC(){
+  const regs=spRegistros.filter(r=>r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined);
+  if(!regs.length)return null;
+  return Math.round(regs.filter(r=>r.fields.Cumplido).length/regs.length*100);
+}
+
+function calcPPCByUser(email){
+  const regs=spRegistros.filter(r=>r.fields.Supervisor_Email===email&&r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined);
+  if(!regs.length)return null;
+  return Math.round(regs.filter(r=>r.fields.Cumplido).length/regs.length*100);
+}
+
+function updatePPCPill(){
+  const ppc=calcPPC();
+  const pill=document.getElementById('ppcPill');
+  if(ppc!==null){
+    pill.textContent=`🎯 PPC: ${ppc}%`;
+    pill.style.background=ppc>=80?'rgba(29,158,117,.3)':ppc>=60?'rgba(186,117,23,.3)':'rgba(226,75,74,.3)';
+  }
+}
+
+// ── RESUMEN ───────────────────────────────────────────────────────
+function buildResumen(info={},sem=SEM_ACTUAL){
+  const partidas=excelData['Partidas']||[];
+  const curvaS=excelData['Curva_S']||[];
+  const pres=parseFloat(info.Presupuesto_Total)||18417650;
+  const sRow=curvaS.find(r=>parseInt(r.Semana)===sem)||{};
+  const afR=parseFloat(sRow.Avance_Real)||34;
+  const afP=parseFloat(sRow.Avance_Prog)||52;
+  const eje=parseFloat(sRow.Ejercido_Acum)||8596255;
+  const spi=afP>0?(afR/afP):0.65;
+  const ppc=calcPPC();
+
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi blue"><div class="label">Avance físico real <span class="source-tag xl">XL</span></div><div class="value">${Math.round(afR)}%</div><div class="sub">Programado: ${Math.round(afP)}%<br><strong style="color:#e24b4a;">${Math.round(afP-afR)}% por debajo</strong></div></div>
+    <div class="kpi amber"><div class="label">Estimado acumulado <span class="source-tag xl">XL</span></div><div class="value">${fmtM(eje)}</div><div class="sub">${Math.round(eje/pres*100)}% del contrato</div></div>
+    <div class="kpi ${spiColor(spi)}"><div class="label">SPI — Desempeño Cronograma <span class="source-tag xl">XL</span></div><div class="value">${spi.toFixed(2)}</div><div class="sub">$${spi.toFixed(2)} ejecutado por $1 prog.<br>${Math.round((1-spi)*100)}% por debajo<br>🔴&lt;0.85 | 🟡0.85–0.95 | 🟢≥1.0</div></div>
+    <div class="kpi ${ppc!==null?ppcClass(ppc):'gris'}"><div class="label">PPC Last Planner <span class="source-tag sp">SP</span></div><div class="value">${ppc!==null?ppc+'%':'—'}</div><div class="sub">${ppc!==null?(ppc>=80?'✅ Meta cumplida':ppc>=60?'⚠️ Por debajo':'🔴 Crítico'):'Sin datos aún'}<br>Meta: ≥80%</div></div>`;
+
+  function spiColor(s){return s>=1?'green':s>=0.85?'amber':'red';}
+
+  // Alertas
+  let al='';
+  partidas.filter(p=>(parseFloat(p.Avance_Real)||0)<(parseFloat(p.Avance_Prog)||0)&&(parseFloat(p.Avance_Prog)||0)>50).slice(0,3).forEach(p=>{al+=`<div class="alert danger">⚠️ ${p.Nombre_Partida}: ${p.Avance_Real}% real vs ${p.Avance_Prog}% programado</div>`;});
+  spRestricciones.filter(r=>r.fields.Status==='En proceso'||r.fields.Status==='Vencida').slice(0,2).forEach(r=>{al+=`<div class="alert ${r.fields.Status==='Vencida'?'danger':'warn'}">${r.fields.Status==='Vencida'?'🔴':'⚠️'} Restricción: ${r.fields.Descripcion}</div>`;});
+  if(!al)al='<div class="alert ok">✅ Sin alertas críticas al momento.</div>';
+  document.getElementById('alertasBox').innerHTML=al;
+
+  // Chart avance partidas
+  if(partidas.length){
+    const h=Math.max(220,partidas.length*30+60);
+    document.getElementById('resChart').parentElement.style.height=h+'px';
+    mkChart('bar','resChart',partidas.map(p=>(p.Nombre_Partida||'').slice(0,18)),[
+      {data:partidas.map(p=>parseFloat(p.Avance_Prog)||0),backgroundColor:'#b5d4f4'},
+      {data:partidas.map(p=>parseFloat(p.Avance_Real)||0),backgroundColor:partidas.map(p=>(parseFloat(p.Avance_Real)||0)<(parseFloat(p.Avance_Prog)||0)?'#e24b4a':'#1d9e75')},
+    ],{indexAxis:'y',scales:{x:{ticks:{callback:v=>v+'%',font:{size:10}}},y:{ticks:{font:{size:10}}}}});
+  }
+
+  // PPC por supervisor
+  const sups=[...new Set(spActividades.map(a=>a.fields.Supervisor_Email))].filter(Boolean);
+  const names={};spActividades.forEach(a=>{if(a.fields.Supervisor_Email)names[a.fields.Supervisor_Email]=a.fields.Supervisor_Nombre;});
+  document.getElementById('ppcSupList').innerHTML=sups.length?sups.map(email=>{
+    const p=calcPPCByUser(email);
+    const name=names[email]||email.split('@')[0];
+    const ini=name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    const acts=spActividades.filter(a=>a.fields.Supervisor_Email===email).length;
+    const regs=spRegistros.filter(r=>r.fields.Supervisor_Email===email&&r.fields.Cumplido!==null).length;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid #eee;">
+      <div style="width:36px;height:36px;border-radius:50%;background:${p?ppcColor(p)+'20':'#f5f5f0'};color:${p?ppcColor(p):'#888'};display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0;">${ini}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:500;">${name}</div>
+        <div class="ppc-meter"><div class="ppc-fill" style="width:${p||0}%;background:${p?ppcColor(p):'#ddd'};"></div></div>
+        <div style="font-size:11px;color:#888;">${acts} actividades · ${regs} días registrados</div>
+      </div>
+      <div style="font-size:20px;font-weight:600;color:${p?ppcColor(p):'#888'};">${p!==null?p+'%':'—'}</div>
+    </div>`;
+  }).join(''):'<div style="color:#aaa;font-size:12px;padding:10px 0;">Sin datos de supervisores aún.</div>';
+}
+
+// ── LAST PLANNER ──────────────────────────────────────────────────
+function buildLastPlanner(){
+  const ppc=calcPPC();
+  const total=spActividades.length;
+  const conReg=spRegistros.filter(r=>r.fields.Cumplido!==null).length;
+  const cumplidas=spRegistros.filter(r=>r.fields.Cumplido===true).length;
+  const conCNC=spRegistros.filter(r=>r.fields.CNC&&r.fields.CNC.length>0).length;
+
+  document.getElementById('lpKpis').innerHTML=`
+    <div class="kpi ${ppc!==null?ppcClass(ppc):'gris'}"><div class="label">PPC Semana ${SEM_ACTUAL}</div><div class="value">${ppc!==null?ppc+'%':'—'}</div><div class="sub">Meta: ≥80%<br>${ppc!==null?(ppc>=80?'✅ Meta cumplida':ppc>=60?'⚠️ Bajo meta':'🔴 Crítico'):'Sin datos'}</div></div>
+    <div class="kpi blue"><div class="label">Actividades comprometidas</div><div class="value">${total}</div><div class="sub">Esta semana</div></div>
+    <div class="kpi green"><div class="label">Días registrados</div><div class="value">${conReg}</div><div class="sub">${cumplidas} cumplidos · ${conReg-cumplidas} no cumplidos</div></div>
+    <div class="kpi red"><div class="label">Con CNC</div><div class="value">${conCNC}</div><div class="sub">Causas registradas</div></div>`;
+
+  // Lista de actividades
+  document.getElementById('lpActsList').innerHTML=spActividades.length?spActividades.map(a=>{
+    const regsAct=spRegistros.filter(r=>r.fields.Actividad_ID===a.id&&r.fields.Cumplido!==null);
+    const comp=regsAct.filter(r=>r.fields.Cumplido).length;
+    const ppcA=regsAct.length>0?Math.round(comp/regsAct.length*100):null;
+    const dias=(a.fields.Dias_Programados||'').split(',');
+    const diasHTML=['L','M','X','J','V','S','D'].map(d=>{
+      if(!dias.includes(d))return`<span style="width:24px;height:24px;border-radius:6px;background:#f5f5f0;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#ccc;">${d}</span>`;
+      const r=spRegistros.find(r=>r.fields.Actividad_ID===a.id&&r.fields.Dia===d);
+      const bg=r?.fields.Cumplido===true?'#e1f5ee':r?.fields.Cumplido===false?'#fcebeb':'#e3f2fd';
+      const col=r?.fields.Cumplido===true?'#1d9e75':r?.fields.Cumplido===false?'#e24b4a':'#185fa5';
+      const em=r?.fields.Cumplido===true?'✅':r?.fields.Cumplido===false?'❌':'⬜';
+      return`<span style="width:24px;height:24px;border-radius:6px;background:${bg};display:inline-flex;align-items:center;justify-content:center;font-size:11px;" title="${d}: ${r?.fields.Cantidad||'—'} ${a.fields.Unidad||''}">${em}</span>`;
+    }).join('');
+    return`<div style="border:.5px solid #ddd;border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:3px solid ${ppcA!==null?ppcColor(ppcA):'#ddd'};">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <div style="font-size:13px;font-weight:500;">${a.fields.Nombre_Actividad||''}</div>
+        ${ppcA!==null?`<span class="badge ${ppcClass(ppcA)}">${ppcA}%</span>`:''}
+      </div>
+      <div style="font-size:11px;color:#888;margin-bottom:6px;">👷 ${a.fields.Supervisor_Nombre||''} · 📂 ${a.fields.Partida||''} · 🎯 ${a.fields.Meta||''} ${a.fields.Unidad||''}/día</div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;">${diasHTML}</div>
+      ${regsAct.filter(r=>r.fields.CNC).map(r=>`<span class="badge rojo" style="font-size:10px;margin-top:3px;">${r.fields.CNC}</span>`).join(' ')}
+    </div>`;
+  }).join(''):'<div style="color:#aaa;font-size:12px;padding:20px;text-align:center;">Los supervisores aún no han registrado actividades esta semana.</div>';
+
+  // CNC Chart
+  const cncs={};
+  spRegistros.forEach(r=>{(r.fields.CNC||'').split(',').filter(Boolean).forEach(c=>{cncs[c.trim()]=(cncs[c.trim()]||0)+1;});});
+  const sorted=Object.entries(cncs).sort((a,b)=>b[1]-a[1]);
+  if(sorted.length){
+    mkChart('bar','cncChart',sorted.map(([k])=>k),
+      [{data:sorted.map(([,v])=>v),backgroundColor:['#e24b4a','#ba7517','#185fa5','#1d9e75','#6c3483']}],
+      {indexAxis:'y',scales:{x:{ticks:{callback:v=>Math.round(v),font:{size:10}}},y:{ticks:{font:{size:10}}}}});
+  }
+}
+
+// ── CURVA S (Excel) ───────────────────────────────────────────────
+function buildCurvaS(info={}){
+  const curvaS=excelData['Curva_S']||[];
+  if(!curvaS.length){return;}
+  const lbl=curvaS.map(r=>'S'+r.Semana);
+  const prg=curvaS.map(r=>parseFloat(r.Avance_Prog)||0);
+  const rel=curvaS.map(r=>r.Avance_Real!=null?parseFloat(r.Avance_Real):null);
+  const presA=curvaS.map(r=>parseFloat(r.Presupuesto_Acum)||0);
+  const ejerA=curvaS.map(r=>r.Ejercido_Acum!=null?parseFloat(r.Ejercido_Acum):null);
+
+  document.getElementById('curvaSContent').innerHTML=`
+    <div class="card"><h3>📈 Curva S — Avance físico (%)</h3>
+      <div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px;color:#666;"><span>🔵 Programado</span><span>🟢 Real</span></div>
+      <div style="position:relative;height:280px;"><canvas id="curvaSChart"></canvas></div></div>
+    <div class="card"><h3>💰 Curva S — Estimaciones acumuladas</h3>
+      <div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px;color:#666;"><span>🔵 Presupuesto acum.</span><span>🟠 Ejercido acum.</span></div>
+      <div style="position:relative;height:240px;"><canvas id="curvaFinChart"></canvas></div></div>`;
+
+  setTimeout(()=>{
+    mkChart('line','curvaSChart',lbl,[
+      {data:prg,borderColor:'#185fa5',borderWidth:2,pointRadius:2,tension:.4,fill:false,spanGaps:false},
+      {data:rel,borderColor:'#1d9e75',borderWidth:2.5,pointRadius:3,tension:.4,fill:false,spanGaps:false},
+    ],{scales:{x:{ticks:{font:{size:10}}},y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}}}}});
+    mkChart('line','curvaFinChart',lbl,[
+      {data:presA,borderColor:'#185fa5',borderWidth:2,pointRadius:2,tension:.4,fill:false},
+      {data:ejerA,borderColor:'#ba7517',borderWidth:2.5,pointRadius:3,tension:.4,fill:false,spanGaps:false},
+    ],{scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:v=>'$'+(v/1e6).toFixed(1)+'M',font:{size:10}}}}});
+  },100);
+}
+
+// ── FINANCIERO (Excel) ────────────────────────────────────────────
+function buildFinanciero(info={}){
+  const partidas=excelData['Partidas']||[];
+  const estimaciones=excelData['Estimaciones']||[];
+  const curvaS=excelData['Curva_S']||[];
+  const pres=parseFloat(info.Presupuesto_Total)||18417650;
+  const sem=parseInt(info.Semana_Actual)||SEM_ACTUAL;
+  const sRow=curvaS.find(r=>parseInt(r.Semana)===sem)||{};
+  const eje=parseFloat(sRow.Ejercido_Acum)||8596255;
+  const afR=parseFloat(sRow.Avance_Real)||34;
+  const cpi=eje>0?(afR/100*pres)/eje:0.72;
+  const dias=Math.round(Math.abs((parseFloat(sRow.Avance_Prog)||52)-afR)/100*sem*7);
+
+  document.getElementById('finContent').innerHTML=`
+    <div class="kpi-grid">
+      <div class="kpi blue"><div class="label">Presupuesto total</div><div class="value">${fmtM(pres)}</div></div>
+      <div class="kpi amber"><div class="label">Ejercido acumulado</div><div class="value">${fmtM(eje)}</div><div class="sub">${Math.round(eje/pres*100)}% del contrato</div></div>
+      <div class="kpi green"><div class="label">Por ejercer</div><div class="value">${fmtM(pres-eje)}</div></div>
+      <div class="kpi ${cpi>=1?'green':cpi>=0.9?'amber':'red'}"><div class="label">CPI — Índice Costo</div><div class="value">${cpi.toFixed(2)}</div><div class="sub">$${cpi.toFixed(2)} de avance por $1 gastado<br>🔴&lt;0.90 | 🟡0.90–1.0 | 🟢≥1.0</div></div>
+    </div>
+    <div class="card" style="background:#fcebeb;border-color:#ef9a9a;">
+      <div style="font-size:13px;font-weight:500;color:#a32d2d;margin-bottom:10px;">⏰ Análisis de retraso — Semana ${sem}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;">
+        <div style="text-align:center;padding:10px;background:#fff;border-radius:8px;"><div style="font-size:11px;color:#888;margin-bottom:4px;">Programado</div><div style="font-size:22px;font-weight:500;color:#185fa5;">${Math.round(parseFloat(sRow.Avance_Prog)||52)}%</div></div>
+        <div style="text-align:center;padding:10px;background:#fff;border-radius:8px;"><div style="font-size:11px;color:#888;margin-bottom:4px;">Real</div><div style="font-size:22px;font-weight:500;color:#e24b4a;">${Math.round(afR)}%</div></div>
+        <div style="text-align:center;padding:10px;background:#fff;border-radius:8px;"><div style="font-size:11px;color:#888;margin-bottom:4px;">Retraso</div><div style="font-size:22px;font-weight:500;color:#e24b4a;">~${dias} días</div></div>
+      </div>
+      <div style="padding:8px 12px;background:#fff;border-radius:8px;font-size:12px;color:#633806;">💡 Llevamos ${sem} semanas trabajando pero el avance equivale a la semana ${(afR/(parseFloat(sRow.Avance_Prog)||52)*sem).toFixed(1)}. Necesitamos recuperar ~${dias} días.</div>
+    </div>
+    <div class="card"><h3>📊 Estimaciones semanales</h3><div style="position:relative;height:200px;"><canvas id="finChart"></canvas></div></div>
+    <div class="card"><h3>🧾 Detalle estimaciones</h3>
+      <table><thead><tr><th>Est.</th><th>Periodo</th><th style="text-align:right;">Monto</th><th style="text-align:right;">Acumulado</th><th>Status</th></tr></thead>
+      <tbody>${(()=>{let ac=0;return estimaciones.map(e=>{ac+=parseFloat(e.Monto)||0;return`<tr><td>${e.Num||''}</td><td>${e.Periodo||''}</td><td style="text-align:right;">${fmtN(parseFloat(e.Monto)||0)}</td><td style="text-align:right;">${fmtN(ac)}</td><td>${badge(e.Status||'')}</td></tr>`;}).join('');})()}</tbody></table>
+    </div>
+    ${partidas.length?`<div class="card"><h3>🏗 Financiero por partida</h3><div style="position:relative;height:${Math.max(200,partidas.length*32+60)}px;"><canvas id="finPartChart"></canvas></div></div>`:''}`;
+
+  setTimeout(()=>{
+    if(estimaciones.length){
+      mkChart('bar','finChart',estimaciones.map(e=>e.Periodo||e.Num),
+        [{data:estimaciones.map(e=>parseFloat(e.Monto)||0),backgroundColor:'#185fa5'}],
+        {scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:v=>'$'+(v/1e6).toFixed(1)+'M',font:{size:10}}}}});
+    }
+    if(partidas.length&&document.getElementById('finPartChart')){
+      mkChart('bar','finPartChart',partidas.map(p=>(p.Nombre_Partida||'').slice(0,18)),
+        [{data:partidas.map(p=>parseFloat(p.Presupuesto)||0),backgroundColor:'#b5d4f4'},{data:partidas.map(p=>parseFloat(p.Ejercido)||0),backgroundColor:'#185fa5'}],
+        {indexAxis:'y',scales:{x:{ticks:{callback:v=>'$'+(v/1e6).toFixed(1)+'M',font:{size:10}}},y:{ticks:{font:{size:10}}}}});
+    }
+  },100);
+}
+
+// ── RESTRICCIONES (SharePoint) ────────────────────────────────────
+function buildRestricciones(){
+  const rc={Vencida:0,'En proceso':0,Liberada:0,Pendiente:0};
+  spRestricciones.forEach(r=>{if(rc[r.fields.Status]!==undefined)rc[r.fields.Status]++;});
+  document.getElementById('restKpis').innerHTML=`
+    <div class="kpi red"><div class="label">Vencidas</div><div class="value">${rc.Vencida}</div></div>
+    <div class="kpi amber"><div class="label">En proceso</div><div class="value">${rc['En proceso']}</div></div>
+    <div class="kpi green"><div class="label">Liberadas</div><div class="value">${rc.Liberada}</div></div>
+    <div class="kpi blue"><div class="label">Pendientes</div><div class="value">${rc.Pendiente}</div></div>`;
+  document.getElementById('restBody').innerHTML=spRestricciones.length?spRestricciones.map(r=>`<tr>
+    <td style="font-size:12px;">${r.fields.Descripcion||''}</td>
+    <td style="font-size:11px;">${r.fields.Responsable||''}</td>
+    <td style="font-size:11px;">${r.fields.Supervisor_Nombre||r.fields.Supervisor_Email?.split('@')[0]||''}</td>
+    <td style="font-size:11px;">${r.fields.Fecha_Compromiso||'—'}</td>
+    <td>${badge(r.fields.Impacto||'')}</td>
+    <td>${badge(r.fields.Status||'')}</td>
+  </tr>`).join(''):'<tr><td colspan="6" style="color:#aaa;text-align:center;padding:20px;">Sin restricciones registradas.</td></tr>';
+}
+
+// ── LOOK AHEAD (Excel) ────────────────────────────────────────────
+function buildLookAhead(){
+  const la=excelData['Look_Ahead']||[];
+  const su=excelData['Suministros']||[];
+  if(!la.length&&!su.length){return;}
+  const si=la.length?Math.min(...la.map(r=>parseInt(r.Sem_Inicio)||99)):1;
+  const sf=la.length?Math.max(...la.map(r=>parseInt(r.Sem_Fin)||0)):4;
+  const cols=[];for(let s=si;s<=sf;s++)cols.push(s);
+  document.getElementById('laContent').innerHTML=`
+    <div class="card"><h3>🗓 Look Ahead — Próximas semanas</h3><div style="overflow-x:auto;">
+      <table><thead><tr><th>Actividad</th>${cols.map(s=>`<th>S${s}</th>`).join('')}<th>Responsable</th><th>Status</th></tr></thead>
+      <tbody>${la.map(r=>{const ri=parseInt(r.Sem_Inicio)||0,rf=parseInt(r.Sem_Fin)||0;const bg=r.Status==='Listo'?'#e1f5ee':r.Status==='Bloqueado'?'#fcebeb':'#faeeda';return`<tr><td style="font-size:12px;">${r.Actividad||''}</td>${cols.map(s=>`<td style="${s>=ri&&s<=rf?'background:'+bg+';text-align:center;':''}>${s>=ri&&s<=rf?'●':''}</td>`).join('')}<td style="font-size:11px;">${r.Responsable||''}</td><td>${badge(r.Status||'')}</td></tr>`;}).join('')}</tbody></table>
+    </div></div>
+    ${su.length?`<div class="card"><h3>🚛 Suministros críticos</h3>
+      <table><thead><tr><th>Material</th><th>Cantidad</th><th>Unidad</th><th>Proveedor</th><th>Fecha</th><th>Status</th></tr></thead>
+      <tbody>${su.map(s=>`<tr><td style="font-size:12px;">${s.Material||''}</td><td>${s.Cantidad||''}</td><td>${s.Unidad||''}</td><td style="font-size:11px;">${s.Proveedor||''}</td><td style="font-size:11px;">${s.Fecha_Requerida||''}</td><td>${badge(s.Confirmacion||'')}</td></tr>`).join('')}</tbody></table>
+    </div>`:''}`;
+}
+
+// ── EVIDENCIAS (SharePoint) ───────────────────────────────────────
 async function cargarEvidencias(){
-  document.getElementById('evEmpty').innerHTML='<div class="ev-empty">⏳ Cargando fotos desde SharePoint...</div>';
+  if(!driveId)return;
   try{
-    const h={Authorization:`Bearer ${accessToken}`};
-    const siteR=await fetch(`https://graph.microsoft.com/v1.0/sites/${SITE_HOST}:${SITE_PATH}`,{headers:h});
-    const site=await siteR.json();
-    const driveR=await fetch(`https://graph.microsoft.com/v1.0/sites/${site.id}/drive`,{headers:h});
-    const drive=await driveR.json();
-    driveIdG=drive.id;
-    const folR=await fetch(`https://graph.microsoft.com/v1.0/drives/${driveIdG}/root:${FOLDER_PATH}:/children`,{headers:h});
-    const folData=await folR.json();
-    const sems=(folData.value||[]).filter(f=>f.folder).map(f=>f.name).sort();
-    if(!sems.length){document.getElementById('evEmpty').innerHTML='<div class="ev-empty"><div style="font-size:40px;margin-bottom:12px;">📂</div><div style="font-weight:500;">Carpeta vacía</div><div style="font-size:12px;color:#aaa;margin-top:6px;">Los supervisores aún no han subido fotos. Usa la app de SharePoint en Android para subir fotos a CAO → Evidencias → Sem_07</div></div>';return;}
-    semActiva=sems[0];
-    document.getElementById('semTabs').innerHTML=sems.map(s=>`<div class="sem-tab ${s===semActiva?'active':''}" onclick="cambiarSem('${s}',this)">${s.replace('_',' ')}</div>`).join('');
-    await cargarFotosSem(semActiva);
-    document.getElementById('evContent').style.display='block';
-    document.getElementById('evEmpty').style.display='none';
-  }catch(e){document.getElementById('evEmpty').innerHTML=`<div class="ev-empty">⚠️ Error: ${e.message}</div>`;}
+    const r=await graphGet(`/drives/${driveId}/root:${FOLDER_EV}:/children`);
+    const sems=(r.value||[]).filter(f=>f.folder).map(f=>f.name).sort();
+    if(!sems.length)return;
+    semActiva=sems[sems.length-1];
+    document.getElementById('semTabs').innerHTML=sems.map(s=>`<button style="padding:5px 12px;border:${s===semActiva?'.5px solid #1a3a2a':'0.5px solid #ddd'};border-radius:20px;background:${s===semActiva?'#1a3a2a':'#fff'};color:${s===semActiva?'#fff':'#666'};cursor:pointer;font-size:12px;" onclick="cambiarSemEv('${s}',this)">${s.replace('_',' ')}</button>`).join('');
+    await cargarFotosEv(semActiva);
+  }catch(e){}
 }
 
-async function cambiarSem(sem,btn){
+async function cambiarSemEv(sem,btn){
   semActiva=sem;
-  document.querySelectorAll('.sem-tab').forEach(t=>t.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-  await cargarFotosSem(sem);
+  document.querySelectorAll('#semTabs button').forEach(b=>{b.style.background='#fff';b.style.color='#666';b.style.borderColor='#ddd';});
+  if(btn){btn.style.background='#1a3a2a';btn.style.color='#fff';btn.style.borderColor='#1a3a2a';}
+  await cargarFotosEv(sem);
 }
 
-async function cargarFotosSem(sem){
-  document.getElementById('fotoGrid').innerHTML='<div style="text-align:center;padding:20px;color:#888;">⏳ Cargando...</div>';
+async function cargarFotosEv(sem){
+  document.getElementById('fotoGrid').innerHTML='<div style="color:#888;font-size:13px;padding:20px;text-align:center;">⏳ Cargando fotos...</div>';
   try{
-    const h={Authorization:`Bearer ${accessToken}`};
-    const r=await fetch(`https://graph.microsoft.com/v1.0/drives/${driveIdG}/root:${FOLDER_PATH}/${sem}:/children`,{headers:h});
-    const d=await r.json();
-    fotosData=(d.value||[]).filter(f=>f.file&&/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name));
+    const r=await graphGet(`/drives/${driveId}/root:${FOLDER_EV}/${sem}:/children`);
+    fotosData=(r.value||[]).filter(f=>f.file&&/\.(jpg|jpeg|png|gif|webp)$/i.test(f.name));
     const partidas=['Todos',...new Set(fotosData.map(f=>f.name.split('_')[1]).filter(Boolean))];
-    document.getElementById('partidaFilter').innerHTML=partidas.map(p=>`<button class="partida-btn ${p===partidaActiva?'active':''}" onclick="filtrarPartida('${p}')">${p}</button>`).join('');
-    renderFotos();
-  }catch(e){document.getElementById('fotoGrid').innerHTML=`<div class="ev-empty">⚠️ ${e.message}</div>`;}
+    document.getElementById('partidaFilter').innerHTML=partidas.map(p=>`<button class="partida-btn" style="padding:4px 12px;border:.5px solid #ddd;border-radius:20px;background:#fff;cursor:pointer;font-size:11px;color:#666;" onclick="filtrarFotos('${p}',this)">${p}</button>`).join('');
+    renderFotos(fotosData);
+  }catch(e){document.getElementById('fotoGrid').innerHTML='<div style="color:#aaa;font-size:13px;padding:20px;text-align:center;">Sin fotos en esta carpeta.</div>';}
 }
 
-function filtrarPartida(p){
-  partidaActiva=p;
-  document.querySelectorAll('.partida-btn').forEach(b=>b.classList.toggle('active',b.textContent===p));
-  renderFotos();
+function filtrarFotos(p,btn){
+  document.querySelectorAll('#partidaFilter button').forEach(b=>{b.style.background='#fff';b.style.color='#666';});
+  if(btn){btn.style.background='#185fa5';btn.style.color='#fff';}
+  renderFotos(p==='Todos'?fotosData:fotosData.filter(f=>f.name.split('_')[1]===p));
 }
 
-function renderFotos(){
-  const lista=partidaActiva==='Todos'?fotosData:fotosData.filter(f=>f.name.split('_')[1]===partidaActiva);
-  if(!lista.length){document.getElementById('fotoGrid').innerHTML='<div class="ev-empty">📭 No hay fotos para este filtro.</div>';return;}
+function renderFotos(lista){
+  if(!lista.length){document.getElementById('fotoGrid').innerHTML='<div style="color:#aaa;font-size:13px;padding:20px;text-align:center;">📭 Sin fotos.</div>';return;}
   document.getElementById('fotoGrid').innerHTML=lista.map(f=>{
     const p=f.name.split('_')[1]||'—';
     const col=PARTIDA_COLORS[p]||'#888';
-    const fecha=f.lastModifiedDateTime?new Date(f.lastModifiedDateTime).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}):'—';
+    const fecha=f.lastModifiedDateTime?new Date(f.lastModifiedDateTime).toLocaleDateString('es-MX',{day:'2-digit',month:'short'}):'—';
     const url=f['@microsoft.graph.downloadUrl']||'';
-    return`<div class="foto-card" onclick="verFoto('${url}','${f.name}','${fecha}')">
-      <div class="foto-img" style="background:${col}20;">📷</div>
-      <div class="foto-info">
-        <div class="foto-nombre">${f.name}</div>
-        <div class="foto-meta">${fecha}</div>
-        <span class="foto-partida" style="background:${col}20;color:${col};">${p}</span>
+    return`<div style="background:#fff;border-radius:10px;border:.5px solid #ddd;overflow:hidden;cursor:pointer;transition:transform .2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform=''" onclick="verFoto('${url}','${f.name}','${fecha}')">
+      <div style="width:100%;height:130px;background:${col}15;display:flex;align-items:center;justify-content:center;font-size:36px;">📷</div>
+      <div style="padding:8px 10px;">
+        <div style="font-size:11px;font-weight:500;color:#333;margin-bottom:2px;word-break:break-word;">${f.name}</div>
+        <div style="font-size:10px;color:#888;">${fecha}</div>
+        <span style="display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:500;background:${col}20;color:${col};margin-top:3px;">${p}</span>
       </div>
     </div>`;
   }).join('');
@@ -310,117 +758,8 @@ function verFoto(url,nombre,fecha){
   document.getElementById('modalFotoImg').src=url;
   document.getElementById('modalFotoNombre').textContent=nombre;
   document.getElementById('modalFotoMeta').textContent=`Subida: ${fecha} | ${semActiva.replace('_',' ')}`;
-  document.getElementById('modalFoto').classList.add('open');
+  document.getElementById('modalFoto').style.display='flex';
 }
-function cerrarFoto(){document.getElementById('modalFoto').classList.remove('open');}
-
-// ── DASHBOARD ────────────────────────────────────────────────────
-function onDrop(e){e.preventDefault();loadFile(e.dataTransfer.files[0]);}
-function resetDash(){document.getElementById('uploadScreen').style.display='flex';document.getElementById('dashboard').style.display='none';Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};}
-function showTab(id,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');if(btn)btn.classList.add('active');}
-function fmtM(n){return'$'+(n/1e6).toFixed(1)+'M';}
-function fmtN(n){return'$'+Math.round(n).toLocaleString('es-MX');}
-function badge(s){const m={Completo:'verde','En proceso':'amarillo',Retraso:'rojo','Sin iniciar':'gris',Vencida:'rojo',Liberada:'verde',Pendiente:'gris',Listo:'verde',Bloqueado:'rojo',Restricción:'amarillo',Confirmado:'verde','En gestión':'amarillo','Sin confirmar':'rojo',Alto:'rojo',Medio:'amarillo',Bajo:'gris',Pagada:'verde','En revisión':'amarillo','Por presentar':'gris'};return`<span class="badge ${m[s]||'gris'}">${s}</span>`;}
-
-function loadFile(file){
-  if(!file)return;
-  const r=new FileReader();
-  r.onload=e=>{try{const wb=XLSX.read(e.target.result,{type:'binary'});const data={};wb.SheetNames.forEach(n=>{data[n]=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:null});});renderDashboard(data);}catch(err){alert('Error: '+err.message);}};
-  r.readAsBinaryString(file);
-}
-
-function renderDashboard(data){
-  document.getElementById('uploadScreen').style.display='none';
-  document.getElementById('dashboard').style.display='block';
-  const info=(data['Info_Proyecto']||[]).reduce((a,r)=>{if(r&&r['Campo'])a[r['Campo']]=r['Valor'];return a;},{});
-  const curvaS=data['Curva_S']||[];
-  const partidas=data['Partidas']||[];
-  const restricciones=data['Restricciones']||[];
-  const estimaciones=data['Estimaciones']||[];
-  const lookahead=data['Look_Ahead']||[];
-  const suministros=data['Suministros']||[];
-  const sem=parseInt(info['Semana_Actual'])||7;
-  const pres=parseFloat(info['Presupuesto_Total'])||18417650;
-  const sRow=curvaS.find(r=>parseInt(r['Semana'])===sem)||{};
-  const afR=parseFloat(sRow['Avance_Real'])||34;
-  const afP=parseFloat(sRow['Avance_Prog'])||52;
-  const eje=parseFloat(sRow['Ejercido_Acum'])||8596255;
-  const spi=afP>0?(afR/afP):0.65;
-  const cpi=eje>0?(afR/100*pres)/eje:0.72;
-  const dias=Math.round(Math.abs(afP-afR)/100*sem*7);
-
-  document.getElementById('hNombre').textContent='🏗 '+(info['Nombre_Proyecto']||'Control de Obra — WEG Estructura');
-  document.getElementById('hSub').textContent=`Metarco | Residente: ${info['Residente']||'Marco Antonio Simon'} | Sem ${sem}`;
-  document.getElementById('hFecha').textContent='Corte: '+(info['Fecha_Corte']||'—');
-
-  const spiCls=spi>=1?'green':spi>=0.85?'amber':'red';
-  document.getElementById('kpiGrid').innerHTML=`
-    <div class="kpi blue"><div class="label">Avance físico real</div><div class="value">${Math.round(afR)}%</div><div class="sub">Programado: ${Math.round(afP)}%<br><strong style="color:#e24b4a;">${Math.round(afP-afR)}% por debajo</strong></div></div>
-    <div class="kpi amber"><div class="label">Estimado acumulado</div><div class="value">${fmtM(eje)}</div><div class="sub">${Math.round(eje/pres*100)}% del contrato</div></div>
-    <div class="kpi ${spiCls}"><div class="label">SPI — Índice Desempeño Cronograma</div><div class="value">${spi.toFixed(2)}</div><div class="sub">$${spi.toFixed(2)} ejecutado por $1 prog.<br>${Math.round((1-spi)*100)}% por debajo<br>🔴&lt;0.85 | 🟡0.85–0.95 | 🟢≥1.0</div></div>
-    <div class="kpi green"><div class="label">Actividades completas</div><div class="value">${partidas.filter(p=>parseFloat(p['Avance_Real'])>=100).length||3}</div><div class="sub">de ${partidas.length||20} totales</div></div>`;
-
-  let al='';
-  partidas.filter(p=>(parseFloat(p['Avance_Real'])||0)<(parseFloat(p['Avance_Prog'])||0)&&(parseFloat(p['Avance_Prog'])||0)>50).slice(0,3).forEach(p=>{al+=`<div class="alert danger">⚠️ ${p['Nombre_Partida']}: ${p['Avance_Real']}% real vs ${p['Avance_Prog']}% prog.</div>`;});
-  if(!al)al='<div class="alert ok">✅ Carga el Excel actualizado para ver alertas en tiempo real.</div>';
-  document.getElementById('alertasBox').innerHTML=al;
-
-  document.getElementById('semBody').innerHTML=partidas.slice(0,10).map(p=>{
-    const r=parseFloat(p['Avance_Real'])||0,pr=parseFloat(p['Avance_Prog'])||0;
-    const late=r<pr;const st=r>=100?'Completo':late&&pr>50?'Retraso':r>0?'En proceso':'Sin iniciar';
-    return`<tr><td style="font-size:11px;">${p['Nombre_Partida']||''}</td><td style="text-align:center;font-weight:500;color:${r>=100?'#1d9e75':late?'#e24b4a':'#ba7517'};">${r}%</td><td style="text-align:center;">${pr}%</td><td>${badge(st)}</td></tr>`;
-  }).join('');
-
-  const lbl=curvaS.length>0?curvaS.map(r=>'S'+r['Semana']):['S1','S2','S3','S4','S5','S6','S7'];
-  const prg=curvaS.length>0?curvaS.map(r=>parseFloat(r['Avance_Prog'])||0):[1,3,8,14,20,28,38];
-  const rel=curvaS.length>0?curvaS.map(r=>r['Avance_Real']!=null?parseFloat(r['Avance_Real']):null):[1,2,6,11,17,24,34];
-  mkLine('curvaSChart',lbl,[{d:prg,c:'#185fa5'},{d:rel,c:'#1d9e75'}],v=>v+'%');
-  mkLine('curvaFinChart',lbl,[{d:curvaS.map(r=>parseFloat(r['Presupuesto_Acum'])||0),c:'#185fa5'},{d:curvaS.map(r=>r['Ejercido_Acum']!=null?parseFloat(r['Ejercido_Acum']):null),c:'#ba7517'}],v=>'$'+(v/1e6).toFixed(1)+'M');
-
-  const cpiCls=cpi>=1?'green':cpi>=0.9?'amber':'red';
-  document.getElementById('finKpis').innerHTML=`
-    <div class="kpi blue"><div class="label">Presupuesto total</div><div class="value">${fmtM(pres)}</div></div>
-    <div class="kpi amber"><div class="label">Ejercido</div><div class="value">${fmtM(eje)}</div><div class="sub">${Math.round(eje/pres*100)}% del contrato</div></div>
-    <div class="kpi green"><div class="label">Por ejercer</div><div class="value">${fmtM(pres-eje)}</div></div>
-    <div class="kpi ${cpiCls}"><div class="label">CPI — Índice Desempeño del Costo</div><div class="value">${cpi.toFixed(2)}</div><div class="sub">$${cpi.toFixed(2)} de avance por $1 gastado<br>🔴&lt;0.90 | 🟡0.90–1.0 | 🟢≥1.0</div></div>`;
-
-  document.getElementById('retrasoBox').innerHTML=`
-    <h3 style="color:#a32d2d;margin-bottom:10px;">⏰ Análisis de retraso — Semana ${sem}</h3>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px;">
-      <div style="text-align:center;padding:10px;background:#f5f5f0;border-radius:8px;"><div style="font-size:11px;color:#888;margin-bottom:4px;">Programado</div><div style="font-size:22px;font-weight:500;color:#185fa5;">${Math.round(afP)}%</div><div style="font-size:10px;color:#888;">Donde deberíamos estar</div></div>
-      <div style="text-align:center;padding:10px;background:#f5f5f0;border-radius:8px;"><div style="font-size:11px;color:#888;margin-bottom:4px;">Real</div><div style="font-size:22px;font-weight:500;color:#e24b4a;">${Math.round(afR)}%</div><div style="font-size:10px;color:#888;">Donde estamos hoy</div></div>
-      <div style="text-align:center;padding:10px;background:#f5f5f0;border-radius:8px;"><div style="font-size:11px;color:#888;margin-bottom:4px;">Retraso</div><div style="font-size:22px;font-weight:500;color:#e24b4a;">~${dias} días</div><div style="font-size:10px;color:#888;">acumulados</div></div>
-    </div>
-    <div style="padding:8px 12px;background:#faeeda;border-radius:8px;font-size:12px;color:#633806;">💡 Llevamos ${sem} semanas trabajando pero el avance equivale a la semana ${(afR/afP*sem).toFixed(1)}. Necesitamos recuperar ~${dias} días.</div>`;
-
-  let acum=0;
-  document.getElementById('estBody').innerHTML=estimaciones.map(e=>{acum+=parseFloat(e['Monto'])||0;return`<tr><td>${e['Num']||''}</td><td>${e['Periodo']||''}</td><td style="text-align:right;">${fmtN(parseFloat(e['Monto'])||0)}</td><td style="text-align:right;">${fmtN(acum)}</td><td>${badge(e['Status']||'')}</td></tr>`;}).join('');
-
-  const rc={Vencida:0,'En proceso':0,Liberada:0,Pendiente:0};
-  restricciones.forEach(r=>{if(rc[r['Status']]!==undefined)rc[r['Status']]++;});
-  document.getElementById('restKpis').innerHTML=`<div class="kpi red"><div class="label">Vencidas</div><div class="value">${rc['Vencida']}</div></div><div class="kpi amber"><div class="label">En proceso</div><div class="value">${rc['En proceso']}</div></div><div class="kpi green"><div class="label">Liberadas</div><div class="value">${rc['Liberada']}</div></div><div class="kpi blue"><div class="label">Pendientes</div><div class="value">${rc['Pendiente']}</div></div>`;
-  document.getElementById('restBody').innerHTML=restricciones.map(r=>`<tr><td>${r['ID']||''}</td><td style="font-size:11px;">${r['Descripcion']||''}</td><td style="font-size:11px;">${r['Responsable']||''}</td><td>${r['Fecha_Compromiso']||''}</td><td>${badge(r['Impacto']||'')}</td><td>${badge(r['Status']||'')}</td></tr>`).join('');
-
-  if(lookahead.length){
-    const si=Math.min(...lookahead.map(r=>parseInt(r['Sem_Inicio'])||99));
-    const sf=Math.max(...lookahead.map(r=>parseInt(r['Sem_Fin'])||0));
-    const cols=[];for(let s=si;s<=sf;s++)cols.push(s);
-    document.getElementById('laHead').innerHTML=`<tr><th>Actividad</th>${cols.map(s=>`<th>S${s}</th>`).join('')}<th>Responsable</th><th>Status</th></tr>`;
-    document.getElementById('laBody').innerHTML=lookahead.map(r=>{const ri=parseInt(r['Sem_Inicio'])||0,rf=parseInt(r['Sem_Fin'])||0;const bg=r['Status']==='Listo'?'#e1f5ee':r['Status']==='Bloqueado'?'#fcebeb':'#faeeda';return`<tr><td>${r['Actividad']||''}</td>${cols.map(s=>`<td style="${s>=ri&&s<=rf?'background:'+bg+';text-align:center;':''}>${s>=ri&&s<=rf?'●':''}</td>`).join('')}<td>${r['Responsable']||''}</td><td>${badge(r['Status']||'')}</td></tr>`;}).join('');
-  }
-  document.getElementById('sumBody').innerHTML=suministros.map(s=>`<tr><td>${s['Material']||''}</td><td>${s['Cantidad']||''}</td><td>${s['Unidad']||''}</td><td>${s['Proveedor']||''}</td><td>${s['Fecha_Requerida']||''}</td><td>${badge(s['Confirmacion']||'')}</td></tr>`).join('');
-
-  if(partidas.length>0){
-    const h=Math.max(220,partidas.length*30+60);
-    document.getElementById('resChart').parentElement.style.height=h+'px';
-    mkBarH('resChart',partidas.map(a=>(a['Nombre_Partida']||'').slice(0,18)),[{d:partidas.map(a=>parseFloat(a['Avance_Prog'])||0),c:'#b5d4f4'},{d:partidas.map(a=>parseFloat(a['Avance_Real'])||0),c:partidas.map(a=>(parseFloat(a['Avance_Real'])||0)<(parseFloat(a['Avance_Prog'])||0)?'#e24b4a':'#1d9e75')}]);
-  }
-  mkBar('finChart',estimaciones.map(e=>e['Periodo']||e['Num']),estimaciones.map(e=>parseFloat(e['Monto'])||0),v=>'$'+(v/1e6).toFixed(1)+'M');
-}
-
-function mkLine(id,labels,datasets,yFmt){if(charts[id])try{charts[id].destroy();}catch(e){}charts[id]=new Chart(document.getElementById(id).getContext('2d'),{type:'line',data:{labels,datasets:datasets.map(d=>({data:d.d,borderColor:d.c,borderWidth:2,pointRadius:2,tension:.4,fill:false,spanGaps:false}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:yFmt,font:{size:10}}}}}});}
-function mkBar(id,labels,data,yFmt){if(charts[id])try{charts[id].destroy();}catch(e){}charts[id]=new Chart(document.getElementById(id).getContext('2d'),{type:'bar',data:{labels,datasets:[{data,backgroundColor:'#185fa5'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:yFmt,font:{size:10}}}}}});}
-function mkBarH(id,labels,datasets){if(charts[id])try{charts[id].destroy();}catch(e){}charts[id]=new Chart(document.getElementById(id).getContext('2d'),{type:'bar',data:{labels,datasets:datasets.map(d=>({data:d.d,backgroundColor:d.c}))},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>v+'%',font:{size:10}}},y:{ticks:{font:{size:10}}}}}});}
 </script>
 </body>
 </html>
