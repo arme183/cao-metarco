@@ -9,44 +9,44 @@
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size:15px;max-width:480px;margin:0 auto;min-height:100vh;}
 
-/* LOGIN */
 .login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;background:linear-gradient(160deg,#1a3a2a,#235438);}
 .login-logo{font-size:64px;margin-bottom:1rem;}
 .login h1{font-size:22px;font-weight:600;color:#fff;margin-bottom:.5rem;}
 .login p{color:#9fca9f;font-size:14px;margin-bottom:2rem;line-height:1.6;}
-.btn-login{background:#fff;color:#1a3a2a;border:none;padding:14px 28px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.btn-login{background:#fff;color:#1a3a2a;border:none;padding:14px 28px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;}
 .btn-login:active{transform:scale(.97);}
-.login-hint{color:#9fca9f;font-size:12px;margin-top:12px;}
 
-/* HEADER */
 .header{background:#1a3a2a;color:#fff;padding:12px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
-.header-left h1{font-size:15px;font-weight:500;}
-.header-left p{font-size:11px;color:#9fca9f;margin-top:2px;}
-.user-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 10px;border-radius:20px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:5px;}
+.header h1{font-size:15px;font-weight:500;}
+.header p{font-size:11px;color:#9fca9f;margin-top:2px;}
+.user-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 10px;border-radius:20px;cursor:pointer;font-size:12px;}
 
-/* SEMANA BANNER */
 .sem-banner{background:#235438;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
 .sem-info{font-size:12px;color:#9fca9f;}
 .sem-info strong{color:#fff;font-size:14px;}
 .ppc-chip{background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;font-size:12px;color:#fff;font-weight:500;}
-.dia-hoy{background:rgba(255,255,255,.1);border-radius:20px;padding:4px 10px;font-size:11px;color:#c8e6c9;}
 
-/* NAV BOTTOM */
+/* DAILY REPORT BANNER */
+.daily-banner{background:#fff;border-bottom:.5px solid #ddd;padding:10px 16px;display:flex;gap:8px;}
+.daily-btn{flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .2s;}
+.daily-btn:active{transform:scale(.96);}
+.daily-btn.arranque{background:#e8f5e9;color:#1a3a2a;}
+.daily-btn.arranque.done{background:#1a3a2a;color:#fff;}
+.daily-btn.cierre{background:#fff3e0;color:#854f0b;}
+.daily-btn.cierre.done{background:#ba7517;color:#fff;}
+.daily-btn .icon{font-size:20px;}
+.daily-btn .label{font-size:11px;}
+.daily-btn .status{font-size:10px;opacity:.7;}
+
 .nav-bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:.5px solid #ddd;display:flex;z-index:100;}
-.nav-btn{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:#888;transition:all .2s;}
+.nav-btn{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:#888;}
 .nav-btn.active{color:#1a3a2a;}
 .nav-btn .icon{font-size:20px;}
 
-/* CONTENT */
 .content{padding:14px 16px 80px;}
 .screen{display:none;}
 .screen.active{display:block;}
 
-/* CARDS */
-.card{background:#fff;border-radius:12px;border:.5px solid #ddd;padding:14px;margin-bottom:12px;}
-.card-title{font-size:13px;font-weight:500;color:#444;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
-
-/* ACTIVIDAD CARD */
 .act-card{background:#fff;border-radius:12px;border:.5px solid #ddd;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;}
 .act-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px;}
 .act-card.pendiente::before{background:#ddd;}
@@ -54,9 +54,9 @@ body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size
 .act-card.retraso::before{background:#e24b4a;}
 .act-card.hoy::before{background:#185fa5;}
 .act-nombre{font-size:14px;font-weight:500;margin-bottom:4px;}
-.act-meta{font-size:12px;color:#888;margin-bottom:8px;line-height:1.5;}
-.act-dias{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap;}
-.dia-chip{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;border:.5px solid #ddd;}
+.act-meta{font-size:12px;color:#888;margin-bottom:8px;}
+.dias-row{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px;}
+.dia-chip{height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;border:.5px solid #ddd;}
 .dia-chip.prog{background:#e3f2fd;border-color:#185fa5;color:#185fa5;}
 .dia-chip.cumplido{background:#e1f5ee;border-color:#1d9e75;color:#1d9e75;}
 .dia-chip.retraso{background:#fcebeb;border-color:#e24b4a;color:#e24b4a;}
@@ -64,70 +64,78 @@ body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size
 .dia-chip.no-prog{background:#f5f5f0;color:#ccc;border-color:#eee;}
 .btn-registrar{background:#1a3a2a;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;width:100%;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px;}
 .btn-registrar:active{transform:scale(.97);}
-.btn-registrar.ya-registrado{background:#e8f5e9;color:#1d9e75;border:.5px solid #a5d6a7;}
-.btn-registrar.con-cnc{background:#fcebeb;color:#e24b4a;border:.5px solid #ef9a9a;}
+.btn-registrar.ya{background:#e8f5e9;color:#1d9e75;border:.5px solid #a5d6a7;}
+.btn-registrar.cnc{background:#fcebeb;color:#e24b4a;border:.5px solid #ef9a9a;}
 
-/* FORMULARIO REGISTRO */
-.reg-form{background:#fff;border-radius:12px;border:.5px solid #ddd;padding:16px;margin-bottom:12px;}
-.form-label{font-size:12px;font-weight:500;color:#555;margin-bottom:6px;display:block;}
-.form-input{width:100%;padding:12px;border:.5px solid #ddd;border-radius:8px;font-size:15px;font-family:inherit;margin-bottom:12px;appearance:none;}
-.form-input:focus{outline:none;border-color:#1a3a2a;}
-.cant-row{display:grid;grid-template-columns:2fr 1fr;gap:8px;}
-.cumplido-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
-.cumplido-btn{padding:16px;border-radius:10px;border:.5px solid #ddd;cursor:pointer;font-size:22px;text-align:center;background:#fff;transition:all .2s;}
-.cumplido-btn.si.sel{background:#e1f5ee;border-color:#1d9e75;box-shadow:0 2px 8px rgba(29,158,117,.2);}
-.cumplido-btn.no.sel{background:#fcebeb;border-color:#e24b4a;box-shadow:0 2px 8px rgba(226,75,74,.2);}
-.cumplido-label{font-size:11px;color:#888;margin-top:4px;}
-.cnc-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
-.cnc-btn{padding:7px 12px;border-radius:20px;border:.5px solid #ddd;background:#f5f5f0;font-size:12px;cursor:pointer;transition:all .15s;}
-.cnc-btn.sel{background:#e24b4a;color:#fff;border-color:#c0392b;}
-.btn-guardar{background:#1a3a2a;color:#fff;border:none;padding:14px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:600;width:100%;margin-top:4px;}
-.btn-guardar:active{transform:scale(.97);}
-.btn-guardar:disabled{background:#aaa;}
-
-/* BADGE */
 .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
 .badge.verde{background:#e1f5ee;color:#0f6e56;}
 .badge.rojo{background:#fcebeb;color:#a32d2d;}
 .badge.amarillo{background:#faeeda;color:#854f0b;}
 .badge.gris{background:#f1efe8;color:#5f5e5a;}
-.badge.azul{background:#e3f2fd;color:#185fa5;}
 
-/* PPC METER */
-.ppc-bar{height:8px;background:#eee;border-radius:4px;overflow:hidden;margin:6px 0;}
-.ppc-fill{height:100%;border-radius:4px;transition:width .5s;}
+.ppc-bar{height:5px;background:#eee;border-radius:3px;overflow:hidden;margin:4px 0;}
+.ppc-fill{height:100%;border-radius:3px;}
 
-/* RESTRICCION */
-.rest-card{background:#fcebeb;border-radius:10px;padding:12px;margin-bottom:8px;border:.5px solid #ef9a9a;}
+.rest-card{border-radius:10px;padding:12px;margin-bottom:8px;border:.5px solid #ef9a9a;background:#fcebeb;}
 .rest-card.liberada{background:#e8f5e9;border-color:#a5d6a7;}
 
-/* LOADING */
-.loading{text-align:center;padding:40px;color:#888;font-size:14px;}
-.spinner{font-size:32px;animation:spin 1s linear infinite;display:inline-block;margin-bottom:10px;}
-@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg)};}
-
-/* EMPTY */
+.loading{text-align:center;padding:40px;color:#888;}
 .empty{text-align:center;padding:40px 20px;color:#aaa;}
 .empty-icon{font-size:48px;margin-bottom:10px;}
 
-/* TOAST */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center;}
+.modal.open{display:flex;}
+.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;}
+.modal-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:4px;}
+.modal-sub{font-size:12px;color:#888;margin-bottom:16px;}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#888;margin-top:-4px;}
+
+.form-label{font-size:12px;font-weight:500;color:#555;margin-bottom:5px;display:block;margin-top:12px;}
+.form-label:first-child{margin-top:0;}
+.form-input{width:100%;padding:11px 12px;border:.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;appearance:none;}
+.form-input:focus{outline:none;border-color:#1a3a2a;}
+textarea.form-input{resize:vertical;min-height:70px;}
+.cant-row{display:grid;grid-template-columns:2fr 1fr;gap:8px;}
+.cumplido-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px;}
+.cumplido-btn{padding:14px;border-radius:10px;border:.5px solid #ddd;cursor:pointer;font-size:20px;text-align:center;background:#fff;}
+.cumplido-btn.si.sel{background:#e1f5ee;border-color:#1d9e75;}
+.cumplido-btn.no.sel{background:#fcebeb;border-color:#e24b4a;}
+.cumplido-label{font-size:11px;color:#888;margin-top:3px;}
+.cnc-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;}
+.cnc-btn{padding:7px 12px;border-radius:20px;border:.5px solid #ddd;background:#f5f5f0;font-size:12px;cursor:pointer;}
+.cnc-btn.sel{background:#e24b4a;color:#fff;border-color:#c0392b;}
+.btn-guardar{background:#1a3a2a;color:#fff;border:none;padding:14px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:600;width:100%;margin-top:14px;}
+.btn-guardar:active{transform:scale(.97);}
+.btn-guardar:disabled{background:#aaa;}
+.fab{position:fixed;bottom:76px;right:16px;width:52px;height:52px;border-radius:50%;background:#1a3a2a;color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,42,.4);display:none;align-items:center;justify-content:center;z-index:99;}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a3a2a;color:#fff;padding:12px 20px;border-radius:20px;font-size:13px;z-index:1000;opacity:0;transition:opacity .3s;white-space:nowrap;}
 .toast.show{opacity:1;}
+.section-title{font-size:12px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;}
 
-/* SECTION */
-.section-title{font-size:13px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 8px;}
+/* DAILY REPORT FORM */
+.dr-section{background:#f5f5f0;border-radius:10px;padding:12px;margin-bottom:10px;}
+.dr-section-title{font-size:12px;font-weight:600;color:#1a3a2a;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
+.check-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid #eee;cursor:pointer;}
+.check-item:last-child{border-bottom:none;}
+.check-box{width:22px;height:22px;border-radius:6px;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;transition:all .2s;}
+.check-box.checked{background:#1a3a2a;border-color:#1a3a2a;color:#fff;}
+.check-label{font-size:13px;flex:1;}
+.foto-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px;}
+.foto-btn{padding:11px;border:.5px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;text-align:center;}
+.foto-preview{width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-top:8px;display:none;}
+.cumplimiento-opts{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;}
+.cumpl-btn{padding:8px 14px;border-radius:20px;border:.5px solid #ddd;background:#fff;cursor:pointer;font-size:12px;font-weight:500;}
+.cumpl-btn.sel.completo{background:#1d9e75;color:#fff;border-color:#1d9e75;}
+.cumpl-btn.sel.parcial{background:#ba7517;color:#fff;border-color:#ba7517;}
+.cumpl-btn.sel.no{background:#e24b4a;color:#fff;border-color:#e24b4a;}
 
-/* ADD BTN */
-.fab{position:fixed;bottom:76px;right:16px;width:52px;height:52px;border-radius:50%;background:#1a3a2a;color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,42,.4);display:flex;align-items:center;justify-content:center;z-index:99;}
-.fab:active{transform:scale(.92);}
-
-/* MODAL */
-.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center;}
-.modal-overlay.open{display:flex;}
-.modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
-.modal-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
-.modal-title{font-size:16px;font-weight:600;margin-bottom:16px;}
-.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#888;}
+/* HISTORIAL DR */
+.dr-card{background:#fff;border-radius:10px;border:.5px solid #ddd;padding:12px;margin-bottom:8px;}
+.dr-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.dr-tipo{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.dr-tipo.arranque{background:#e8f5e9;color:#1a3a2a;}
+.dr-tipo.cierre{background:#fff3e0;color:#854f0b;}
 </style>
 </head>
 <body>
@@ -137,45 +145,50 @@ body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size
   <div class="login">
     <div class="login-logo">🏗</div>
     <h1>CAO Supervisores</h1>
-    <p>Metarco | Sistema de Control de Avance de Obra<br>Registra tu avance diario en segundos</p>
+    <p>Metarco | Sistema de Control de Avance<br>WEG Estructura</p>
     <button class="btn-login" onclick="login()">
-      <span style="font-size:20px;">Ⓜ️</span>
-      Entrar con cuenta Metarco
+      <span style="font-size:20px;">Ⓜ️</span> Entrar con cuenta Metarco
     </button>
-    <p class="login-hint">Usa tu correo @metarco.com.mx</p>
+    <p style="color:#9fca9f;font-size:11px;margin-top:12px;">@metarco.com.mx</p>
   </div>
 </div>
 
 <!-- APP -->
 <div id="appScreen" style="display:none;">
-
-  <!-- HEADER -->
   <div class="header">
-    <div class="header-left">
+    <div>
       <h1>🏗 CAO Supervisores</h1>
-      <p id="hSub">Cargando...</p>
+      <p id="hSub">WEG Estructura</p>
     </div>
-    <button class="user-btn" onclick="logout()">
-      <span id="userInitials">?</span>
-      <span style="opacity:.7;font-size:10px;">Salir</span>
-    </button>
+    <button class="user-btn" onclick="logout()" id="userBtn">Salir</button>
   </div>
 
-  <!-- SEMANA BANNER -->
   <div class="sem-banner">
     <div>
-      <div class="sem-info"><strong id="semLabel">Sem 7</strong> · <span id="semFechas">12–17 Mayo</span></div>
-      <div class="dia-hoy" style="margin-top:4px;" id="diaHoyLabel">📍 Hoy: Miércoles 14 Mayo</div>
+      <div class="sem-info"><strong id="semLabel">Sem 7</strong> · <span id="semFechas">12–17 Mayo 2026</span></div>
+      <div style="font-size:11px;color:#c8e6c9;margin-top:3px;" id="diaLabel">📍 Hoy: Miércoles 14 Mayo</div>
     </div>
     <div style="text-align:right;">
       <div class="ppc-chip" id="ppcChip">🎯 PPC: —</div>
-      <div style="font-size:10px;color:#9fca9f;margin-top:3px;" id="semPctLabel">Sem 7 de 18</div>
+      <div style="font-size:10px;color:#9fca9f;margin-top:2px;" id="semPct">Sem 7 de 18 · 39%</div>
     </div>
   </div>
 
-  <!-- SCREENS -->
-  <div class="content">
+  <!-- DAILY REPORT BUTTONS -->
+  <div class="daily-banner">
+    <button class="daily-btn arranque" id="btnArranque" onclick="abrirDR('arranque')">
+      <span class="icon">🌅</span>
+      <span class="label">Reporte Arranque</span>
+      <span class="status" id="statusArranque">7:00 AM — Pendiente</span>
+    </button>
+    <button class="daily-btn cierre" id="btnCierre" onclick="abrirDR('cierre')">
+      <span class="icon">🌇</span>
+      <span class="label">Reporte Cierre</span>
+      <span class="status" id="statusCierre">6:00 PM — Pendiente</span>
+    </button>
+  </div>
 
+  <div class="content">
     <!-- HOY -->
     <div id="screen-hoy" class="screen active">
       <div class="section-title">📍 Mis actividades de hoy</div>
@@ -203,199 +216,260 @@ body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size
       <div id="restList"></div>
     </div>
 
+    <!-- REPORTES -->
+    <div id="screen-reportes" class="screen">
+      <div class="section-title">📊 Mis reportes diarios</div>
+      <div id="drHistorial"></div>
+    </div>
   </div>
 
-  <!-- NAV BOTTOM -->
   <div class="nav-bottom">
-    <button class="nav-btn active" onclick="showScreen('hoy',this)">
-      <span class="icon">📍</span>Hoy
-    </button>
-    <button class="nav-btn" onclick="showScreen('semana',this)">
-      <span class="icon">📋</span>Semana
-    </button>
-    <button class="nav-btn" onclick="showScreen('registrar',this)">
-      <span class="icon">✏️</span>Registrar
-    </button>
-    <button class="nav-btn" onclick="showScreen('restricciones',this)">
-      <span class="icon">🔒</span>Restricciones
-    </button>
+    <button class="nav-btn active" onclick="showScreen('hoy',this)"><span class="icon">📍</span>Hoy</button>
+    <button class="nav-btn" onclick="showScreen('semana',this)"><span class="icon">📋</span>Semana</button>
+    <button class="nav-btn" onclick="showScreen('registrar',this)"><span class="icon">✏️</span>Registrar</button>
+    <button class="nav-btn" onclick="showScreen('restricciones',this)"><span class="icon">🔒</span>Restrict.</button>
+    <button class="nav-btn" onclick="showScreen('reportes',this)"><span class="icon">📊</span>Reportes</button>
   </div>
-
 </div>
 
-<!-- FAB agregar actividad -->
-<button class="fab" id="fabBtn" onclick="abrirModalAct()" style="display:none;" title="Agregar actividad">+</button>
-
-<!-- TOAST -->
+<button class="fab" id="fabBtn" onclick="abrirModalAct()">+</button>
 <div class="toast" id="toast"></div>
 
-<!-- MODAL NUEVA ACTIVIDAD -->
-<div class="modal-overlay" id="modalAct">
+<!-- MODAL DAILY REPORT -->
+<div class="modal" id="modalDR">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <button class="modal-close" onclick="cerrarModal('modalAct')">✕</button>
-    <div class="modal-title">+ Nueva actividad</div>
-    <label class="form-label">Actividad / Descripción *</label>
-    <input class="form-input" id="mNombre" placeholder="Ej: Fabricar marcos escalera PB — sección norte" type="text">
-    <label class="form-label">Partida del programa</label>
-    <select class="form-input" id="mPartida">
-      <option value="">Selecciona una partida...</option>
-      <option>PG Lab — Fabricación</option>
-      <option>PG Lab — Montaje</option>
-      <option>Plafón Lab — Fabricación</option>
-      <option>Plafón Dev — Montaje</option>
-      <option>Racks Dev — Fabricación</option>
-      <option>Racks Dev — Montaje</option>
-      <option>Escalera PB — Fabricación</option>
-      <option>Escalera PB — Montaje</option>
-      <option>Portones — Fabricación</option>
-      <option>Barandales VP — Fabricación</option>
-      <option>Barandales VP — Montaje</option>
-      <option>Otra partida</option>
-    </select>
-    <div class="cant-row">
-      <div>
-        <label class="form-label">Meta del día *</label>
-        <input class="form-input" id="mMeta" placeholder="Ej: 12" type="number" min="0" step="0.1">
-      </div>
-      <div>
-        <label class="form-label">Unidad *</label>
-        <select class="form-input" id="mUnidad">
-          <option value="ml">ml</option>
-          <option value="m2">m2</option>
-          <option value="pza">pza</option>
-          <option value="kg">kg</option>
-          <option value="%">%</option>
-          <option value="ton">ton</option>
-        </select>
-      </div>
-    </div>
-    <label class="form-label">Turno</label>
-    <select class="form-input" id="mTurno">
-      <option>Turno completo</option>
-      <option>Turno mañana</option>
-      <option>Turno tarde</option>
-    </select>
-    <label class="form-label">Días programados</label>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;" id="mDiasCheck">
-      <button class="cnc-btn" data-dia="L" onclick="toggleDia(this)">L</button>
-      <button class="cnc-btn" data-dia="M" onclick="toggleDia(this)">M</button>
-      <button class="cnc-btn" data-dia="X" onclick="toggleDia(this)">X</button>
-      <button class="cnc-btn" data-dia="J" onclick="toggleDia(this)">J</button>
-      <button class="cnc-btn" data-dia="V" onclick="toggleDia(this)">V</button>
-      <button class="cnc-btn" data-dia="S" onclick="toggleDia(this)">S</button>
-      <button class="cnc-btn" data-dia="D" onclick="toggleDia(this)">D</button>
-    </div>
-    <label class="form-label">Observaciones (opcional)</label>
-    <textarea class="form-input" id="mObs" rows="2" placeholder="Ej: Depende de que llegue el PTR el lunes"></textarea>
-    <button class="btn-guardar" onclick="guardarActividad()">✅ Agregar al plan semanal</button>
-  </div>
-</div>
+    <button class="modal-close" onclick="cerrarModal('modalDR')">✕</button>
+    <div class="modal-title" id="drTitle">Reporte de Arranque</div>
+    <div class="modal-sub" id="drSub">🌅 Miércoles 14 Mayo 2026 — WEG Estructura</div>
+    <input type="hidden" id="drTipo">
 
-<!-- MODAL NUEVA RESTRICCION -->
-<div class="modal-overlay" id="modalRest">
-  <div class="modal-sheet">
-    <div class="modal-handle"></div>
-    <button class="modal-close" onclick="cerrarModal('modalRest')">✕</button>
-    <div class="modal-title">🔒 Nueva restricción</div>
-    <label class="form-label">¿Qué te está bloqueando? *</label>
-    <textarea class="form-input" id="rDesc" rows="2" placeholder="Ej: Falta entrega de acero fy=4200 para armado de columnas nivel 4"></textarea>
-    <label class="form-label">¿Quién debe resolverlo?</label>
-    <input class="form-input" id="rResp" placeholder="Ej: Proveedor Aceros MX / Ing. Torres">
-    <label class="form-label">Fecha límite</label>
-    <input class="form-input" id="rFecha" type="date">
-    <label class="form-label">Impacto</label>
-    <select class="form-input" id="rImpacto">
-      <option>Alto</option>
-      <option>Medio</option>
-      <option>Bajo</option>
-    </select>
-    <button class="btn-guardar" onclick="guardarRestriccion()">💾 Guardar restricción</button>
+    <!-- SECCIÓN ARRANQUE -->
+    <div id="drArranqueForm">
+      <div class="dr-section">
+        <div class="dr-section-title">📋 ¿Qué se va a hacer hoy?</div>
+        <div id="drActsCheck"></div>
+        <div style="margin-top:8px;">
+          <label class="form-label">Actividades adicionales (opcional)</label>
+          <textarea class="form-input" id="drActsExtra" rows="2" placeholder="Ej: Revisar calidad soldaduras sección A"></textarea>
+        </div>
+      </div>
+
+      <div class="dr-section">
+        <div class="dr-section-title">🎯 Metas del día</div>
+        <label class="form-label">¿Cuánto se espera ejecutar hoy?</label>
+        <input class="form-input" id="drMetaHoy" placeholder="Ej: 12 ml de PG Lab + 45 m2 Plafón">
+      </div>
+
+      <div class="dr-section">
+        <div class="dr-section-title">⚠️ ¿Hay algo que pueda bloquear el trabajo hoy?</div>
+        <label class="form-label">Restricciones o riesgos del día</label>
+        <textarea class="form-input" id="drRiesgos" rows="2" placeholder="Ej: Podría faltar material si no llega el camión antes de las 9am"></textarea>
+      </div>
+
+      <div class="dr-section">
+        <div class="dr-section-title">👷 Recursos disponibles hoy</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <label class="form-label">Personal (personas)</label>
+            <input class="form-input" id="drPersonal" type="number" min="0" placeholder="Ej: 8">
+          </div>
+          <div>
+            <label class="form-label">Equipos disponibles</label>
+            <input class="form-input" id="drEquipos" placeholder="Ej: 2 soldadoras">
+          </div>
+        </div>
+      </div>
+
+      <div class="dr-section">
+        <div class="dr-section-title">📸 Foto del arranque (opcional)</div>
+        <p style="font-size:11px;color:#888;margin-bottom:6px;">Foto del área de trabajo al inicio del turno</p>
+        <div class="foto-btns">
+          <button class="foto-btn" onclick="document.getElementById('drFotoCamA').click()">📷 Tomar foto</button>
+          <button class="foto-btn" onclick="document.getElementById('drFotoGalA').click()">🖼 Galería</button>
+        </div>
+        <input type="file" id="drFotoCamA" accept="image/*" capture="environment" style="display:none" onchange="previewFoto(this,'drFotoPreviewA')">
+        <input type="file" id="drFotoGalA" accept="image/*" style="display:none" onchange="previewFoto(this,'drFotoPreviewA')">
+        <img id="drFotoPreviewA" class="foto-preview" alt="Foto arranque">
+        <div id="drFotoStatusA" style="font-size:11px;color:#888;margin-top:4px;"></div>
+      </div>
+
+      <label class="form-label">Observaciones generales del arranque</label>
+      <textarea class="form-input" id="drObsArranque" rows="2" placeholder="Ej: Condiciones del área, novedades, cambios de último momento..."></textarea>
+    </div>
+
+    <!-- SECCIÓN CIERRE -->
+    <div id="drCierreForm" style="display:none;">
+      <div class="dr-section">
+        <div class="dr-section-title">✅ ¿Qué se logró hoy?</div>
+        <div id="drActsCierreCheck"></div>
+        <div style="margin-top:8px;">
+          <label class="form-label">Logros adicionales</label>
+          <textarea class="form-input" id="drLogrosExtra" rows="2" placeholder="Ej: Se terminó sección sur que no estaba planificada"></textarea>
+        </div>
+      </div>
+
+      <div class="dr-section">
+        <div class="dr-section-title">📏 Cantidades ejecutadas hoy</div>
+        <label class="form-label">¿Cuánto se ejecutó en total?</label>
+        <input class="form-input" id="drCantReal" placeholder="Ej: 10 ml de PG Lab + 30 m2 Plafón">
+        <label class="form-label" style="margin-top:8px;">Cumplimiento general del día</label>
+        <div class="cumplimiento-opts">
+          <button class="cumpl-btn completo" onclick="selCumplimiento('Completo',this)">✅ Completo</button>
+          <button class="cumpl-btn parcial" onclick="selCumplimiento('Parcial',this)">⚠️ Parcial</button>
+          <button class="cumpl-btn no" onclick="selCumplimiento('No cumplido',this)">❌ No cumplido</button>
+        </div>
+      </div>
+
+      <div class="dr-section" id="drCNCSection" style="display:none;">
+        <div class="dr-section-title" style="color:#e24b4a;">🚫 ¿Por qué no se cumplió todo?</div>
+        <div class="cnc-grid" id="drCNCOpts"></div>
+        <div id="drCNCOtraWrap" style="display:none;margin-top:8px;">
+          <label class="form-label">Describe la causa:</label>
+          <input class="form-input" id="drCNCOtra" placeholder="Ej: Problema con el andamio">
+        </div>
+      </div>
+
+      <div class="dr-section">
+        <div class="dr-section-title">🔒 Restricciones del día</div>
+        <label class="form-label">¿Quedó alguna restricción activa?</label>
+        <textarea class="form-input" id="drRestCierre" rows="2" placeholder="Ej: Material de PTR no llegó, se requiere para mañana"></textarea>
+      </div>
+
+      <div class="dr-section">
+        <div class="dr-section-title">📸 Foto del cierre</div>
+        <p style="font-size:11px;color:#888;margin-bottom:6px;">Foto del avance al final del turno — evidencia del trabajo del día</p>
+        <div class="foto-btns">
+          <button class="foto-btn" onclick="document.getElementById('drFotoCamC').click()">📷 Tomar foto</button>
+          <button class="foto-btn" onclick="document.getElementById('drFotoGalC').click()">🖼 Galería</button>
+        </div>
+        <input type="file" id="drFotoCamC" accept="image/*" capture="environment" style="display:none" onchange="previewFoto(this,'drFotoPreviewC')">
+        <input type="file" id="drFotoGalC" accept="image/*" style="display:none" onchange="previewFoto(this,'drFotoPreviewC')">
+        <img id="drFotoPreviewC" class="foto-preview" alt="Foto cierre">
+        <div id="drFotoStatusC" style="font-size:11px;color:#888;margin-top:4px;"></div>
+      </div>
+
+      <label class="form-label">Observaciones del cierre y para el día siguiente</label>
+      <textarea class="form-input" id="drObsCierre" rows="3" placeholder="Ej: Mañana se necesita arrancar temprano, el camión de concreto llega a las 7am..."></textarea>
+    </div>
+
+    <button class="btn-guardar" id="btnGuardarDR" onclick="guardarDR()">💾 Enviar reporte</button>
   </div>
 </div>
 
 <!-- MODAL REGISTRO DIARIO -->
-<div class="modal-overlay" id="modalReg">
+<div class="modal" id="modalReg">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="cerrarModal('modalReg')">✕</button>
     <div class="modal-title" id="regTitle">Registrar avance</div>
     <input type="hidden" id="regActId">
-
-    <div style="background:#e8f5e9;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:#2e7d32;">
+    <div style="background:#e8f5e9;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#2e7d32;">
       Meta de hoy: <strong id="regMetaLabel">—</strong>
     </div>
-
-    <label class="form-label">¿Cuánto ejecutaste hoy? *</label>
-    <div class="cant-row" style="margin-bottom:14px;">
+    <label class="form-label">¿Cuánto ejecutaste hoy?</label>
+    <div class="cant-row" style="margin-bottom:12px;">
       <input class="form-input" id="regCant" type="number" min="0" step="0.1" placeholder="Ej: 8.5" style="margin:0;">
       <input class="form-input" id="regUnidad" readonly style="background:#f5f5f0;color:#888;margin:0;">
     </div>
-
-    <label class="form-label">¿Se cumplió lo prometido para hoy? *</label>
+    <label class="form-label">¿Se cumplió lo prometido?</label>
     <div class="cumplido-row">
-      <div class="cumplido-btn si" id="btnSi" onclick="selCumplido(true)">
-        ✅<div class="cumplido-label">Sí, se cumplió</div>
-      </div>
-      <div class="cumplido-btn no" id="btnNo" onclick="selCumplido(false)">
-        ❌<div class="cumplido-label">No se cumplió</div>
-      </div>
+      <div class="cumplido-btn si" id="btnSi" onclick="selCumplido(true)">✅<div class="cumplido-label">Sí, cumplido</div></div>
+      <div class="cumplido-btn no" id="btnNo" onclick="selCumplido(false)">❌<div class="cumplido-label">No cumplido</div></div>
     </div>
-
-    <div id="cncSection" style="display:none;">
-      <label class="form-label" style="color:#e24b4a;">🚫 ¿Por qué no se cumplió? *</label>
-      <p style="font-size:11px;color:#888;margin-bottom:8px;">Selecciona todas las que apliquen. Sé honesto — nos ayuda a mejorar.</p>
+    <div id="cncSection" style="display:none;margin-top:12px;">
+      <label class="form-label" style="color:#e24b4a;">🚫 ¿Por qué no se cumplió?</label>
       <div class="cnc-grid" id="cncOpts"></div>
     </div>
-
-    <label class="form-label">Observación del día</label>
-    <textarea class="form-input" id="regObs" rows="2" placeholder="Ej: Se completaron 8ml sección norte, falta sección sur. Material llegó a las 2pm."></textarea>
-
+    <label class="form-label" style="margin-top:12px;">Observación</label>
+    <textarea class="form-input" id="regObs" rows="2" placeholder="Ej: 8ml sección norte, falta sección sur"></textarea>
     <label class="form-label">📸 Foto de evidencia</label>
-    <div id="fotoPreview" style="display:none;margin-bottom:10px;position:relative;">
-      <img id="fotoImg" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover;" alt="Foto evidencia">
-      <button onclick="quitarFoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;">✕</button>
+    <div class="foto-btns">
+      <button class="foto-btn" onclick="document.getElementById('regFotoCam').click()">📷 Tomar foto</button>
+      <button class="foto-btn" onclick="document.getElementById('regFotoGal').click()">🖼 Galería</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-      <button onclick="document.getElementById('inputCamara').click()" style="padding:12px;border:.5px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">
-        📷 Tomar foto
-      </button>
-      <button onclick="document.getElementById('inputGaleria').click()" style="padding:12px;border:.5px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">
-        🖼 Desde galería
-      </button>
-    </div>
-    <input type="file" id="inputCamara" accept="image/*" capture="environment" style="display:none" onchange="seleccionarFoto(this)">
-    <input type="file" id="inputGaleria" accept="image/*" style="display:none" onchange="seleccionarFoto(this)">
-    <div id="fotoStatus" style="font-size:11px;color:#888;margin-bottom:10px;"></div>
-
+    <input type="file" id="regFotoCam" accept="image/*" capture="environment" style="display:none" onchange="previewFoto(this,'regFotoPreview')">
+    <input type="file" id="regFotoGal" accept="image/*" style="display:none" onchange="previewFoto(this,'regFotoPreview')">
+    <img id="regFotoPreview" class="foto-preview" alt="Evidencia">
     <button class="btn-guardar" id="btnGuardarReg" onclick="guardarRegistro()">💾 Guardar registro</button>
   </div>
 </div>
 
+<!-- MODAL NUEVA ACTIVIDAD -->
+<div class="modal" id="modalAct">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="cerrarModal('modalAct')">✕</button>
+    <div class="modal-title">+ Nueva actividad</div>
+    <label class="form-label">Actividad / Descripción *</label>
+    <input class="form-input" id="mNombre" placeholder="Ej: Fabricar marcos escalera PB — sección norte">
+    <label class="form-label">Partida</label>
+    <select class="form-input" id="mPartida">
+      <option value="">Selecciona...</option>
+      <option>PG Lab — Fabricación</option><option>PG Lab — Montaje</option>
+      <option>Plafón Lab — Fabricación</option><option>Plafón Dev — Montaje</option>
+      <option>Racks Dev — Fabricación</option><option>Racks Dev — Montaje</option>
+      <option>Escalera PB — Fabricación</option><option>Escalera PB — Montaje</option>
+      <option>Portones — Fabricación</option><option>Barandales VP — Fabricación</option>
+      <option>Otra partida</option>
+    </select>
+    <div class="cant-row">
+      <div><label class="form-label">Meta/día *</label><input class="form-input" id="mMeta" type="number" min="0" step="0.1" placeholder="12"></div>
+      <div><label class="form-label">Unidad *</label>
+        <select class="form-input" id="mUnidad"><option value="ml">ml</option><option value="m2">m2</option><option value="pza">pza</option><option value="kg">kg</option><option value="%">%</option><option value="ton">ton</option></select>
+      </div>
+    </div>
+    <label class="form-label">Turno</label>
+    <select class="form-input" id="mTurno"><option>Turno completo</option><option>Turno mañana</option><option>Turno tarde</option></select>
+    <label class="form-label">Días programados</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;" id="mDiasCheck">
+      <button class="cnc-btn" data-dia="L" onclick="this.classList.toggle('sel')">L</button>
+      <button class="cnc-btn" data-dia="M" onclick="this.classList.toggle('sel')">M</button>
+      <button class="cnc-btn" data-dia="X" onclick="this.classList.toggle('sel')">X</button>
+      <button class="cnc-btn" data-dia="J" onclick="this.classList.toggle('sel')">J</button>
+      <button class="cnc-btn" data-dia="V" onclick="this.classList.toggle('sel')">V</button>
+      <button class="cnc-btn" data-dia="S" onclick="this.classList.toggle('sel')">S</button>
+      <button class="cnc-btn" data-dia="D" onclick="this.classList.toggle('sel')">D</button>
+    </div>
+    <button class="btn-guardar" onclick="guardarActividad()">✅ Agregar al plan</button>
+  </div>
+</div>
+
+<!-- MODAL RESTRICCION -->
+<div class="modal" id="modalRest">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="cerrarModal('modalRest')">✕</button>
+    <div class="modal-title">🔒 Nueva restricción</div>
+    <label class="form-label">¿Qué te está bloqueando? *</label>
+    <textarea class="form-input" id="rDesc" rows="2" placeholder="Ej: Falta entrega de acero fy=4200"></textarea>
+    <label class="form-label">¿Quién debe resolverlo?</label>
+    <input class="form-input" id="rResp" placeholder="Ej: Aceros MX / Ing. Torres">
+    <label class="form-label">Fecha límite</label>
+    <input class="form-input" id="rFecha" type="date">
+    <label class="form-label">Impacto</label>
+    <select class="form-input" id="rImpacto"><option>Alto</option><option>Medio</option><option>Bajo</option></select>
+    <button class="btn-guardar" onclick="guardarRestriccion()">💾 Guardar restricción</button>
+  </div>
+</div>
+
 <script>
-// ── CONFIG ───────────────────────────────────────────────────────
-const MSAL_CFG={
-  auth:{
-    clientId:'9f85ee63-a011-4636-857e-b72128ed61e9',
-    authority:'https://login.microsoftonline.com/3fce0139-013b-4c64-a04d-8605a9eb8088',
-    redirectUri:window.location.href.split('?')[0]
-  },
-  cache:{cacheLocation:'sessionStorage'}
-};
+const MSAL_CFG={auth:{clientId:'9f85ee63-a011-4636-857e-b72128ed61e9',authority:'https://login.microsoftonline.com/3fce0139-013b-4c64-a04d-8605a9eb8088',redirectUri:window.location.href.split('?')[0]},cache:{cacheLocation:'sessionStorage'}};
 const SCOPES=['User.Read','Sites.ReadWrite.All'];
 const SITE_ID='173d71cd-18eb-456a-93af-7b6b3d086f9b';
 const GRAPH='https://graph.microsoft.com/v1.0';
 const OBRA='WEG Estructura';
 const SEM_ACTUAL=7;
 const TOTAL_SEMS=18;
-const DIAS_MAP={L:'Lunes',M:'Martes',X:'Miércoles',J:'Jueves',V:'Viernes',S:'Sábado',D:'Domingo'};
-const HOY_DIA='X'; // Miércoles
+const HOY_DIA='X';
 const HOY_FECHA='14 de Mayo 2026';
+const DIAS_MAP={L:'Lunes',M:'Martes',X:'Miércoles',J:'Jueves',V:'Viernes',S:'Sábado',D:'Domingo'};
 const CNC_OPTS=['📦 Falta de material','👷 Falta de mano de obra','🔧 Falta de equipo','⏳ Trabajo previo sin terminar','🔒 Restricción no liberada','📋 Falta de info/planos','📐 Problema de diseño','🌧 Clima','⚠️ Seguridad','🔄 Cambio de prioridad','✏️ Otra causa'];
 
-let msalInst=null, user=null, token=null, siteListId={}, cumplido=null;
-let actividades=[], registros=[], restricciones=[];
-let regActual=null;
+let msalInst=null,user=null,token=null,cumplido=null,cumplimientoSel=null;
+let actividades=[],registros=[],restricciones=[],dailyReports=[];
+let regActual=null,fotoBase64Reg=null,fotoBase64DR=null;
+let siteListIds={};
 
 // ── AUTH ─────────────────────────────────────────────────────────
 async function login(){
@@ -407,478 +481,84 @@ async function login(){
     user={name:resp.account.name,email:resp.account.username,initials:resp.account.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()};
     initApp();
   }catch(e){
-    // DEMO MODE sin login real
     token='DEMO';
     user={name:'Marco Antonio Simon',email:'m.simon@metarco.com.mx',initials:'MS'};
     initApp();
   }
 }
-
 function logout(){if(confirm('¿Cerrar sesión?')){location.reload();}}
+
+// ── GRAPH ─────────────────────────────────────────────────────────
+async function gGet(url){
+  if(token==='DEMO')return{value:[]};
+  const r=await fetch(GRAPH+url,{headers:{Authorization:`Bearer ${token}`}});
+  if(!r.ok)throw new Error(r.status);
+  return r.json();
+}
+async function gPost(url,body){
+  if(token==='DEMO')return{id:'demo_'+Date.now()};
+  const r=await fetch(GRAPH+url,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
+}
+async function gPatch(url,body){
+  if(token==='DEMO')return{};
+  await fetch(GRAPH+url,{method:'PATCH',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+}
+async function getListId(name){
+  if(siteListIds[name])return siteListIds[name];
+  const d=await gGet(`/sites/${SITE_ID}/lists?$filter=displayName eq '${name}'&$select=id`);
+  siteListIds[name]=d.value?.[0]?.id;
+  return siteListIds[name];
+}
 
 // ── INIT ─────────────────────────────────────────────────────────
 async function initApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
   document.getElementById('fabBtn').style.display='flex';
-  document.getElementById('userInitials').textContent=user.initials;
-  document.getElementById('hSub').textContent=`${user.name} · WEG Estructura`;
-  document.getElementById('semLabel').textContent=`Sem ${SEM_ACTUAL}`;
-  document.getElementById('semPctLabel').textContent=`Sem ${SEM_ACTUAL} de ${TOTAL_SEMS} · ${Math.round(SEM_ACTUAL/TOTAL_SEMS*100)}% del proyecto`;
-  document.getElementById('diaHoyLabel').textContent=`📍 Hoy: ${DIAS_MAP[HOY_DIA]} ${HOY_FECHA}`;
-
+  document.getElementById('userBtn').textContent=user.initials+' Salir';
+  document.getElementById('hSub').textContent=user.name+' · WEG Estructura';
+  document.getElementById('semLabel').textContent='Sem '+SEM_ACTUAL;
+  document.getElementById('semPct').textContent='Sem '+SEM_ACTUAL+' de '+TOTAL_SEMS+' · '+Math.round(SEM_ACTUAL/TOTAL_SEMS*100)+'%';
+  document.getElementById('diaLabel').textContent='📍 Hoy: '+DIAS_MAP[HOY_DIA]+' '+HOY_FECHA;
   await cargarDatos();
-  buildHoy();
-  buildSemana();
-  buildRegistrar();
-  buildRestricciones();
-  updatePPC();
+  buildHoy();buildSemana();buildRegistrar();buildRestricciones();buildDRHistorial();updatePPC();checkDRStatus();
 }
 
-// ── GRAPH API ─────────────────────────────────────────────────────
-async function graphGet(url){
-  if(token==='DEMO')return{value:[]};
-  const r=await fetch(GRAPH+url,{headers:{Authorization:`Bearer ${token}`}});
-  if(!r.ok)throw new Error('Error Graph: '+r.status);
-  return r.json();
-}
-
-async function graphPost(url,body){
-  if(token==='DEMO'){return{id:Math.random().toString(36).slice(2)};}
-  const r=await fetch(GRAPH+url,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  if(!r.ok)throw new Error('Error Graph POST: '+r.status);
-  return r.json();
-}
-
-async function graphPatch(url,body){
-  if(token==='DEMO')return{};
-  const r=await fetch(GRAPH+url,{method:'PATCH',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  return r.json();
-}
-
-async function getListId(listName){
-  if(siteListId[listName])return siteListId[listName];
-  const data=await graphGet(`/sites/${SITE_ID}/lists?$filter=displayName eq '${listName}'&$select=id,displayName`);
-  const list=data.value?.[0];
-  if(!list)throw new Error(`Lista ${listName} no encontrada`);
-  siteListId[listName]=list.id;
-  return list.id;
-}
-
-// ── CARGAR DATOS ─────────────────────────────────────────────────
 async function cargarDatos(){
-  document.getElementById('actsHoy').innerHTML='<div class="loading"><div class="spinner">⏳</div><br>Cargando actividades...</div>';
   try{
     if(token==='DEMO'){
-      // Datos de ejemplo para demo
-      actividades=[
-        {id:'1',fields:{Nombre_Actividad:'Fabricación PG Lab — frente norte',Obra:OBRA,Partida:'PG Lab — Fabricación',Supervisor_Email:user.email,Supervisor_Nombre:user.name,Meta:12,Unidad:'ml',Semana:SEM_ACTUAL,Dias_Programados:'L,M,X,J,V',Turno:'Turno completo',Status:'Activa'}},
-        {id:'2',fields:{Nombre_Actividad:'Armar andamio plafón laboratorio',Obra:OBRA,Partida:'Plafón Lab — Fabricación',Supervisor_Email:user.email,Supervisor_Nombre:user.name,Meta:1,Unidad:'pza',Semana:SEM_ACTUAL,Dias_Programados:'L,M',Turno:'Turno mañana',Status:'Activa'}},
-        {id:'3',fields:{Nombre_Actividad:'Fabricación escalera subestación PB',Obra:OBRA,Partida:'Escalera PB — Fabricación',Supervisor_Email:user.email,Supervisor_Nombre:user.name,Meta:1,Unidad:'pza',Semana:SEM_ACTUAL,Dias_Programados:'L,M,X,J,V',Turno:'Turno completo',Status:'Activa'}},
-      ];
-      registros=[
-        {id:'r1',fields:{Actividad_ID:'1',Supervisor_Email:user.email,Fecha:'2026-05-12',Dia:'L',Cantidad:8,Cumplido:true,CNC:'',Observacion:'Completados 8ml sección norte',Semana:SEM_ACTUAL,Obra:OBRA}},
-        {id:'r2',fields:{Actividad_ID:'1',Supervisor_Email:user.email,Fecha:'2026-05-13',Dia:'M',Cantidad:6,Cumplido:false,CNC:'📦 Falta de material',Observacion:'PTR llegó tarde',Semana:SEM_ACTUAL,Obra:OBRA}},
-        {id:'r3',fields:{Actividad_ID:'2',Supervisor_Email:user.email,Fecha:'2026-05-12',Dia:'L',Cantidad:1,Cumplido:true,CNC:'',Observacion:'',Semana:SEM_ACTUAL,Obra:OBRA}},
-        {id:'r4',fields:{Actividad_ID:'2',Supervisor_Email:user.email,Fecha:'2026-05-13',Dia:'M',Cantidad:1,Cumplido:true,CNC:'',Observacion:'Andamio completado',Semana:SEM_ACTUAL,Obra:OBRA}},
-        {id:'r5',fields:{Actividad_ID:'3',Supervisor_Email:user.email,Fecha:'2026-05-12',Dia:'L',Cantidad:null,Cumplido:true,CNC:'',Observacion:'Iniciado corte',Semana:SEM_ACTUAL,Obra:OBRA}},
-        {id:'r6',fields:{Actividad_ID:'3',Supervisor_Email:user.email,Fecha:'2026-05-13',Dia:'M',Cantidad:null,Cumplido:true,CNC:'',Observacion:'Armado alfardas',Semana:SEM_ACTUAL,Obra:OBRA}},
-      ];
-      restricciones=[
-        {id:'rs1',fields:{Descripcion:'Falta entrega de acero fy=4200',Obra:OBRA,Supervisor_Email:user.email,Responsable:'Aceros MX',Fecha_Compromiso:'2026-05-20',Impacto:'Alto',Status:'En proceso',Semana:SEM_ACTUAL}},
-      ];
+      actividades=demoActs();registros=demoRegs();restricciones=demoRest();dailyReports=[];
       return;
     }
-
-    // Cargar desde SharePoint
-    const actListId=await getListId('CAO_Actividades');
-    const actData=await graphGet(`/sites/${SITE_ID}/lists/${actListId}/items?$expand=fields&$filter=fields/Supervisor_Email eq '${user.email}' and fields/Semana eq ${SEM_ACTUAL} and fields/Obra eq '${OBRA}'&$top=50`);
-    actividades=actData.value||[];
-
-    const regListId=await getListId('CAO_Registros_Diarios');
-    const regData=await graphGet(`/sites/${SITE_ID}/lists/${regListId}/items?$expand=fields&$filter=fields/Supervisor_Email eq '${user.email}' and fields/Semana eq ${SEM_ACTUAL} and fields/Obra eq '${OBRA}'&$top=200`);
-    registros=regData.value||[];
-
-    const restListId=await getListId('CAO_Restricciones');
-    const restData=await graphGet(`/sites/${SITE_ID}/lists/${restListId}/items?$expand=fields&$filter=fields/Supervisor_Email eq '${user.email}' and fields/Obra eq '${OBRA}'&$top=50`);
-    restricciones=restData.value||[];
-
-  }catch(e){
-    console.error(e);
-    showToast('⚠️ Error al cargar datos: '+e.message);
-  }
+    const [aId,rId,rsId,drId]=await Promise.all([getListId('CAO_Actividades'),getListId('CAO_Registros_Diarios'),getListId('CAO_Restricciones'),getListId('CAO_Daily_Report')]);
+    const [aD,rD,rsD,drD]=await Promise.all([
+      gGet(`/sites/${SITE_ID}/lists/${aId}/items?$expand=fields&$filter=fields/Supervisor_Email eq '${user.email}' and fields/Semana eq ${SEM_ACTUAL}&$top=50`),
+      gGet(`/sites/${SITE_ID}/lists/${rId}/items?$expand=fields&$filter=fields/Supervisor_Email eq '${user.email}' and fields/Semana eq ${SEM_ACTUAL}&$top=200`),
+      gGet(`/sites/${SITE_ID}/lists/${rsId}/items?$expand=fields&$filter=fields/Supervisor_Email eq '${user.email}'&$top=50`),
+      gGet(`/sites/${SITE_ID}/lists/${drId}/items?$expand=fields&$filter=fields/Supervisor_Email eq '${user.email}' and fields/Semana eq ${SEM_ACTUAL}&$top=20`)
+    ]);
+    actividades=aD.value||[];registros=rD.value||[];restricciones=rsD.value||[];dailyReports=drD.value||[];
+  }catch(e){actividades=demoActs();registros=demoRegs();restricciones=demoRest();dailyReports=[];}
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────
-function getRegistro(actId,dia){return registros.find(r=>r.fields.Actividad_ID===actId&&r.fields.Dia===dia);}
-function diasProg(act){return(act.fields.Dias_Programados||'').split(',').map(d=>d.trim()).filter(Boolean);}
-function calcPPC(){
-  let prom=0,comp=0;
-  actividades.forEach(a=>{
-    const dp=diasProg(a);
-    dp.forEach(d=>{
-      const r=getRegistro(a.id,d);
-      if(r&&r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined){prom++;if(r.fields.Cumplido)comp++;}
-    });
-  });
-  return prom>0?Math.round(comp/prom*100):null;
-}
-
-function ppcColor(p){return p>=80?'#1d9e75':p>=60?'#ba7517':'#e24b4a';}
-
-function updatePPC(){
-  const ppc=calcPPC();
-  const chip=document.getElementById('ppcChip');
-  if(ppc!==null){
-    chip.textContent=`🎯 PPC: ${ppc}%`;
-    chip.style.background=ppc>=80?'rgba(29,158,117,.3)':ppc>=60?'rgba(186,117,23,.3)':'rgba(226,75,74,.3)';
-  }
-}
-
-// ── HOY ───────────────────────────────────────────────────────────
-function buildHoy(){
-  const misActs=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
-  const container=document.getElementById('actsHoy');
-  if(!misActs.length){
-    container.innerHTML=`<div class="empty"><div class="empty-icon">🎉</div><div style="font-weight:500;margin-bottom:6px;">Sin actividades hoy</div><div style="font-size:13px;">No tienes actividades programadas para hoy.<br>Si necesitas agregar una, usa el botón +</div></div>`;
-    return;
-  }
-  container.innerHTML=misActs.map(a=>{
-    const r=getRegistro(a.id,HOY_DIA);
-    const reg=r&&r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined;
-    const cls=reg?(r.fields.Cumplido?'cumplida':'retraso'):'hoy';
-    return`<div class="act-card ${cls}">
-      <div class="act-nombre">${a.fields.Nombre_Actividad}</div>
-      <div class="act-meta">📂 ${a.fields.Partida||'—'} · 🎯 Meta: ${a.fields.Meta} ${a.fields.Unidad} · ⏱ ${a.fields.Turno||'—'}</div>
-      ${reg?`
-        <div style="background:${r.fields.Cumplido?'#e8f5e9':'#fcebeb'};border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;">
-          ${r.fields.Cumplido?'✅':'❌'} ${r.fields.Cumplido?'Cumplido':'No cumplido'}
-          ${r.fields.Cantidad?` · ${r.fields.Cantidad} ${a.fields.Unidad}`:''}
-          ${r.fields.CNC?`<div style="margin-top:4px;"><span class="badge rojo" style="font-size:10px;">${r.fields.CNC}</span></div>`:''}
-          ${r.fields.Observacion?`<div style="margin-top:4px;color:#666;">"${r.fields.Observacion}"</div>`:''}
-        </div>
-        <button onclick="abrirRegistro('${a.id}')" class="btn-registrar ${r.fields.Cumplido?'ya-registrado':'con-cnc'}">✏️ Editar registro</button>`
-      :`<button onclick="abrirRegistro('${a.id}')" class="btn-registrar">📍 Registrar avance de hoy</button>`}
-    </div>`;
-  }).join('');
-}
-
-// ── SEMANA ────────────────────────────────────────────────────────
-function buildSemana(){
-  const container=document.getElementById('actsSemana');
-  if(!actividades.length){
-    container.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-weight:500;">Sin actividades esta semana</div><div style="font-size:13px;margin-top:6px;">Agrega actividades con el botón +</div></div>`;
-    return;
-  }
-  container.innerHTML=actividades.map(a=>{
-    const dp=diasProg(a);
-    const diasHTML=Object.keys(DIAS_MAP).map(d=>{
-      const prog=dp.includes(d);
-      const r=getRegistro(a.id,d);
-      const cls=!prog?'no-prog':d===HOY_DIA&&prog?'hoy-prog':r?.fields.Cumplido===true?'cumplido':r?.fields.Cumplido===false?'retraso':'prog';
-      const emoji=!prog?'':r?.fields.Cumplido===true?'✅':r?.fields.Cumplido===false?'❌':d===HOY_DIA?'📍':'';
-      return`<div class="dia-chip ${cls}" title="${DIAS_MAP[d]}">${emoji||d}</div>`;
-    }).join('');
-
-    const regsAct=registros.filter(r=>r.fields.Actividad_ID===a.id&&r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined);
-    const compAct=regsAct.filter(r=>r.fields.Cumplido).length;
-    const ppcAct=regsAct.length>0?Math.round(compAct/regsAct.length*100):null;
-
-    return`<div class="act-card">
-      <div class="act-nombre">${a.fields.Nombre_Actividad}</div>
-      <div class="act-meta">📂 ${a.fields.Partida||'—'} · 🎯 ${a.fields.Meta} ${a.fields.Unidad}/día · ⏱ ${a.fields.Turno||'—'}</div>
-      <div class="act-dias">${diasHTML}</div>
-      ${ppcAct!==null?`<div style="font-size:11px;color:#888;">PPC: <strong style="color:${ppcColor(ppcAct)};">${ppcAct}%</strong> (${compAct}/${regsAct.length} días cumplidos)</div>
-      <div class="ppc-bar"><div class="ppc-fill" style="width:${ppcAct}%;background:${ppcColor(ppcAct)};"></div></div>`:''}
-    </div>`;
-  }).join('');
-}
-
-// ── REGISTRAR ─────────────────────────────────────────────────────
-function buildRegistrar(){
-  const misActs=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
-  const container=document.getElementById('regScreen');
-  if(!misActs.length){
-    container.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div>No hay actividades para hoy</div></div>`;
-    return;
-  }
-  container.innerHTML=misActs.map(a=>{
-    const r=getRegistro(a.id,HOY_DIA);
-    const reg=r&&r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined;
-    return`<div class="reg-form">
-      <div style="font-size:14px;font-weight:500;margin-bottom:4px;">${a.fields.Nombre_Actividad}</div>
-      <div style="font-size:11px;color:#888;margin-bottom:10px;">${a.fields.Partida||'—'} · Meta: ${a.fields.Meta} ${a.fields.Unidad}</div>
-      ${reg?`
-        <div style="background:${r.fields.Cumplido?'#e8f5e9':'#fcebeb'};border-radius:8px;padding:10px;margin-bottom:8px;font-size:12px;">
-          ${r.fields.Cumplido?'✅ Cumplido':'❌ No cumplido'} · ${r.fields.Cantidad||'—'} ${a.fields.Unidad}
-          ${r.fields.CNC?`<div style="margin-top:4px;"><span class="badge rojo" style="font-size:10px;">${r.fields.CNC}</span></div>`:''}
-          ${r.fields.Observacion?`<div style="margin-top:4px;color:#666;">"${r.fields.Observacion}"</div>`:''}
-        </div>
-        <button onclick="abrirRegistro('${a.id}')" class="btn-registrar ya-registrado">✏️ Editar registro de hoy</button>`
-      :`<button onclick="abrirRegistro('${a.id}')" class="btn-registrar">📍 Registrar ahora</button>`}
-    </div>`;
-  }).join('');
-}
-
-// ── RESTRICCIONES ─────────────────────────────────────────────────
-function buildRestricciones(){
-  const container=document.getElementById('restList');
-  if(!restricciones.length){
-    container.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div style="font-weight:500;">Sin restricciones activas</div><div style="font-size:13px;margin-top:6px;">¡Todo en orden! Si algo te bloquea, repórtalo.</div></div>`;
-    return;
-  }
-  container.innerHTML=restricciones.map(r=>{
-    const f=r.fields;
-    const liberada=f.Status==='Liberada';
-    return`<div class="rest-card ${liberada?'liberada':''}">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <span class="badge ${f.Impacto==='Alto'?'rojo':f.Impacto==='Medio'?'amarillo':'gris'}">${f.Impacto}</span>
-        <span class="badge ${f.Status==='Liberada'?'verde':f.Status==='En proceso'?'amarillo':'rojo'}">${f.Status}</span>
-      </div>
-      <div style="font-size:13px;font-weight:500;margin-bottom:4px;">${f.Descripcion}</div>
-      <div style="font-size:11px;color:#888;">👤 ${f.Responsable||'—'} · 📅 ${f.Fecha_Compromiso||'—'}</div>
-      ${!liberada?`<button onclick="liberarRestriccion('${r.id}')" style="background:none;border:.5px solid #1d9e75;color:#1d9e75;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-top:8px;width:100%;">✅ Marcar como liberada</button>`:''}
-    </div>`;
-  }).join('');
-}
-
-// ── MODAL REGISTRO ────────────────────────────────────────────────
-function abrirRegistro(actId){
-  regActual=actividades.find(a=>a.id===actId);
-  if(!regActual)return;
-  const r=getRegistro(actId,HOY_DIA);
-  document.getElementById('regActId').value=actId;
-  document.getElementById('regTitle').textContent=regActual.fields.Nombre_Actividad.slice(0,40)+(regActual.fields.Nombre_Actividad.length>40?'…':'');
-  document.getElementById('regMetaLabel').textContent=`${regActual.fields.Meta} ${regActual.fields.Unidad} — ${DIAS_MAP[HOY_DIA]} ${HOY_FECHA}`;
-  document.getElementById('regUnidad').value=regActual.fields.Unidad;
-  document.getElementById('regCant').value=r?.fields.Cantidad||'';
-  document.getElementById('regObs').value=r?.fields.Observacion||'';
-  cumplido=r?.fields.Cumplido??null;
-  updateCumplidoBtns();
-  document.getElementById('cncSection').style.display=cumplido===false?'block':'none';
-  buildCNCOpts(r?.fields.CNC?r.fields.CNC.split(','):[]);
-  document.getElementById('modalReg').classList.add('open');
-}
-
-function buildCNCOpts(sel){
-  document.getElementById('cncOpts').innerHTML=CNC_OPTS.map(c=>`<button class="cnc-btn ${sel.includes(c)?'sel':''}" onclick="toggleCNC(this)">${c}</button>`).join('');
-}
-
-function toggleCNC(btn){btn.classList.toggle('sel');}
-
-function selCumplido(val){
-  cumplido=val;
-  updateCumplidoBtns();
-  document.getElementById('cncSection').style.display=val===false?'block':'none';
-  if(val===false)buildCNCOpts([]);
-}
-
-function updateCumplidoBtns(){
-  const si=document.getElementById('btnSi'),no=document.getElementById('btnNo');
-  si.className='cumplido-btn si'+(cumplido===true?' sel':'');
-  no.className='cumplido-btn no'+(cumplido===false?' sel':'');
-}
-
-async function guardarRegistro(){
-  const actId=document.getElementById('regActId').value;
-  if(cumplido===null){showToast('⚠️ Indica si se cumplió o no');return;}
-  const cant=parseFloat(document.getElementById('regCant').value)||null;
-  const obs=document.getElementById('regObs').value.trim();
-  const cncs=cumplido===false?Array.from(document.querySelectorAll('.cnc-btn.sel')).map(b=>b.textContent.trim()):[];
-  if(cumplido===false&&!cncs.length){showToast('⚠️ Selecciona al menos una causa');return;}
-
-  const btn=document.getElementById('btnGuardarReg');
-  btn.disabled=true;btn.textContent='Guardando...';
-
-  // Subir foto si hay
-  let fotoUrl=null;
-  if(fotoBase64&&fotoNombre){
-    btn.textContent='📸 Subiendo foto...';
-    fotoUrl=await subirFotoSharePoint(fotoBase64,fotoNombre);
-  }
-
-  const fields={
-    ID_Registro:`${actId}_${HOY_DIA}_${SEM_ACTUAL}`,
-    Actividad_ID:actId,
-    Supervisor_Email:user.email,
-    Supervisor_Nombre:user.name,
-    Obra:OBRA,
-    Fecha:new Date().toISOString().split('T')[0],
-    Dia:HOY_DIA,
-    Cantidad:cant,
-    Cumplido:cumplido,
-    CNC:cncs.join(','),
-    Observacion:obs,
-    Foto_URL:fotoUrl||null,
-    Foto_Nombre:fotoNombre||null,
-
-  try{
-    const existing=getRegistro(actId,HOY_DIA);
-    if(token!=='DEMO'){
-      const listId=await getListId('CAO_Registros_Diarios');
-      if(existing){
-        await graphPatch(`/sites/${SITE_ID}/lists/${listId}/items/${existing.id}/fields`,fields);
-        existing.fields={...existing.fields,...fields};
-      } else {
-        const nuevo=await graphPost(`/sites/${SITE_ID}/lists/${listId}/items`,{fields});
-        registros.push({id:nuevo.id,fields});
-      }
-    } else {
-      // Demo mode
-      const existing=getRegistro(actId,HOY_DIA);
-      if(existing){existing.fields={...existing.fields,...fields};}
-      else{registros.push({id:'r'+Date.now(),fields});}
-    }
-    cerrarModal('modalReg');
-    cumplido=null;
-    buildHoy();buildSemana();buildRegistrar();updatePPC();
-    showToast('✅ Registro guardado');
-  }catch(e){showToast('⚠️ Error: '+e.message);}
-  btn.disabled=false;btn.textContent='💾 Guardar registro';
-}
-
-// ── NUEVA ACTIVIDAD ───────────────────────────────────────────────
-function toggleDia(btn){btn.classList.toggle('sel');}
-function abrirModalAct(){document.getElementById('modalAct').classList.add('open');}
-
-async function guardarActividad(){
-  const nombre=document.getElementById('mNombre').value.trim();
-  const meta=parseFloat(document.getElementById('mMeta').value)||0;
-  if(!nombre||!meta){showToast('⚠️ Llena el nombre y la meta');return;}
-  const dias=Array.from(document.querySelectorAll('#mDiasCheck .cnc-btn.sel')).map(b=>b.dataset.dia);
-  if(!dias.length){showToast('⚠️ Selecciona al menos un día');return;}
-
-  const fields={
-    Nombre_Actividad:nombre,
-    Obra:OBRA,
-    Partida:document.getElementById('mPartida').value||'Sin partida',
-    Supervisor_Email:user.email,
-    Supervisor_Nombre:user.name,
-    Meta:meta,
-    Unidad:document.getElementById('mUnidad').value,
-    Semana:SEM_ACTUAL,
-    Dias_Programados:dias.join(','),
-    Turno:document.getElementById('mTurno').value,
-    Status:'Activa'
-  };
-
-  try{
-    if(token!=='DEMO'){
-      const listId=await getListId('CAO_Actividades');
-      const nuevo=await graphPost(`/sites/${SITE_ID}/lists/${listId}/items`,{fields});
-      actividades.push({id:nuevo.id,fields});
-    } else {
-      actividades.push({id:'a'+Date.now(),fields});
-    }
-    cerrarModal('modalAct');
-    document.getElementById('mNombre').value='';
-    document.getElementById('mMeta').value='';
-    document.querySelectorAll('#mDiasCheck .cnc-btn.sel').forEach(b=>b.classList.remove('sel'));
-    buildHoy();buildSemana();buildRegistrar();
-    showToast('✅ Actividad agregada al plan');
-  }catch(e){showToast('⚠️ Error: '+e.message);}
-}
-
-// ── RESTRICCIONES ─────────────────────────────────────────────────
-function abrirModalRest(){document.getElementById('modalRest').classList.add('open');}
-
-async function guardarRestriccion(){
-  const desc=document.getElementById('rDesc').value.trim();
-  if(!desc){showToast('⚠️ Describe la restricción');return;}
-  const fields={
-    Descripcion:desc,
-    Obra:OBRA,
-    Supervisor_Email:user.email,
-    Responsable:document.getElementById('rResp').value.trim()||'Por definir',
-    Fecha_Compromiso:document.getElementById('rFecha').value||null,
-    Impacto:document.getElementById('rImpacto').value,
-    Status:'En proceso',
-    Semana:SEM_ACTUAL
-  };
-  try{
-    if(token!=='DEMO'){
-      const listId=await getListId('CAO_Restricciones');
-      const nuevo=await graphPost(`/sites/${SITE_ID}/lists/${listId}/items`,{fields});
-      restricciones.push({id:nuevo.id,fields});
-    } else {
-      restricciones.push({id:'rs'+Date.now(),fields});
-    }
-    cerrarModal('modalRest');
-    document.getElementById('rDesc').value='';
-    document.getElementById('rResp').value='';
-    buildRestricciones();
-    showToast('✅ Restricción registrada');
-  }catch(e){showToast('⚠️ Error: '+e.message);}
-}
-
-async function liberarRestriccion(id){
-  if(!confirm('¿Marcar esta restricción como liberada?'))return;
-  try{
-    if(token!=='DEMO'){
-      const listId=await getListId('CAO_Restricciones');
-      await graphPatch(`/sites/${SITE_ID}/lists/${listId}/items/${id}/fields`,{Status:'Liberada'});
-    }
-    const r=restricciones.find(x=>x.id===id);
-    if(r)r.fields.Status='Liberada';
-    buildRestricciones();
-    showToast('✅ Restricción liberada');
-  }catch(e){showToast('⚠️ Error: '+e.message);}
-}
-
-// ── FOTO ──────────────────────────────────────────────────────────
-let fotoBase64=null, fotoNombre=null;
-
-function seleccionarFoto(input){
-  const file=input.files[0];
-  if(!file)return;
-  const maxSize=5*1024*1024; // 5MB
-  if(file.size>maxSize){showToast('⚠️ La foto es muy grande. Máximo 5MB');return;}
-  fotoNombre=`S${SEM_ACTUAL}_${regActual?.fields.Partida?.replace(/[^a-zA-Z0-9]/g,'_')||'foto'}_${HOY_DIA}_${Date.now()}.jpg`;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    fotoBase64=e.target.result;
-    document.getElementById('fotoImg').src=fotoBase64;
-    document.getElementById('fotoPreview').style.display='block';
-    document.getElementById('fotoStatus').textContent=`📎 ${file.name} (${(file.size/1024).toFixed(0)}KB) — se subirá a SharePoint al guardar`;
-  };
-  reader.readAsDataURL(file);
-}
-
-function quitarFoto(){
-  fotoBase64=null;fotoNombre=null;
-  document.getElementById('fotoPreview').style.display='none';
-  document.getElementById('fotoStatus').textContent='';
-  document.getElementById('inputCamara').value='';
-  document.getElementById('inputGaleria').value='';
-}
-
-async function subirFotoSharePoint(base64,nombre){
-  if(token==='DEMO'){showToast('📸 Foto lista (modo demo)');return null;}
-  try{
-    // Convertir base64 a blob
-    const arr=base64.split(',');
-    const mime=arr[0].match(/:(.*?);/)[1];
-    const bstr=atob(arr[1]);
-    const u8arr=new Uint8Array(bstr.length);
-    for(let i=0;i<bstr.length;i++)u8arr[i]=bstr.charCodeAt(i);
-    const blob=new Blob([u8arr],{type:mime});
-
-    // Subir a SharePoint CAO/Evidencias/Sem_XX/
-    const semFolder=`Sem_0${SEM_ACTUAL}`;
-    const uploadUrl=`/sites/${SITE_ID}/drive/root:/CONSTRUCCION/CONTROL DE COSTOS/CAO/Evidencias/${semFolder}/${nombre}:/content`;
-    const r=await fetch(GRAPH+uploadUrl,{
-      method:'PUT',
-      headers:{Authorization:`Bearer ${token}`,'Content-Type':mime},
-      body:blob
-    });
-    if(!r.ok)throw new Error('Error subiendo foto');
-    const data=await r.json();
-    return data.webUrl||null;
-  }catch(e){
-    showToast('⚠️ Error subiendo foto: '+e.message);
-    return null;
-  }
-}
+// ── DEMO DATA ─────────────────────────────────────────────────────
+function demoActs(){return[
+  {id:'1',fields:{Nombre_Actividad:'Fabricación PG Lab — frente norte',Partida:'PG Lab — Fabricación',Meta:12,Unidad:'ml',Dias_Programados:'L,M,X,J,V',Turno:'Turno completo',Status:'Activa'}},
+  {id:'2',fields:{Nombre_Actividad:'Fabricación escalera subestación PB',Partida:'Escalera PB — Fabricación',Meta:1,Unidad:'pza',Dias_Programados:'L,M,X,J,V',Turno:'Turno completo',Status:'Activa'}},
+  {id:'3',fields:{Nombre_Actividad:'Fabricación barandales VP Hornos',Partida:'Barandales VP — Fabricación',Meta:50,Unidad:'ml',Dias_Programados:'L,M,X',Turno:'Turno mañana',Status:'Activa'}},
+];}
+function demoRegs(){return[
+  {id:'r1',fields:{Actividad_ID:'1',Dia:'L',Cantidad:8,Cumplido:true,CNC:'',Observacion:'8ml sección norte'}},
+  {id:'r2',fields:{Actividad_ID:'1',Dia:'M',Cantidad:6,Cumplido:false,CNC:'📦 Falta de material',Observacion:'PTR llegó tarde'}},
+  {id:'r3',fields:{Actividad_ID:'2',Dia:'L',Cantidad:null,Cumplido:true,CNC:'',Observacion:'Iniciado corte'}},
+  {id:'r4',fields:{Actividad_ID:'2',Dia:'M',Cantidad:null,Cumplido:true,CNC:'',Observacion:'Armado alfardas'}},
+  {id:'r5',fields:{Actividad_ID:'3',Dia:'L',Cantidad:18,Cumplido:true,CNC:'',Observacion:''}},
+  {id:'r6',fields:{Actividad_ID:'3',Dia:'M',Cantidad:16,Cumplido:true,CNC:'',Observacion:''}},
+];}
+function demoRest(){return[
+  {id:'rs1',fields:{Descripcion:'Falta entrega acero fy=4200',Responsable:'Aceros MX',Fecha_Compromiso:'2026-05-20',Impacto:'Alto',Status:'En proceso'}},
+];}
 
 // ── UTILS ─────────────────────────────────────────────────────────
 function showScreen(id,btn){
@@ -886,16 +566,322 @@ function showScreen(id,btn){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('screen-'+id).classList.add('active');
   if(btn)btn.classList.add('active');
-  document.getElementById('fabBtn').style.display=id==='semana'||id==='hoy'?'flex':'none';
+  document.getElementById('fabBtn').style.display=id==='hoy'||id==='semana'?'flex':'none';
+}
+function cerrarModal(id){document.getElementById(id).classList.remove('open');}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+function getReg(actId,dia){return registros.find(r=>r.fields.Actividad_ID===actId&&r.fields.Dia===dia);}
+function diasProg(act){return(act.fields.Dias_Programados||'').split(',').map(d=>d.trim()).filter(Boolean);}
+function calcPPC(){const r=registros.filter(x=>x.fields.Cumplido!==null&&x.fields.Cumplido!==undefined);if(!r.length)return null;return Math.round(r.filter(x=>x.fields.Cumplido).length/r.length*100);}
+function ppcColor(p){return p>=80?'#1d9e75':p>=60?'#ba7517':'#e24b4a';}
+function updatePPC(){const p=calcPPC();const chip=document.getElementById('ppcChip');if(p!==null){chip.textContent='🎯 PPC: '+p+'%';chip.style.background=p>=80?'rgba(29,158,117,.3)':p>=60?'rgba(186,117,23,.3)':'rgba(226,75,74,.3)';}}
+function previewFoto(input,previewId){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=document.getElementById(previewId);
+    img.src=e.target.result;img.style.display='block';
+    if(previewId==='regFotoPreview')fotoBase64Reg=e.target.result;
+    else fotoBase64DR=e.target.result;
+  };
+  r.readAsDataURL(f);
 }
 
-function cerrarModal(id){document.getElementById(id).classList.remove('open');}
+// ── CHECK DR STATUS ───────────────────────────────────────────────
+function checkDRStatus(){
+  const arr=dailyReports.find(r=>r.fields.Tipo==='Arranque');
+  const cie=dailyReports.find(r=>r.fields.Tipo==='Cierre');
+  const btnA=document.getElementById('btnArranque');
+  const btnC=document.getElementById('btnCierre');
+  if(arr){btnA.classList.add('done');document.getElementById('statusArranque').textContent='✅ Enviado';}
+  else{document.getElementById('statusArranque').textContent='7:00 AM — Pendiente';}
+  if(cie){btnC.classList.add('done');document.getElementById('statusCierre').textContent='✅ Enviado';}
+  else{document.getElementById('statusCierre').textContent='6:00 PM — Pendiente';}
+}
 
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+// ── DAILY REPORT ──────────────────────────────────────────────────
+function abrirDR(tipo){
+  document.getElementById('drTipo').value=tipo;
+  const esArr=tipo==='arranque';
+  document.getElementById('drTitle').textContent=esArr?'🌅 Reporte de Arranque':'🌇 Reporte de Cierre';
+  document.getElementById('drSub').textContent=(esArr?'Miércoles 14 Mayo 2026':'Miércoles 14 Mayo 2026')+' — WEG Estructura';
+  document.getElementById('drArranqueForm').style.display=esArr?'block':'none';
+  document.getElementById('drCierreForm').style.display=esArr?'none':'block';
+
+  // Llenar checkboxes de actividades del día
+  const misActs=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
+  const checksHTML=misActs.map((a,i)=>`
+    <div class="check-item" onclick="toggleCheck('dr_${i}')">
+      <div class="check-box" id="dr_${i}"></div>
+      <div class="check-label">${a.fields.Nombre_Actividad} <span style="font-size:11px;color:#888;">(${a.fields.Meta} ${a.fields.Unidad})</span></div>
+    </div>`).join('');
+
+  if(esArr){document.getElementById('drActsCheck').innerHTML=checksHTML||'<div style="color:#aaa;font-size:12px;">No hay actividades programadas para hoy.</div>';}
+  else{
+    document.getElementById('drActsCierreCheck').innerHTML=misActs.map((a,i)=>`
+      <div class="check-item" onclick="toggleCheck('drc_${i}')">
+        <div class="check-box" id="drc_${i}"></div>
+        <div class="check-label">${a.fields.Nombre_Actividad} — ¿Se completó?</div>
+      </div>`).join('')||'<div style="color:#aaa;font-size:12px;">No hay actividades.</div>';
+    // CNC opts
+    document.getElementById('drCNCOpts').innerHTML=CNC_OPTS.map(c=>`<button class="cnc-btn" onclick="this.classList.toggle('sel');toggleDRCNCOtra()">${c}</button>`).join('');
+  }
+  cumplimientoSel=null;
+  document.querySelectorAll('.cumpl-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('drCNCSection').style.display='none';
+  fotoBase64DR=null;
+  document.getElementById(esArr?'drFotoPreviewA':'drFotoPreviewC').style.display='none';
+  document.getElementById('modalDR').classList.add('open');
+}
+
+function toggleCheck(id){const el=document.getElementById(id);el.classList.toggle('checked');el.textContent=el.classList.contains('checked')?'✓':'';}
+function toggleDRCNCOtra(){document.getElementById('drCNCOtraWrap').style.display=document.querySelector('#drCNCOpts .cnc-btn.sel[onclick*="Otra"]')?'block':'none';}
+
+function selCumplimiento(val,btn){
+  cumplimientoSel=val;
+  document.querySelectorAll('.cumpl-btn').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  document.getElementById('drCNCSection').style.display=val!=='Completo'?'block':'none';
+}
+
+async function guardarDR(){
+  const tipo=document.getElementById('drTipo').value;
+  const esArr=tipo==='arranque';
+  const btn=document.getElementById('btnGuardarDR');
+  btn.disabled=true;btn.textContent='Enviando...';
+
+  // Recopilar actividades chequeadas
+  const misActs=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
+  const actsCheck=misActs.map((a,i)=>{
+    const id=esArr?`dr_${i}`:`drc_${i}`;
+    const checked=document.getElementById(id)?.classList.contains('checked');
+    return checked?a.fields.Nombre_Actividad:null;
+  }).filter(Boolean).join(', ');
+
+  // CNC si aplica
+  const cncs=!esArr?Array.from(document.querySelectorAll('#drCNCOpts .cnc-btn.sel')).map(b=>b.textContent).join(', '):'';
+  const cncOtra=document.getElementById('drCNCOtra')?.value||'';
+  const cncFinal=cncOtra?cncs+', '+cncOtra:cncs;
+
+  const fields={
+    ID_Reporte:`DR_${tipo}_${HOY_DIA}_S${SEM_ACTUAL}_${user.email}`,
+    Obra:OBRA,
+    Supervisor_Email:user.email,
+    Supervisor_Nombre:user.name,
+    Fecha:new Date().toISOString(),
+    Tipo:tipo==='arranque'?'Arranque':'Cierre',
+    Semana:SEM_ACTUAL,
+    Actividades_Hoy:esArr?(actsCheck+(document.getElementById('drActsExtra')?.value?' | '+document.getElementById('drActsExtra').value:'')):(actsCheck+(document.getElementById('drLogrosExtra')?.value?' | '+document.getElementById('drLogrosExtra').value:'')),
+    Meta_Cantidad:esArr?(document.getElementById('drMetaHoy')?.value||''):(document.getElementById('drCantReal')?.value||''),
+    Real_Cantidad:!esArr?(document.getElementById('drCantReal')?.value||''):'',
+    Cumplimiento:!esArr?(cumplimientoSel||'Sin registrar'):'',
+    Restricciones_Activas:esArr?(document.getElementById('drRiesgos')?.value||''):(document.getElementById('drRestCierre')?.value||''),
+    Materiales_Requeridos:esArr?(`Personal: ${document.getElementById('drPersonal')?.value||'—'} | Equipos: ${document.getElementById('drEquipos')?.value||'—'}`):'',
+    Observaciones:esArr?(document.getElementById('drObsArranque')?.value||''):(document.getElementById('drObsCierre')?.value||'')+(!esArr&&cncFinal?' | CNC: '+cncFinal:''),
+    Foto_URL:fotoBase64DR?'Foto adjunta':'',
+  };
+
+  try{
+    if(token!=='DEMO'){
+      const listId=await getListId('CAO_Daily_Report');
+      const nuevo=await gPost(`/sites/${SITE_ID}/lists/${listId}/items`,{fields});
+      dailyReports.push({id:nuevo.id,fields});
+    } else {
+      dailyReports.push({id:'dr'+Date.now(),fields});
+    }
+    cerrarModal('modalDR');
+    checkDRStatus();
+    buildDRHistorial();
+    showToast(tipo==='arranque'?'🌅 Reporte de arranque enviado':'🌇 Reporte de cierre enviado');
+  }catch(e){showToast('⚠️ Error: '+e.message);}
+  btn.disabled=false;btn.textContent='💾 Enviar reporte';
+}
+
+// ── DR HISTORIAL ──────────────────────────────────────────────────
+function buildDRHistorial(){
+  const container=document.getElementById('drHistorial');
+  if(!dailyReports.length){
+    container.innerHTML=`<div class="empty"><div class="empty-icon">📊</div><div style="font-weight:500;">Sin reportes esta semana</div><div style="font-size:13px;margin-top:6px;">Usa los botones de Arranque y Cierre para generar reportes diarios.</div></div>`;
+    return;
+  }
+  container.innerHTML=dailyReports.map(r=>{
+    const f=r.fields;
+    const esArr=f.Tipo==='Arranque';
+    return`<div class="dr-card">
+      <div class="dr-card-header">
+        <span class="dr-tipo ${esArr?'arranque':'cierre'}">${esArr?'🌅 Arranque':'🌇 Cierre'}</span>
+        <span style="font-size:11px;color:#888;">${new Date(f.Fecha||Date.now()).toLocaleDateString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+      </div>
+      ${f.Actividades_Hoy?`<div style="font-size:12px;margin-bottom:4px;"><strong>Actividades:</strong> ${f.Actividades_Hoy}</div>`:''}
+      ${f.Meta_Cantidad?`<div style="font-size:12px;margin-bottom:4px;"><strong>${esArr?'Meta:':'Ejecutado:'}</strong> ${f.Meta_Cantidad}</div>`:''}
+      ${f.Cumplimiento?`<div style="font-size:12px;margin-bottom:4px;"><strong>Cumplimiento:</strong> ${f.Cumplimiento==='Completo'?'✅':f.Cumplimiento==='Parcial'?'⚠️':'❌'} ${f.Cumplimiento}</div>`:''}
+      ${f.Restricciones_Activas?`<div style="font-size:12px;margin-bottom:4px;color:#854f0b;"><strong>Restricciones:</strong> ${f.Restricciones_Activas}</div>`:''}
+      ${f.Observaciones?`<div style="font-size:11px;color:#666;font-style:italic;">"${f.Observaciones}"</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── HOY ───────────────────────────────────────────────────────────
+function buildHoy(){
+  const mis=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
+  const c=document.getElementById('actsHoy');
+  if(!mis.length){c.innerHTML=`<div class="empty"><div class="empty-icon">🎉</div><div>Sin actividades hoy</div><div style="font-size:13px;margin-top:6px;">Usa el botón + para agregar una</div></div>`;return;}
+  c.innerHTML=mis.map(a=>{
+    const r=getReg(a.id,HOY_DIA);
+    const reg=r&&r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined;
+    const cls=reg?(r.fields.Cumplido?'cumplida':'retraso'):'hoy';
+    return`<div class="act-card ${cls}">
+      <div class="act-nombre">${a.fields.Nombre_Actividad}</div>
+      <div class="act-meta">📂 ${a.fields.Partida||'—'} · 🎯 ${a.fields.Meta} ${a.fields.Unidad} · ⏱ ${a.fields.Turno||'—'}</div>
+      ${reg?`<div style="background:${r.fields.Cumplido?'#e8f5e9':'#fcebeb'};border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;">
+        ${r.fields.Cumplido?'✅':'❌'} ${r.fields.Cumplido?'Cumplido':'No cumplido'}${r.fields.Cantidad?` · ${r.fields.Cantidad} ${a.fields.Unidad}`:''}
+        ${r.fields.CNC?`<div style="margin-top:3px;"><span class="badge rojo" style="font-size:10px;">${r.fields.CNC}</span></div>`:''}
+        ${r.fields.Observacion?`<div style="margin-top:3px;color:#666;">"${r.fields.Observacion}"</div>`:''}
+      </div>
+      <button onclick="abrirRegistro('${a.id}')" class="btn-registrar ${r.fields.Cumplido?'ya':'cnc'}">✏️ Editar registro</button>`
+      :`<button onclick="abrirRegistro('${a.id}')" class="btn-registrar">📍 Registrar avance de hoy</button>`}
+    </div>`;
+  }).join('');
+}
+
+// ── SEMANA ────────────────────────────────────────────────────────
+function buildSemana(){
+  const c=document.getElementById('actsSemana');
+  if(!actividades.length){c.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div>Sin actividades</div></div>`;return;}
+  c.innerHTML=actividades.map(a=>{
+    const dp=diasProg(a);
+    const diasHTML=Object.keys(DIAS_MAP).map(d=>{
+      const prog=dp.includes(d);const r=getReg(a.id,d);
+      const cls=!prog?'no-prog':d===HOY_DIA&&prog?'hoy-prog':r?.fields.Cumplido===true?'cumplido':r?.fields.Cumplido===false?'retraso':'prog';
+      const em=!prog?'':r?.fields.Cumplido===true?'✅':r?.fields.Cumplido===false?'❌':d===HOY_DIA?'📍':'';
+      return`<div class="dia-chip ${cls}">${em||d}</div>`;
+    }).join('');
+    const regsA=registros.filter(r=>r.fields.Actividad_ID===a.id&&r.fields.Cumplido!==null);
+    const ppcA=regsA.length>0?Math.round(regsA.filter(r=>r.fields.Cumplido).length/regsA.length*100):null;
+    return`<div class="act-card">
+      <div class="act-nombre">${a.fields.Nombre_Actividad}</div>
+      <div class="act-meta">📂 ${a.fields.Partida||'—'} · 🎯 ${a.fields.Meta} ${a.fields.Unidad}/día</div>
+      <div class="dias-row">${diasHTML}</div>
+      ${ppcA!==null?`<div style="font-size:11px;color:#888;">PPC: <strong style="color:${ppcColor(ppcA)};">${ppcA}%</strong></div><div class="ppc-bar"><div class="ppc-fill" style="width:${ppcA}%;background:${ppcColor(ppcA)};"></div></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── REGISTRAR ─────────────────────────────────────────────────────
+function buildRegistrar(){
+  const mis=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
+  const c=document.getElementById('regScreen');
+  if(!mis.length){c.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div>Sin actividades para hoy</div></div>`;return;}
+  c.innerHTML=mis.map(a=>{
+    const r=getReg(a.id,HOY_DIA);const reg=r&&r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined;
+    return`<div class="act-card" style="margin-bottom:10px;">
+      <div class="act-nombre">${a.fields.Nombre_Actividad}</div>
+      <div class="act-meta">${a.fields.Partida||'—'} · Meta: ${a.fields.Meta} ${a.fields.Unidad}</div>
+      ${reg?`<div style="background:${r.fields.Cumplido?'#e8f5e9':'#fcebeb'};border-radius:8px;padding:8px;margin-bottom:6px;font-size:12px;">${r.fields.Cumplido?'✅':'❌'} ${r.fields.Cumplido?'Cumplido':'No cumplido'} · ${r.fields.Cantidad||'—'} ${a.fields.Unidad}</div>
+      <button onclick="abrirRegistro('${a.id}')" class="btn-registrar ya">✏️ Editar</button>`
+      :`<button onclick="abrirRegistro('${a.id}')" class="btn-registrar">📍 Registrar ahora</button>`}
+    </div>`;
+  }).join('');
+}
+
+// ── RESTRICCIONES ─────────────────────────────────────────────────
+function buildRestricciones(){
+  const c=document.getElementById('restList');
+  if(!restricciones.length){c.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div>Sin restricciones activas</div></div>`;return;}
+  c.innerHTML=restricciones.map(r=>`<div class="rest-card ${r.fields.Status==='Liberada'?'liberada':''}">
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+      <span class="badge ${r.fields.Impacto==='Alto'?'rojo':r.fields.Impacto==='Medio'?'amarillo':'gris'}">${r.fields.Impacto}</span>
+      <span class="badge ${r.fields.Status==='Liberada'?'verde':r.fields.Status==='En proceso'?'amarillo':'rojo'}">${r.fields.Status}</span>
+    </div>
+    <div style="font-size:13px;font-weight:500;margin-bottom:4px;">${r.fields.Descripcion}</div>
+    <div style="font-size:11px;color:#888;">👤 ${r.fields.Responsable||'—'} · 📅 ${r.fields.Fecha_Compromiso||'—'}</div>
+    ${r.fields.Status!=='Liberada'?`<button onclick="liberarRest('${r.id}')" style="margin-top:8px;width:100%;background:none;border:.5px solid #1d9e75;color:#1d9e75;padding:7px;border-radius:6px;cursor:pointer;font-size:12px;">✅ Marcar como liberada</button>`:''}
+  </div>`).join('');
+}
+
+// ── REGISTRO DIARIO ───────────────────────────────────────────────
+function abrirRegistro(actId){
+  regActual=actividades.find(a=>a.id===actId);if(!regActual)return;
+  const r=getReg(actId,HOY_DIA);
+  document.getElementById('regActId').value=actId;
+  document.getElementById('regTitle').textContent=regActual.fields.Nombre_Actividad.slice(0,36)+'…';
+  document.getElementById('regMetaLabel').textContent=`${regActual.fields.Meta} ${regActual.fields.Unidad} — ${DIAS_MAP[HOY_DIA]}`;
+  document.getElementById('regUnidad').value=regActual.fields.Unidad;
+  document.getElementById('regCant').value=r?.fields.Cantidad||'';
+  document.getElementById('regObs').value=r?.fields.Observacion||'';
+  cumplido=r?.fields.Cumplido??null;
+  updateCumplidoBtns();
+  document.getElementById('cncSection').style.display=cumplido===false?'block':'none';
+  document.getElementById('cncOpts').innerHTML=CNC_OPTS.map(c=>`<button class="cnc-btn ${r?.fields.CNC?.includes(c)?'sel':''}" onclick="this.classList.toggle('sel')">${c}</button>`).join('');
+  fotoBase64Reg=null;
+  document.getElementById('regFotoPreview').style.display='none';
+  document.getElementById('modalReg').classList.add('open');
+}
+
+function selCumplido(val){cumplido=val;updateCumplidoBtns();document.getElementById('cncSection').style.display=val===false?'block':'none';if(val===false)document.getElementById('cncOpts').innerHTML=CNC_OPTS.map(c=>`<button class="cnc-btn" onclick="this.classList.toggle('sel')">${c}</button>`).join('');}
+function updateCumplidoBtns(){
+  document.getElementById('btnSi').className='cumplido-btn si'+(cumplido===true?' sel':'');
+  document.getElementById('btnNo').className='cumplido-btn no'+(cumplido===false?' sel':'');
+}
+
+async function guardarRegistro(){
+  const actId=document.getElementById('regActId').value;
+  if(cumplido===null){showToast('⚠️ Indica si se cumplió o no');return;}
+  const cncs=cumplido===false?Array.from(document.querySelectorAll('#cncOpts .cnc-btn.sel')).map(b=>b.textContent).join(','):[];
+  if(cumplido===false&&!cncs.length){showToast('⚠️ Selecciona al menos una causa');return;}
+  const btn=document.getElementById('btnGuardarReg');btn.disabled=true;btn.textContent='Guardando...';
+  const fields={ID_Registro:`${actId}_${HOY_DIA}_${SEM_ACTUAL}`,Actividad_ID:actId,Supervisor_Email:user.email,Supervisor_Nombre:user.name,Obra:OBRA,Fecha:new Date().toISOString().split('T')[0],Dia:HOY_DIA,Cantidad:parseFloat(document.getElementById('regCant').value)||null,Cumplido:cumplido,CNC:cncs.toString(),Observacion:document.getElementById('regObs').value.trim(),Semana:SEM_ACTUAL};
+  try{
+    const ex=getReg(actId,HOY_DIA);
+    if(token!=='DEMO'){
+      const lId=await getListId('CAO_Registros_Diarios');
+      if(ex){await gPatch(`/sites/${SITE_ID}/lists/${lId}/items/${ex.id}/fields`,fields);ex.fields={...ex.fields,...fields};}
+      else{const n=await gPost(`/sites/${SITE_ID}/lists/${lId}/items`,{fields});registros.push({id:n.id,fields});}
+    }else{if(ex){ex.fields={...ex.fields,...fields};}else{registros.push({id:'r'+Date.now(),fields});}}
+    cerrarModal('modalReg');cumplido=null;
+    buildHoy();buildSemana();buildRegistrar();updatePPC();
+    showToast('✅ Registro guardado');
+  }catch(e){showToast('⚠️ Error: '+e.message);}
+  btn.disabled=false;btn.textContent='💾 Guardar registro';
+}
+
+// ── ACTIVIDAD ─────────────────────────────────────────────────────
+function abrirModalAct(){document.getElementById('modalAct').classList.add('open');}
+async function guardarActividad(){
+  const nombre=document.getElementById('mNombre').value.trim();
+  const meta=parseFloat(document.getElementById('mMeta').value)||0;
+  if(!nombre||!meta){showToast('⚠️ Llena nombre y meta');return;}
+  const dias=Array.from(document.querySelectorAll('#mDiasCheck .cnc-btn.sel')).map(b=>b.dataset.dia);
+  if(!dias.length){showToast('⚠️ Selecciona al menos un día');return;}
+  const fields={Nombre_Actividad:nombre,Obra:OBRA,Partida:document.getElementById('mPartida').value||'Sin partida',Supervisor_Email:user.email,Supervisor_Nombre:user.name,Meta:meta,Unidad:document.getElementById('mUnidad').value,Semana:SEM_ACTUAL,Dias_Programados:dias.join(','),Turno:document.getElementById('mTurno').value,Status:'Activa'};
+  try{
+    if(token!=='DEMO'){const lId=await getListId('CAO_Actividades');const n=await gPost(`/sites/${SITE_ID}/lists/${lId}/items`,{fields});actividades.push({id:n.id,fields});}
+    else{actividades.push({id:'a'+Date.now(),fields});}
+    cerrarModal('modalAct');document.getElementById('mNombre').value='';document.getElementById('mMeta').value='';
+    document.querySelectorAll('#mDiasCheck .cnc-btn.sel').forEach(b=>b.classList.remove('sel'));
+    buildHoy();buildSemana();buildRegistrar();showToast('✅ Actividad agregada');
+  }catch(e){showToast('⚠️ Error: '+e.message);}
+}
+
+// ── RESTRICCION ───────────────────────────────────────────────────
+function abrirModalRest(){document.getElementById('modalRest').classList.add('open');}
+async function guardarRestriccion(){
+  const desc=document.getElementById('rDesc').value.trim();if(!desc){showToast('⚠️ Describe la restricción');return;}
+  const fields={Descripcion:desc,Obra:OBRA,Supervisor_Email:user.email,Responsable:document.getElementById('rResp').value.trim()||'Por definir',Fecha_Compromiso:document.getElementById('rFecha').value||null,Impacto:document.getElementById('rImpacto').value,Status:'En proceso',Semana:SEM_ACTUAL};
+  try{
+    if(token!=='DEMO'){const lId=await getListId('CAO_Restricciones');const n=await gPost(`/sites/${SITE_ID}/lists/${lId}/items`,{fields});restricciones.push({id:n.id,fields});}
+    else{restricciones.push({id:'rs'+Date.now(),fields});}
+    cerrarModal('modalRest');document.getElementById('rDesc').value='';
+    buildRestricciones();showToast('✅ Restricción registrada');
+  }catch(e){showToast('⚠️ Error: '+e.message);}
+}
+async function liberarRest(id){
+  if(!confirm('¿Marcar como liberada?'))return;
+  try{
+    if(token!=='DEMO'){const lId=await getListId('CAO_Restricciones');await gPatch(`/sites/${SITE_ID}/lists/${lId}/items/${id}/fields`,{Status:'Liberada'});}
+    const r=restricciones.find(x=>x.id===id);if(r)r.fields.Status='Liberada';
+    buildRestricciones();showToast('✅ Restricción liberada');
+  }catch(e){showToast('⚠️ Error: '+e.message);}
 }
 </script>
 </body>
