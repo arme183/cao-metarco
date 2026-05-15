@@ -592,7 +592,7 @@ try { msalInstance = new msal.PublicClientApplication(msalConfig); } catch(e) {}
 
 // ======= Estado local =======
 let state = {
-  usuario: null, obra: null, modoDemo: false,
+  usuario: null, obra: null, modoDemo: false, userRole: 'supervisor',
   actividades: [], restricciones: [], registros: [],
   cumplimientoActual: null,
   semana: 7, totalSemanas: 18,
@@ -649,7 +649,7 @@ function cargarDemoData() {
     { id:3, desc:"Escalera PB — tramos superiores", partida:"Escalera PB — Montaje", meta:2, unidad:"pza", avance:0, cumplido:false },
   ];
   state.restricciones = [
-    { id:1, desc:'Falta tornillería de 5/8" para remates', responsable:"Almacén", fecha:"2026-05-16", impacto:"alto" },
+    { id:1, desc:"Falta tornillería de 5/8" para remates", responsable:"Almacén", fecha:"2026-05-16", impacto:"alto" },
     { id:2, desc:"Acceso a zona norte bloqueado por colada", responsable:"Ing. Ramírez", fecha:"2026-05-18", impacto:"medio" },
   ];
 }
@@ -663,11 +663,33 @@ function mostrarApp() {
   const obraKey = sessionStorage.getItem("obraActiva") || "reforma";
   state.obra = obraMap[obraKey] || obraKey;
 
+  // Leer rol desde sessionStorage
+  state.userRole = sessionStorage.getItem("userRole") || "supervisor";
+
   document.getElementById("obraLabel").textContent = state.obra;
   document.getElementById("semLabel").textContent = "SEM " + state.semana + " · " + semanaLabel();
 
+  // Badge de rol en header
+  const rolColors = { admin:"#ef4444", supervisor:"#10b981", residente:"#8898b8" };
+  const rolLabels = { admin:"👑 ADMIN", supervisor:"🔧 SUPERVISOR", residente:"👁 RESIDENTE" };
+  const rolColor = rolColors[state.userRole] || "#8898b8";
+  const rolLabel = rolLabels[state.userRole] || state.userRole.toUpperCase();
+  const rolBadgeExisting = document.getElementById("rolBadge");
+  if (!rolBadgeExisting) {
+    const semDiv = document.querySelector(".header-semana");
+    const badge = document.createElement("span");
+    badge.id = "rolBadge";
+    badge.style.cssText = "font-size:9px;font-weight:700;letter-spacing:1px;padding:2px 7px;border-radius:10px;color:#fff;background:" + rolColor;
+    badge.textContent = rolLabel;
+    semDiv.prepend(badge);
+  }
+
   calcPPC();
   setTab("hoy", document.querySelector(".tab-btn"));
+}
+
+function puedeEditar() {
+  return state.userRole === 'supervisor' || state.userRole === 'admin';
 }
 
 function calcPPC() {
@@ -684,7 +706,8 @@ function setTab(tab, btn) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   if (btn) btn.classList.add("active");
   const fab = document.getElementById("fabBtn");
-  fab.style.display = ["hoy","semana","registrar"].includes(tab) ? "flex" : "none";
+  const tabsConFAB = ["hoy","semana","registrar","restricciones"];
+  fab.style.display = (tabsConFAB.includes(tab) && puedeEditar()) ? "flex" : "none";
 
   const c = document.getElementById("mainContent");
   if (tab === "hoy") { c.innerHTML = renderHoy(); }
@@ -721,13 +744,13 @@ function renderHoy() {
         <div class="turno-icon">🌅</div>
         <div class="turno-label">Arranque</div>
         <div class="turno-status turno-pending">7:00 AM — Pendiente</div>
-        <button class="btn-turno btn-turno-arranque" onclick="abrirReporte('arranque')">REGISTRAR</button>
+        ${puedeEditar() ? '<button class="btn-turno btn-turno-arranque" onclick="abrirReporte(\'arranque\')">REGISTRAR</button>' : ''}
       </div>
       <div class="turno-card">
         <div class="turno-icon">🌇</div>
         <div class="turno-label">Cierre</div>
         <div class="turno-status turno-pending">6:00 PM — Pendiente</div>
-        <button class="btn-turno btn-turno-cierre" onclick="abrirReporte('cierre')">REGISTRAR</button>
+        ${puedeEditar() ? '<button class="btn-turno btn-turno-cierre" onclick="abrirReporte(\'cierre\')">REGISTRAR</button>' : ''}
       </div>
     </div>
 
@@ -798,7 +821,8 @@ function renderSemana() {
 function renderRegistrar() {
   let rows = state.actividades.map(a => {
     const pct = a.meta>0?Math.round(a.avance/a.meta*100):0;
-    return `<div class="act-row" onclick="abrirAvance(${a.id})" style="cursor:pointer">
+    const clickable = puedeEditar() ? `onclick="abrirAvance(${a.id})" style="cursor:pointer"` : `style="cursor:default"`;
+    return `<div class="act-row" ${clickable}>
       <div class="act-dot act-dot-${pct>=100?"green":pct>0?"blue":"yellow"}"></div>
       <div class="act-info">
         <div class="act-name">${a.desc}</div>
@@ -812,7 +836,7 @@ function renderRegistrar() {
   return `
     <div class="sec-title">📍 ${fechaHoy()}</div>
     <div class="card">${rows}</div>
-    <button class="btn-add" onclick="abrirModal('modalActividad')">+ Agregar actividad</button>`;
+    ${puedeEditar() ? '<button class="btn-add" onclick="abrirModal(\'modalActividad\')">+ Agregar actividad</button>' : ''}`;
 }
 
 // ======= RENDER RESTRICCIONES =======
@@ -829,7 +853,7 @@ function renderRestricciones() {
   return `
     <div class="sec-title">Restricciones activas — ${state.restricciones.length}</div>
     ${cards}
-    <button class="btn-add" onclick="abrirModal('modalRestriccion')">+ Nueva restricción</button>`;
+    ${puedeEditar() ? '<button class="btn-add" onclick="abrirModal(\'modalRestriccion\')">+ Nueva restricción</button>' : ''}`;
 }
 
 // ======= RENDER REPORTES =======
@@ -856,6 +880,7 @@ function renderReportes() {
 
 // ======= FAB =======
 function abrirFAB() {
+  if (!puedeEditar()) return;
   if (state.tabActual === "restricciones") abrirModal("modalRestriccion");
   else abrirModal("modalActividad");
 }
@@ -949,6 +974,9 @@ window.addEventListener("load", async () => {
       if (resp && resp.account) {
         state.usuario = resp.account.name || resp.account.username;
         sessionStorage.setItem("usuarioNombre", state.usuario);
+        const email = (resp.account.username || "").toLowerCase();
+        state.userRole = email.startsWith("a.medina") ? "admin" : "supervisor";
+        sessionStorage.setItem("userRole", state.userRole);
         mostrarApp(); return;
       }
     } catch(e) { console.error(e); }
@@ -960,6 +988,7 @@ window.addEventListener("load", async () => {
   if (sessionStorage.getItem("usuarioNombre")) {
     state.usuario = sessionStorage.getItem("usuarioNombre");
     state.modoDemo = sessionStorage.getItem("modoDemo") === "true";
+    state.userRole = sessionStorage.getItem("userRole") || "supervisor";
     if (state.modoDemo) cargarDemoData();
     mostrarApp(); return;
   }
