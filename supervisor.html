@@ -351,6 +351,23 @@ body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size
     <label class="form-label">Observación del día</label>
     <textarea class="form-input" id="regObs" rows="2" placeholder="Ej: Se completaron 8ml sección norte, falta sección sur. Material llegó a las 2pm."></textarea>
 
+    <label class="form-label">📸 Foto de evidencia</label>
+    <div id="fotoPreview" style="display:none;margin-bottom:10px;position:relative;">
+      <img id="fotoImg" style="width:100%;border-radius:10px;max-height:220px;object-fit:cover;" alt="Foto evidencia">
+      <button onclick="quitarFoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+      <button onclick="document.getElementById('inputCamara').click()" style="padding:12px;border:.5px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">
+        📷 Tomar foto
+      </button>
+      <button onclick="document.getElementById('inputGaleria').click()" style="padding:12px;border:.5px solid #ddd;border-radius:10px;background:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">
+        🖼 Desde galería
+      </button>
+    </div>
+    <input type="file" id="inputCamara" accept="image/*" capture="environment" style="display:none" onchange="seleccionarFoto(this)">
+    <input type="file" id="inputGaleria" accept="image/*" style="display:none" onchange="seleccionarFoto(this)">
+    <div id="fotoStatus" style="font-size:11px;color:#888;margin-bottom:10px;"></div>
+
     <button class="btn-guardar" id="btnGuardarReg" onclick="guardarRegistro()">💾 Guardar registro</button>
   </div>
 </div>
@@ -673,6 +690,13 @@ async function guardarRegistro(){
   const btn=document.getElementById('btnGuardarReg');
   btn.disabled=true;btn.textContent='Guardando...';
 
+  // Subir foto si hay
+  let fotoUrl=null;
+  if(fotoBase64&&fotoNombre){
+    btn.textContent='📸 Subiendo foto...';
+    fotoUrl=await subirFotoSharePoint(fotoBase64,fotoNombre);
+  }
+
   const fields={
     ID_Registro:`${actId}_${HOY_DIA}_${SEM_ACTUAL}`,
     Actividad_ID:actId,
@@ -685,8 +709,8 @@ async function guardarRegistro(){
     Cumplido:cumplido,
     CNC:cncs.join(','),
     Observacion:obs,
-    Semana:SEM_ACTUAL
-  };
+    Foto_URL:fotoUrl||null,
+    Foto_Nombre:fotoNombre||null,
 
   try{
     const existing=getRegistro(actId,HOY_DIA);
@@ -799,6 +823,61 @@ async function liberarRestriccion(id){
     buildRestricciones();
     showToast('✅ Restricción liberada');
   }catch(e){showToast('⚠️ Error: '+e.message);}
+}
+
+// ── FOTO ──────────────────────────────────────────────────────────
+let fotoBase64=null, fotoNombre=null;
+
+function seleccionarFoto(input){
+  const file=input.files[0];
+  if(!file)return;
+  const maxSize=5*1024*1024; // 5MB
+  if(file.size>maxSize){showToast('⚠️ La foto es muy grande. Máximo 5MB');return;}
+  fotoNombre=`S${SEM_ACTUAL}_${regActual?.fields.Partida?.replace(/[^a-zA-Z0-9]/g,'_')||'foto'}_${HOY_DIA}_${Date.now()}.jpg`;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    fotoBase64=e.target.result;
+    document.getElementById('fotoImg').src=fotoBase64;
+    document.getElementById('fotoPreview').style.display='block';
+    document.getElementById('fotoStatus').textContent=`📎 ${file.name} (${(file.size/1024).toFixed(0)}KB) — se subirá a SharePoint al guardar`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function quitarFoto(){
+  fotoBase64=null;fotoNombre=null;
+  document.getElementById('fotoPreview').style.display='none';
+  document.getElementById('fotoStatus').textContent='';
+  document.getElementById('inputCamara').value='';
+  document.getElementById('inputGaleria').value='';
+}
+
+async function subirFotoSharePoint(base64,nombre){
+  if(token==='DEMO'){showToast('📸 Foto lista (modo demo)');return null;}
+  try{
+    // Convertir base64 a blob
+    const arr=base64.split(',');
+    const mime=arr[0].match(/:(.*?);/)[1];
+    const bstr=atob(arr[1]);
+    const u8arr=new Uint8Array(bstr.length);
+    for(let i=0;i<bstr.length;i++)u8arr[i]=bstr.charCodeAt(i);
+    const blob=new Blob([u8arr],{type:mime});
+
+    // Subir a SharePoint CAO/Evidencias/Sem_XX/
+    const semFolder=`Sem_0${SEM_ACTUAL}`;
+    const uploadUrl=`/sites/${SITE_ID}/drive/root:/CONSTRUCCION/CONTROL DE COSTOS/CAO/Evidencias/${semFolder}/${nombre}:/content`;
+    const r=await fetch(GRAPH+uploadUrl,{
+      method:'PUT',
+      headers:{Authorization:`Bearer ${token}`,'Content-Type':mime},
+      body:blob
+    });
+    if(!r.ok)throw new Error('Error subiendo foto');
+    const data=await r.json();
+    return data.webUrl||null;
+  }catch(e){
+    showToast('⚠️ Error subiendo foto: '+e.message);
+    return null;
+  }
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────
