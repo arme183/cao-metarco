@@ -249,6 +249,7 @@ function loginDemo() {
   sessionStorage.setItem("obraActiva", obra);
   sessionStorage.setItem("modoDemo", "true");
   sessionStorage.setItem("usuarioNombre", "Supervisor Demo");
+  sessionStorage.setItem("userRole", "supervisor");
   window.location.href = "supervisor.html";
 }
 
@@ -259,6 +260,9 @@ window.addEventListener("load", async () => {
     if (resp && resp.account) {
       sessionStorage.setItem("usuarioNombre", resp.account.name || resp.account.username);
       sessionStorage.setItem("usuarioEmail", resp.account.username);
+      const email = (resp.account.username || "").toLowerCase();
+      const role = email.startsWith("a.medina") ? "admin" : "supervisor";
+      sessionStorage.setItem("userRole", role);
       window.location.href = "supervisor.html";
     }
   } catch(e) { console.error(e); }
