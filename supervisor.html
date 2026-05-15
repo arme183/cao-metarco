@@ -7,135 +7,156 @@
 <script src="https://alcdn.msauth.net/browser/2.38.0/js/msal-browser.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{font-family:system-ui,sans-serif;background:#f5f5f0;color:#1a1a18;font-size:15px;max-width:480px;margin:0 auto;min-height:100vh;}
+body{font-family:system-ui,sans-serif;background:#f5f5f5;color:#1a1a18;font-size:15px;max-width:480px;margin:0 auto;min-height:100vh;}
 
-.login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;background:linear-gradient(160deg,#1a3a2a,#235438);}
-.login-logo{font-size:64px;margin-bottom:1rem;}
-.login h1{font-size:22px;font-weight:600;color:#fff;margin-bottom:.5rem;}
-.login p{color:#9fca9f;font-size:14px;margin-bottom:2rem;line-height:1.6;}
-.btn-login{background:#fff;color:#1a3a2a;border:none;padding:14px 28px;border-radius:12px;cursor:pointer;font-size:15px;font-weight:600;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;}
+/* ── LOGO SVG METARCO ── */
+.metarco-logo{display:flex;align-items:center;gap:10px;}
+.metarco-logo svg{width:36px;height:36px;}
+.metarco-logo .wordmark{font-size:20px;font-weight:700;letter-spacing:2px;color:#fff;}
+
+/* ── LOGIN ── */
+.login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;background:#000;}
+.login-logo{margin-bottom:2rem;}
+.login-logo svg{width:80px;height:80px;}
+.login-wordmark{font-size:28px;font-weight:700;letter-spacing:4px;color:#fff;margin-bottom:4px;}
+.login-tagline{font-size:12px;color:#666;letter-spacing:2px;text-transform:uppercase;margin-bottom:2.5rem;}
+.login-card{background:#111;border:1px solid #222;border-radius:16px;padding:2rem;width:100%;max-width:360px;}
+.login-card h2{font-size:16px;font-weight:500;color:#fff;margin-bottom:.5rem;}
+.login-card p{font-size:13px;color:#666;margin-bottom:1.5rem;line-height:1.6;}
+.btn-login{background:#fff;color:#000;border:none;padding:14px 24px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:.5px;transition:all .2s;}
+.btn-login:hover{background:#e0e0e0;}
 .btn-login:active{transform:scale(.97);}
+.btn-demo{background:transparent;color:#555;border:1px solid #333;padding:11px 24px;border-radius:10px;cursor:pointer;font-size:13px;width:100%;margin-top:8px;letter-spacing:.5px;}
+.btn-demo:hover{border-color:#555;color:#888;}
+.login-hint{font-size:11px;color:#444;margin-top:16px;letter-spacing:.5px;}
+.login-error{background:#1a0000;border:1px solid #440000;color:#ff6b6b;border-radius:8px;padding:10px 14px;font-size:12px;margin-top:10px;display:none;}
 
-.header{background:#1a3a2a;color:#fff;padding:12px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
-.header h1{font-size:15px;font-weight:500;}
-.header p{font-size:11px;color:#9fca9f;margin-top:2px;}
-.user-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 10px;border-radius:20px;cursor:pointer;font-size:12px;}
+/* ── HEADER ── */
+.header{background:#000;color:#fff;padding:12px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;}
+.user-btn{background:#1a1a1a;border:1px solid #2a2a2a;color:#888;padding:6px 12px;border-radius:20px;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:5px;}
+.user-btn:hover{border-color:#444;color:#fff;}
 
-.sem-banner{background:#235438;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;}
-.sem-info{font-size:12px;color:#9fca9f;}
+/* ── SEM BANNER ── */
+.sem-banner{background:#111;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;border-bottom:1px solid #1a1a1a;}
+.sem-info{font-size:12px;color:#666;}
 .sem-info strong{color:#fff;font-size:14px;}
-.ppc-chip{background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;font-size:12px;color:#fff;font-weight:500;}
+.ppc-chip{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:20px;padding:4px 12px;font-size:12px;color:#fff;font-weight:500;}
 
-/* DAILY REPORT BANNER */
-.daily-banner{background:#fff;border-bottom:.5px solid #ddd;padding:10px 16px;display:flex;gap:8px;}
-.daily-btn{flex:1;padding:10px;border-radius:10px;border:none;cursor:pointer;font-size:13px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .2s;}
+/* ── DAILY REPORT BTNS ── */
+.daily-banner{background:#0a0a0a;border-bottom:1px solid #1a1a1a;padding:10px 16px;display:flex;gap:8px;}
+.daily-btn{flex:1;padding:10px;border-radius:10px;border:1px solid #2a2a2a;cursor:pointer;font-size:12px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .2s;background:#111;color:#fff;letter-spacing:.5px;}
 .daily-btn:active{transform:scale(.96);}
-.daily-btn.arranque{background:#e8f5e9;color:#1a3a2a;}
-.daily-btn.arranque.done{background:#1a3a2a;color:#fff;}
-.daily-btn.cierre{background:#fff3e0;color:#854f0b;}
-.daily-btn.cierre.done{background:#ba7517;color:#fff;}
-.daily-btn .icon{font-size:20px;}
-.daily-btn .label{font-size:11px;}
-.daily-btn .status{font-size:10px;opacity:.7;}
+.daily-btn.arranque{border-color:#1a3a1a;}
+.daily-btn.arranque:hover{background:#0a1a0a;}
+.daily-btn.arranque.done{background:#0a2a0a;border-color:#1d9e75;color:#1d9e75;}
+.daily-btn.cierre{border-color:#2a1a00;}
+.daily-btn.cierre:hover{background:#1a0f00;}
+.daily-btn.cierre.done{background:#1a1000;border-color:#ba7517;color:#ba7517;}
+.daily-btn .icon{font-size:18px;}
+.daily-btn .label{font-size:11px;letter-spacing:.5px;text-transform:uppercase;}
+.daily-btn .status{font-size:10px;opacity:.6;}
 
-.nav-bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#fff;border-top:.5px solid #ddd;display:flex;z-index:100;}
-.nav-btn{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:#888;}
-.nav-btn.active{color:#1a3a2a;}
+/* ── NAV ── */
+.nav-bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#000;border-top:1px solid #1a1a1a;display:flex;z-index:100;}
+.nav-btn{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:#444;letter-spacing:.5px;text-transform:uppercase;transition:color .2s;}
+.nav-btn.active{color:#fff;}
 .nav-btn .icon{font-size:20px;}
 
-.content{padding:14px 16px 80px;}
+/* ── CONTENT ── */
+.content{padding:14px 16px 80px;background:#f5f5f5;min-height:calc(100vh - 120px);}
 .screen{display:none;}
 .screen.active{display:block;}
 
-.act-card{background:#fff;border-radius:12px;border:.5px solid #ddd;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;}
-.act-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:12px 0 0 12px;}
+/* ── CARDS ── */
+.act-card{background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.act-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
 .act-card.pendiente::before{background:#ddd;}
 .act-card.cumplida::before{background:#1d9e75;}
 .act-card.retraso::before{background:#e24b4a;}
-.act-card.hoy::before{background:#185fa5;}
-.act-nombre{font-size:14px;font-weight:500;margin-bottom:4px;}
+.act-card.hoy::before{background:#000;}
+.act-nombre{font-size:14px;font-weight:600;margin-bottom:4px;color:#000;}
 .act-meta{font-size:12px;color:#888;margin-bottom:8px;}
 .dias-row{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px;}
-.dia-chip{height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;border:.5px solid #ddd;}
-.dia-chip.prog{background:#e3f2fd;border-color:#185fa5;color:#185fa5;}
-.dia-chip.cumplido{background:#e1f5ee;border-color:#1d9e75;color:#1d9e75;}
+.dia-chip{height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:1px solid #eee;}
+.dia-chip.prog{background:#f5f5f5;border-color:#ddd;color:#888;}
+.dia-chip.cumplido{background:#e8f5e9;border-color:#1d9e75;color:#1d9e75;}
 .dia-chip.retraso{background:#fcebeb;border-color:#e24b4a;color:#e24b4a;}
-.dia-chip.hoy-prog{background:#185fa5;color:#fff;border-color:#185fa5;}
-.dia-chip.no-prog{background:#f5f5f0;color:#ccc;border-color:#eee;}
-.btn-registrar{background:#1a3a2a;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;width:100%;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.dia-chip.hoy-prog{background:#000;color:#fff;border-color:#000;}
+.dia-chip.no-prog{background:#fafafa;color:#e0e0e0;border-color:#f0f0f0;}
+.btn-registrar{background:#000;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;width:100%;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;letter-spacing:.5px;}
 .btn-registrar:active{transform:scale(.97);}
-.btn-registrar.ya{background:#e8f5e9;color:#1d9e75;border:.5px solid #a5d6a7;}
-.btn-registrar.cnc{background:#fcebeb;color:#e24b4a;border:.5px solid #ef9a9a;}
+.btn-registrar:hover{background:#222;}
+.btn-registrar.ya{background:#f0f9f4;color:#1d9e75;border:1px solid #c8e6c9;}
+.btn-registrar.cnc{background:#fff5f5;color:#e24b4a;border:1px solid #ffcdd2;}
 
-.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;}
-.badge.verde{background:#e1f5ee;color:#0f6e56;}
-.badge.rojo{background:#fcebeb;color:#a32d2d;}
-.badge.amarillo{background:#faeeda;color:#854f0b;}
-.badge.gris{background:#f1efe8;color:#5f5e5a;}
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.3px;}
+.badge.verde{background:#e8f5e9;color:#1d9e75;}
+.badge.rojo{background:#fcebeb;color:#e24b4a;}
+.badge.amarillo{background:#fff8e1;color:#f9a825;}
+.badge.gris{background:#f5f5f5;color:#888;}
 
-.ppc-bar{height:5px;background:#eee;border-radius:3px;overflow:hidden;margin:4px 0;}
-.ppc-fill{height:100%;border-radius:3px;}
-
-.rest-card{border-radius:10px;padding:12px;margin-bottom:8px;border:.5px solid #ef9a9a;background:#fcebeb;}
-.rest-card.liberada{background:#e8f5e9;border-color:#a5d6a7;}
-
+/* ── MISC ── */
+.ppc-bar{height:4px;background:#eee;border-radius:2px;overflow:hidden;margin:6px 0;}
+.ppc-fill{height:100%;border-radius:2px;}
+.rest-card{border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #ffcdd2;background:#fff5f5;}
+.rest-card.liberada{background:#f0f9f4;border-color:#c8e6c9;}
 .loading{text-align:center;padding:40px;color:#888;}
-.empty{text-align:center;padding:40px 20px;color:#aaa;}
+.empty{text-align:center;padding:40px 20px;color:#bbb;}
 .empty-icon{font-size:48px;margin-bottom:10px;}
+.section-title{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px;}
 
-.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center;}
+/* ── MODALS ── */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end;justify-content:center;}
 .modal.open{display:flex;}
 .modal-sheet{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;}
-.modal-handle{width:36px;height:4px;background:#ddd;border-radius:2px;margin:0 auto 16px;}
-.modal-title{font-size:16px;font-weight:600;margin-bottom:4px;}
-.modal-sub{font-size:12px;color:#888;margin-bottom:16px;}
-.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#888;margin-top:-4px;}
-
-.form-label{font-size:12px;font-weight:500;color:#555;margin-bottom:5px;display:block;margin-top:12px;}
+.modal-handle{width:36px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:3px;color:#000;letter-spacing:.3px;}
+.modal-sub{font-size:12px;color:#888;margin-bottom:16px;letter-spacing:.3px;}
+.modal-close{float:right;background:none;border:none;font-size:20px;cursor:pointer;color:#bbb;margin-top:-4px;}
+.form-label{font-size:12px;font-weight:600;color:#444;margin-bottom:5px;display:block;margin-top:12px;letter-spacing:.3px;text-transform:uppercase;}
 .form-label:first-child{margin-top:0;}
-.form-input{width:100%;padding:11px 12px;border:.5px solid #ddd;border-radius:8px;font-size:14px;font-family:inherit;appearance:none;}
-.form-input:focus{outline:none;border-color:#1a3a2a;}
+.form-input{width:100%;padding:12px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:14px;font-family:inherit;appearance:none;transition:border-color .2s;background:#fafafa;}
+.form-input:focus{outline:none;border-color:#000;background:#fff;}
 textarea.form-input{resize:vertical;min-height:70px;}
 .cant-row{display:grid;grid-template-columns:2fr 1fr;gap:8px;}
 .cumplido-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px;}
-.cumplido-btn{padding:14px;border-radius:10px;border:.5px solid #ddd;cursor:pointer;font-size:20px;text-align:center;background:#fff;}
-.cumplido-btn.si.sel{background:#e1f5ee;border-color:#1d9e75;}
+.cumplido-btn{padding:16px;border-radius:10px;border:1.5px solid #e8e8e8;cursor:pointer;font-size:20px;text-align:center;background:#fafafa;transition:all .2s;}
+.cumplido-btn.si.sel{background:#e8f5e9;border-color:#1d9e75;}
 .cumplido-btn.no.sel{background:#fcebeb;border-color:#e24b4a;}
-.cumplido-label{font-size:11px;color:#888;margin-top:3px;}
+.cumplido-label{font-size:11px;color:#888;margin-top:3px;font-weight:600;letter-spacing:.3px;}
 .cnc-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;}
-.cnc-btn{padding:7px 12px;border-radius:20px;border:.5px solid #ddd;background:#f5f5f0;font-size:12px;cursor:pointer;}
-.cnc-btn.sel{background:#e24b4a;color:#fff;border-color:#c0392b;}
-.btn-guardar{background:#1a3a2a;color:#fff;border:none;padding:14px;border-radius:10px;cursor:pointer;font-size:15px;font-weight:600;width:100%;margin-top:14px;}
+.cnc-btn{padding:7px 12px;border-radius:20px;border:1.5px solid #e8e8e8;background:#fafafa;font-size:12px;cursor:pointer;transition:all .15s;font-weight:500;}
+.cnc-btn.sel{background:#000;color:#fff;border-color:#000;}
+.btn-guardar{background:#000;color:#fff;border:none;padding:14px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:700;width:100%;margin-top:14px;letter-spacing:.5px;transition:all .2s;}
+.btn-guardar:hover{background:#222;}
 .btn-guardar:active{transform:scale(.97);}
-.btn-guardar:disabled{background:#aaa;}
-.fab{position:fixed;bottom:76px;right:16px;width:52px;height:52px;border-radius:50%;background:#1a3a2a;color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 16px rgba(26,58,42,.4);display:none;align-items:center;justify-content:center;z-index:99;}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a3a2a;color:#fff;padding:12px 20px;border-radius:20px;font-size:13px;z-index:1000;opacity:0;transition:opacity .3s;white-space:nowrap;}
+.btn-guardar:disabled{background:#888;}
+.fab{position:fixed;bottom:76px;right:16px;width:52px;height:52px;border-radius:50%;background:#000;color:#fff;border:none;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;z-index:99;}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:12px 20px;border-radius:20px;font-size:13px;z-index:1000;opacity:0;transition:opacity .3s;white-space:nowrap;border:1px solid #333;letter-spacing:.3px;}
 .toast.show{opacity:1;}
-.section-title{font-size:12px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px;}
 
-/* DAILY REPORT FORM */
-.dr-section{background:#f5f5f0;border-radius:10px;padding:12px;margin-bottom:10px;}
-.dr-section-title{font-size:12px;font-weight:600;color:#1a3a2a;margin-bottom:8px;display:flex;align-items:center;gap:5px;}
-.check-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:.5px solid #eee;cursor:pointer;}
+/* ── DR ── */
+.dr-section{background:#fafafa;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid #f0f0f0;}
+.dr-section-title{font-size:12px;font-weight:700;color:#000;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
+.check-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0f0;cursor:pointer;}
 .check-item:last-child{border-bottom:none;}
-.check-box{width:22px;height:22px;border-radius:6px;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;transition:all .2s;}
-.check-box.checked{background:#1a3a2a;border-color:#1a3a2a;color:#fff;}
-.check-label{font-size:13px;flex:1;}
+.check-box{width:22px;height:22px;border-radius:6px;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;font-weight:700;transition:all .2s;}
+.check-box.checked{background:#000;border-color:#000;color:#fff;}
+.check-label{font-size:13px;flex:1;color:#333;}
 .foto-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:5px;}
-.foto-btn{padding:11px;border:.5px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;font-size:13px;text-align:center;}
+.foto-btn{padding:11px;border:1.5px solid #e8e8e8;border-radius:8px;background:#fafafa;cursor:pointer;font-size:13px;text-align:center;font-weight:500;transition:all .2s;}
+.foto-btn:hover{border-color:#000;background:#f0f0f0;}
 .foto-preview{width:100%;border-radius:10px;max-height:200px;object-fit:cover;margin-top:8px;display:none;}
 .cumplimiento-opts{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap;}
-.cumpl-btn{padding:8px 14px;border-radius:20px;border:.5px solid #ddd;background:#fff;cursor:pointer;font-size:12px;font-weight:500;}
+.cumpl-btn{padding:9px 16px;border-radius:20px;border:1.5px solid #e8e8e8;background:#fafafa;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.3px;transition:all .2s;}
 .cumpl-btn.sel.completo{background:#1d9e75;color:#fff;border-color:#1d9e75;}
-.cumpl-btn.sel.parcial{background:#ba7517;color:#fff;border-color:#ba7517;}
+.cumpl-btn.sel.parcial{background:#f9a825;color:#fff;border-color:#f9a825;}
 .cumpl-btn.sel.no{background:#e24b4a;color:#fff;border-color:#e24b4a;}
-
-/* HISTORIAL DR */
-.dr-card{background:#fff;border-radius:10px;border:.5px solid #ddd;padding:12px;margin-bottom:8px;}
-.dr-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
-.dr-tipo{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;}
-.dr-tipo.arranque{background:#e8f5e9;color:#1a3a2a;}
-.dr-tipo.cierre{background:#fff3e0;color:#854f0b;}
+.dr-card{background:#fff;border-radius:10px;border:1px solid #e8e8e8;padding:12px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.dr-tipo{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px;}
+.dr-tipo.arranque{background:#e8f5e9;color:#1d9e75;}
+.dr-tipo.cierre{background:#fff8e1;color:#f9a825;}
 </style>
 </head>
 <body>
@@ -143,92 +164,106 @@ textarea.form-input{resize:vertical;min-height:70px;}
 <!-- LOGIN -->
 <div id="loginScreen" style="display:flex;">
   <div class="login">
-    <div class="login-logo">🏗</div>
-    <h1>CAO Supervisores</h1>
-    <p>Metarco | Sistema de Control de Avance<br>WEG Estructura</p>
-    <button class="btn-login" onclick="login()">
-      <span style="font-size:20px;">Ⓜ️</span> Entrar con cuenta Metarco
-    </button>
-    <p style="color:#9fca9f;font-size:11px;margin-top:12px;">@metarco.com.mx</p>
+    <!-- LOGO METARCO SVG -->
+    <div class="login-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="48" stroke="white" stroke-width="3"/>
+        <path d="M25 70 L50 25 L75 70" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M35 70 L50 42 L65 70" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <line x1="25" y1="70" x2="75" y2="70" stroke="white" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="login-wordmark">METARCO</div>
+    <div class="login-tagline">Sistema de Control de Obra</div>
+
+    <div class="login-card">
+      <h2>Control de Avance de Obra</h2>
+      <p>Inicia sesión con tu cuenta corporativa para registrar el avance diario de la obra</p>
+      <button class="btn-login" onclick="login()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><rect width="8" height="8" fill="#f25022"/><rect x="9" width="8" height="8" fill="#7fba00"/><rect y="9" width="8" height="8" fill="#00a4ef"/><rect x="9" y="9" width="8" height="8" fill="#ffb900"/></svg>
+        ACCEDER CON MICROSOFT
+      </button>
+      <button class="btn-demo" onclick="loginDemo()">Continuar en modo demo</button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+    <p class="login-hint">@METARCO.COM.MX · WEG ESTRUCTURA</p>
   </div>
 </div>
 
 <!-- APP -->
 <div id="appScreen" style="display:none;">
   <div class="header">
-    <div>
-      <h1>🏗 CAO Supervisores</h1>
-      <p id="hSub">WEG Estructura</p>
+    <div class="metarco-logo">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="48" stroke="white" stroke-width="4"/>
+        <path d="M25 70 L50 25 L75 70" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M35 70 L50 42 L65 70" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <line x1="25" y1="70" x2="75" y2="70" stroke="white" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="wordmark">METARCO</div>
+        <div style="font-size:10px;color:#444;letter-spacing:1px;" id="hSub">CAO SUPERVISORES</div>
+      </div>
     </div>
-    <button class="user-btn" onclick="logout()" id="userBtn">Salir</button>
+    <button class="user-btn" onclick="logout()" id="userBtn">● Salir</button>
   </div>
 
   <div class="sem-banner">
     <div>
-      <div class="sem-info"><strong id="semLabel">Sem 7</strong> · <span id="semFechas">12–17 Mayo 2026</span></div>
-      <div style="font-size:11px;color:#c8e6c9;margin-top:3px;" id="diaLabel">📍 Hoy: Miércoles 14 Mayo</div>
+      <div class="sem-info"><strong id="semLabel">SEM 7</strong> · <span id="semFechas">12–17 MAYO 2026</span></div>
+      <div style="font-size:11px;color:#555;margin-top:3px;letter-spacing:.5px;" id="diaLabel">📍 HOY: MIÉRCOLES 14 MAYO</div>
     </div>
     <div style="text-align:right;">
       <div class="ppc-chip" id="ppcChip">🎯 PPC: —</div>
-      <div style="font-size:10px;color:#9fca9f;margin-top:2px;" id="semPct">Sem 7 de 18 · 39%</div>
+      <div style="font-size:10px;color:#555;margin-top:2px;letter-spacing:.3px;" id="semPct">SEM 7 DE 18 · 39%</div>
     </div>
   </div>
 
-  <!-- DAILY REPORT BUTTONS -->
   <div class="daily-banner">
     <button class="daily-btn arranque" id="btnArranque" onclick="abrirDR('arranque')">
       <span class="icon">🌅</span>
-      <span class="label">Reporte Arranque</span>
-      <span class="status" id="statusArranque">7:00 AM — Pendiente</span>
+      <span class="label">Arranque</span>
+      <span class="status" id="statusArranque">7:00 AM — PENDIENTE</span>
     </button>
     <button class="daily-btn cierre" id="btnCierre" onclick="abrirDR('cierre')">
       <span class="icon">🌇</span>
-      <span class="label">Reporte Cierre</span>
-      <span class="status" id="statusCierre">6:00 PM — Pendiente</span>
+      <span class="label">Cierre</span>
+      <span class="status" id="statusCierre">6:00 PM — PENDIENTE</span>
     </button>
   </div>
 
   <div class="content">
-    <!-- HOY -->
     <div id="screen-hoy" class="screen active">
-      <div class="section-title">📍 Mis actividades de hoy</div>
+      <div class="section-title">📍 Actividades de hoy</div>
       <div id="actsHoy"></div>
     </div>
-
-    <!-- SEMANA -->
     <div id="screen-semana" class="screen">
-      <div class="section-title">📋 Plan de la semana</div>
+      <div class="section-title">📋 Plan semanal</div>
       <div id="actsSemana"></div>
     </div>
-
-    <!-- REGISTRAR -->
     <div id="screen-registrar" class="screen">
-      <div class="section-title">✏️ Registrar avance de hoy</div>
+      <div class="section-title">✏️ Registrar avance</div>
       <div id="regScreen"></div>
     </div>
-
-    <!-- RESTRICCIONES -->
     <div id="screen-restricciones" class="screen">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div class="section-title" style="margin:0;">🔒 Mis restricciones</div>
-        <button onclick="abrirModalRest()" style="background:#1a3a2a;color:#fff;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;">+ Nueva</button>
+        <div class="section-title" style="margin:0;">🔒 Restricciones</div>
+        <button onclick="abrirModalRest()" style="background:#000;color:#fff;border:none;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.5px;">+ NUEVA</button>
       </div>
       <div id="restList"></div>
     </div>
-
-    <!-- REPORTES -->
     <div id="screen-reportes" class="screen">
-      <div class="section-title">📊 Mis reportes diarios</div>
+      <div class="section-title">📊 Reportes diarios</div>
       <div id="drHistorial"></div>
     </div>
   </div>
 
   <div class="nav-bottom">
-    <button class="nav-btn active" onclick="showScreen('hoy',this)"><span class="icon">📍</span>Hoy</button>
-    <button class="nav-btn" onclick="showScreen('semana',this)"><span class="icon">📋</span>Semana</button>
-    <button class="nav-btn" onclick="showScreen('registrar',this)"><span class="icon">✏️</span>Registrar</button>
-    <button class="nav-btn" onclick="showScreen('restricciones',this)"><span class="icon">🔒</span>Restrict.</button>
-    <button class="nav-btn" onclick="showScreen('reportes',this)"><span class="icon">📊</span>Reportes</button>
+    <button class="nav-btn active" onclick="showScreen('hoy',this)"><span class="icon">📍</span>HOY</button>
+    <button class="nav-btn" onclick="showScreen('semana',this)"><span class="icon">📋</span>SEMANA</button>
+    <button class="nav-btn" onclick="showScreen('registrar',this)"><span class="icon">✏️</span>REGISTRAR</button>
+    <button class="nav-btn" onclick="showScreen('restricciones',this)"><span class="icon">🔒</span>RESTRICT.</button>
+    <button class="nav-btn" onclick="showScreen('reportes',this)"><span class="icon">📊</span>REPORTES</button>
   </div>
 </div>
 
@@ -241,157 +276,121 @@ textarea.form-input{resize:vertical;min-height:70px;}
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="cerrarModal('modalDR')">✕</button>
     <div class="modal-title" id="drTitle">Reporte de Arranque</div>
-    <div class="modal-sub" id="drSub">🌅 Miércoles 14 Mayo 2026 — WEG Estructura</div>
+    <div class="modal-sub" id="drSub">Miércoles 14 Mayo 2026 — WEG Estructura</div>
     <input type="hidden" id="drTipo">
-
-    <!-- SECCIÓN ARRANQUE -->
     <div id="drArranqueForm">
       <div class="dr-section">
-        <div class="dr-section-title">📋 ¿Qué se va a hacer hoy?</div>
+        <div class="dr-section-title">📋 Actividades de hoy</div>
         <div id="drActsCheck"></div>
-        <div style="margin-top:8px;">
-          <label class="form-label">Actividades adicionales (opcional)</label>
-          <textarea class="form-input" id="drActsExtra" rows="2" placeholder="Ej: Revisar calidad soldaduras sección A"></textarea>
-        </div>
+        <label class="form-label" style="margin-top:8px;">Actividades adicionales</label>
+        <textarea class="form-input" id="drActsExtra" rows="2" placeholder="Ej: Revisar calidad soldaduras sección A"></textarea>
       </div>
-
       <div class="dr-section">
-        <div class="dr-section-title">🎯 Metas del día</div>
-        <label class="form-label">¿Cuánto se espera ejecutar hoy?</label>
-        <input class="form-input" id="drMetaHoy" placeholder="Ej: 12 ml de PG Lab + 45 m2 Plafón">
+        <div class="dr-section-title">🎯 Meta del día</div>
+        <input class="form-input" id="drMetaHoy" placeholder="Ej: 12 ml PG Lab + 45 m2 Plafón">
       </div>
-
       <div class="dr-section">
-        <div class="dr-section-title">⚠️ ¿Hay algo que pueda bloquear el trabajo hoy?</div>
-        <label class="form-label">Restricciones o riesgos del día</label>
+        <div class="dr-section-title">⚠️ Posibles bloqueos</div>
         <textarea class="form-input" id="drRiesgos" rows="2" placeholder="Ej: Podría faltar material si no llega el camión antes de las 9am"></textarea>
       </div>
-
       <div class="dr-section">
-        <div class="dr-section-title">👷 Recursos disponibles hoy</div>
+        <div class="dr-section-title">👷 Recursos disponibles</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div>
-            <label class="form-label">Personal (personas)</label>
-            <input class="form-input" id="drPersonal" type="number" min="0" placeholder="Ej: 8">
-          </div>
-          <div>
-            <label class="form-label">Equipos disponibles</label>
-            <input class="form-input" id="drEquipos" placeholder="Ej: 2 soldadoras">
-          </div>
+          <div><label class="form-label">Personal</label><input class="form-input" id="drPersonal" type="number" min="0" placeholder="8 personas"></div>
+          <div><label class="form-label">Equipos</label><input class="form-input" id="drEquipos" placeholder="2 soldadoras"></div>
         </div>
       </div>
-
       <div class="dr-section">
-        <div class="dr-section-title">📸 Foto del arranque (opcional)</div>
-        <p style="font-size:11px;color:#888;margin-bottom:6px;">Foto del área de trabajo al inicio del turno</p>
+        <div class="dr-section-title">📸 Foto arranque</div>
         <div class="foto-btns">
-          <button class="foto-btn" onclick="document.getElementById('drFotoCamA').click()">📷 Tomar foto</button>
+          <button class="foto-btn" onclick="document.getElementById('drFotoCamA').click()">📷 Cámara</button>
           <button class="foto-btn" onclick="document.getElementById('drFotoGalA').click()">🖼 Galería</button>
         </div>
         <input type="file" id="drFotoCamA" accept="image/*" capture="environment" style="display:none" onchange="previewFoto(this,'drFotoPreviewA')">
         <input type="file" id="drFotoGalA" accept="image/*" style="display:none" onchange="previewFoto(this,'drFotoPreviewA')">
-        <img id="drFotoPreviewA" class="foto-preview" alt="Foto arranque">
-        <div id="drFotoStatusA" style="font-size:11px;color:#888;margin-top:4px;"></div>
+        <img id="drFotoPreviewA" class="foto-preview" alt="">
       </div>
-
-      <label class="form-label">Observaciones generales del arranque</label>
-      <textarea class="form-input" id="drObsArranque" rows="2" placeholder="Ej: Condiciones del área, novedades, cambios de último momento..."></textarea>
+      <label class="form-label">Observaciones</label>
+      <textarea class="form-input" id="drObsArranque" rows="2" placeholder="Novedades, condiciones del área..."></textarea>
     </div>
 
-    <!-- SECCIÓN CIERRE -->
     <div id="drCierreForm" style="display:none;">
       <div class="dr-section">
-        <div class="dr-section-title">✅ ¿Qué se logró hoy?</div>
+        <div class="dr-section-title">✅ ¿Qué se logró?</div>
         <div id="drActsCierreCheck"></div>
-        <div style="margin-top:8px;">
-          <label class="form-label">Logros adicionales</label>
-          <textarea class="form-input" id="drLogrosExtra" rows="2" placeholder="Ej: Se terminó sección sur que no estaba planificada"></textarea>
-        </div>
+        <label class="form-label" style="margin-top:8px;">Logros adicionales</label>
+        <textarea class="form-input" id="drLogrosExtra" rows="2" placeholder="Ej: Se terminó sección sur que no estaba planificada"></textarea>
       </div>
-
       <div class="dr-section">
-        <div class="dr-section-title">📏 Cantidades ejecutadas hoy</div>
-        <label class="form-label">¿Cuánto se ejecutó en total?</label>
-        <input class="form-input" id="drCantReal" placeholder="Ej: 10 ml de PG Lab + 30 m2 Plafón">
-        <label class="form-label" style="margin-top:8px;">Cumplimiento general del día</label>
+        <div class="dr-section-title">📏 Cantidad ejecutada</div>
+        <input class="form-input" id="drCantReal" placeholder="Ej: 10 ml PG Lab + 30 m2 Plafón">
+        <label class="form-label" style="margin-top:8px;">Cumplimiento del día</label>
         <div class="cumplimiento-opts">
           <button class="cumpl-btn completo" onclick="selCumplimiento('Completo',this)">✅ Completo</button>
           <button class="cumpl-btn parcial" onclick="selCumplimiento('Parcial',this)">⚠️ Parcial</button>
           <button class="cumpl-btn no" onclick="selCumplimiento('No cumplido',this)">❌ No cumplido</button>
         </div>
       </div>
-
       <div class="dr-section" id="drCNCSection" style="display:none;">
-        <div class="dr-section-title" style="color:#e24b4a;">🚫 ¿Por qué no se cumplió todo?</div>
+        <div class="dr-section-title" style="color:#e24b4a;">🚫 Causa de no cumplimiento</div>
         <div class="cnc-grid" id="drCNCOpts"></div>
-        <div id="drCNCOtraWrap" style="display:none;margin-top:8px;">
-          <label class="form-label">Describe la causa:</label>
-          <input class="form-input" id="drCNCOtra" placeholder="Ej: Problema con el andamio">
-        </div>
       </div>
-
       <div class="dr-section">
-        <div class="dr-section-title">🔒 Restricciones del día</div>
-        <label class="form-label">¿Quedó alguna restricción activa?</label>
-        <textarea class="form-input" id="drRestCierre" rows="2" placeholder="Ej: Material de PTR no llegó, se requiere para mañana"></textarea>
+        <div class="dr-section-title">🔒 Restricciones activas</div>
+        <textarea class="form-input" id="drRestCierre" rows="2" placeholder="Ej: Falta PTR, se requiere para mañana"></textarea>
       </div>
-
       <div class="dr-section">
         <div class="dr-section-title">📸 Foto del cierre</div>
-        <p style="font-size:11px;color:#888;margin-bottom:6px;">Foto del avance al final del turno — evidencia del trabajo del día</p>
         <div class="foto-btns">
-          <button class="foto-btn" onclick="document.getElementById('drFotoCamC').click()">📷 Tomar foto</button>
+          <button class="foto-btn" onclick="document.getElementById('drFotoCamC').click()">📷 Cámara</button>
           <button class="foto-btn" onclick="document.getElementById('drFotoGalC').click()">🖼 Galería</button>
         </div>
         <input type="file" id="drFotoCamC" accept="image/*" capture="environment" style="display:none" onchange="previewFoto(this,'drFotoPreviewC')">
         <input type="file" id="drFotoGalC" accept="image/*" style="display:none" onchange="previewFoto(this,'drFotoPreviewC')">
-        <img id="drFotoPreviewC" class="foto-preview" alt="Foto cierre">
-        <div id="drFotoStatusC" style="font-size:11px;color:#888;margin-top:4px;"></div>
+        <img id="drFotoPreviewC" class="foto-preview" alt="">
       </div>
-
-      <label class="form-label">Observaciones del cierre y para el día siguiente</label>
-      <textarea class="form-input" id="drObsCierre" rows="3" placeholder="Ej: Mañana se necesita arrancar temprano, el camión de concreto llega a las 7am..."></textarea>
+      <label class="form-label">Notas para el día siguiente</label>
+      <textarea class="form-input" id="drObsCierre" rows="3" placeholder="Ej: Mañana llega el camión de concreto a las 7am..."></textarea>
     </div>
-
-    <button class="btn-guardar" id="btnGuardarDR" onclick="guardarDR()">💾 Enviar reporte</button>
+    <button class="btn-guardar" id="btnGuardarDR" onclick="guardarDR()">ENVIAR REPORTE</button>
   </div>
 </div>
 
-<!-- MODAL REGISTRO DIARIO -->
+<!-- MODAL REGISTRO -->
 <div class="modal" id="modalReg">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="cerrarModal('modalReg')">✕</button>
     <div class="modal-title" id="regTitle">Registrar avance</div>
     <input type="hidden" id="regActId">
-    <div style="background:#e8f5e9;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#2e7d32;">
-      Meta de hoy: <strong id="regMetaLabel">—</strong>
+    <div style="background:#f0f9f4;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1d9e75;font-weight:600;letter-spacing:.3px;">
+      META: <span id="regMetaLabel">—</span>
     </div>
-    <label class="form-label">¿Cuánto ejecutaste hoy?</label>
+    <label class="form-label">Cantidad ejecutada hoy</label>
     <div class="cant-row" style="margin-bottom:12px;">
       <input class="form-input" id="regCant" type="number" min="0" step="0.1" placeholder="Ej: 8.5" style="margin:0;">
-      <input class="form-input" id="regUnidad" readonly style="background:#f5f5f0;color:#888;margin:0;">
+      <input class="form-input" id="regUnidad" readonly style="background:#f5f5f5;color:#888;margin:0;font-weight:700;">
     </div>
     <label class="form-label">¿Se cumplió lo prometido?</label>
     <div class="cumplido-row">
-      <div class="cumplido-btn si" id="btnSi" onclick="selCumplido(true)">✅<div class="cumplido-label">Sí, cumplido</div></div>
-      <div class="cumplido-btn no" id="btnNo" onclick="selCumplido(false)">❌<div class="cumplido-label">No cumplido</div></div>
+      <div class="cumplido-btn si" id="btnSi" onclick="selCumplido(true)">✅<div class="cumplido-label">SÍ, CUMPLIDO</div></div>
+      <div class="cumplido-btn no" id="btnNo" onclick="selCumplido(false)">❌<div class="cumplido-label">NO CUMPLIDO</div></div>
     </div>
     <div id="cncSection" style="display:none;margin-top:12px;">
-      <label class="form-label" style="color:#e24b4a;">🚫 ¿Por qué no se cumplió?</label>
+      <label class="form-label" style="color:#e24b4a;">🚫 Causa de no cumplimiento</label>
       <div class="cnc-grid" id="cncOpts"></div>
     </div>
     <label class="form-label" style="margin-top:12px;">Observación</label>
     <textarea class="form-input" id="regObs" rows="2" placeholder="Ej: 8ml sección norte, falta sección sur"></textarea>
-    <label class="form-label">📸 Foto de evidencia</label>
+    <label class="form-label">Foto de evidencia</label>
     <div class="foto-btns">
-      <button class="foto-btn" onclick="document.getElementById('regFotoCam').click()">📷 Tomar foto</button>
+      <button class="foto-btn" onclick="document.getElementById('regFotoCam').click()">📷 Cámara</button>
       <button class="foto-btn" onclick="document.getElementById('regFotoGal').click()">🖼 Galería</button>
     </div>
     <input type="file" id="regFotoCam" accept="image/*" capture="environment" style="display:none" onchange="previewFoto(this,'regFotoPreview')">
     <input type="file" id="regFotoGal" accept="image/*" style="display:none" onchange="previewFoto(this,'regFotoPreview')">
-    <img id="regFotoPreview" class="foto-preview" alt="Evidencia">
-    <button class="btn-guardar" id="btnGuardarReg" onclick="guardarRegistro()">💾 Guardar registro</button>
+    <img id="regFotoPreview" class="foto-preview" alt="">
+    <button class="btn-guardar" id="btnGuardarReg" onclick="guardarRegistro()">GUARDAR REGISTRO</button>
   </div>
 </div>
 
@@ -400,8 +399,8 @@ textarea.form-input{resize:vertical;min-height:70px;}
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="cerrarModal('modalAct')">✕</button>
-    <div class="modal-title">+ Nueva actividad</div>
-    <label class="form-label">Actividad / Descripción *</label>
+    <div class="modal-title">Nueva actividad</div>
+    <label class="form-label">Descripción *</label>
     <input class="form-input" id="mNombre" placeholder="Ej: Fabricar marcos escalera PB — sección norte">
     <label class="form-label">Partida</label>
     <select class="form-input" id="mPartida">
@@ -431,7 +430,7 @@ textarea.form-input{resize:vertical;min-height:70px;}
       <button class="cnc-btn" data-dia="S" onclick="this.classList.toggle('sel')">S</button>
       <button class="cnc-btn" data-dia="D" onclick="this.classList.toggle('sel')">D</button>
     </div>
-    <button class="btn-guardar" onclick="guardarActividad()">✅ Agregar al plan</button>
+    <button class="btn-guardar" onclick="guardarActividad()">AGREGAR AL PLAN</button>
   </div>
 </div>
 
@@ -440,7 +439,7 @@ textarea.form-input{resize:vertical;min-height:70px;}
   <div class="modal-sheet">
     <div class="modal-handle"></div>
     <button class="modal-close" onclick="cerrarModal('modalRest')">✕</button>
-    <div class="modal-title">🔒 Nueva restricción</div>
+    <div class="modal-title">Nueva restricción</div>
     <label class="form-label">¿Qué te está bloqueando? *</label>
     <textarea class="form-input" id="rDesc" rows="2" placeholder="Ej: Falta entrega de acero fy=4200"></textarea>
     <label class="form-label">¿Quién debe resolverlo?</label>
@@ -449,12 +448,20 @@ textarea.form-input{resize:vertical;min-height:70px;}
     <input class="form-input" id="rFecha" type="date">
     <label class="form-label">Impacto</label>
     <select class="form-input" id="rImpacto"><option>Alto</option><option>Medio</option><option>Bajo</option></select>
-    <button class="btn-guardar" onclick="guardarRestriccion()">💾 Guardar restricción</button>
+    <button class="btn-guardar" onclick="guardarRestriccion()">GUARDAR RESTRICCIÓN</button>
   </div>
 </div>
 
 <script>
-const MSAL_CFG={auth:{clientId:'9f85ee63-a011-4636-857e-b72128ed61e9',authority:'https://login.microsoftonline.com/3fce0139-013b-4c64-a04d-8605a9eb8088',redirectUri:window.location.href.split('?')[0]},cache:{cacheLocation:'sessionStorage'}};
+const MSAL_CFG={
+  auth:{
+    clientId:'9f85ee63-a011-4636-857e-b72128ed61e9',
+    authority:'https://login.microsoftonline.com/3fce0139-013b-4c64-a04d-8605a9eb8088',
+    redirectUri:'https://arme183.github.io/cao-metarco/supervisor.html'
+  },
+  cache:{cacheLocation:'sessionStorage'},
+  system:{allowRedirectInIframe:false}
+};
 const SCOPES=['User.Read','Sites.ReadWrite.All'];
 const SITE_ID='173d71cd-18eb-456a-93af-7b6b3d086f9b';
 const GRAPH='https://graph.microsoft.com/v1.0';
@@ -471,22 +478,55 @@ let actividades=[],registros=[],restricciones=[],dailyReports=[];
 let regActual=null,fotoBase64Reg=null,fotoBase64DR=null;
 let siteListIds={};
 
-// ── AUTH ─────────────────────────────────────────────────────────
+// ── AUTH MEJORADO ─────────────────────────────────────────────────
 async function login(){
+  const errEl=document.getElementById('loginError');
+  errEl.style.display='none';
   try{
-    if(!msalInst){msalInst=new msal.PublicClientApplication(MSAL_CFG);await msalInst.initialize();}
-    const resp=await msalInst.loginPopup({scopes:SCOPES});
+    if(!msalInst){
+      msalInst=new msal.PublicClientApplication(MSAL_CFG);
+      await msalInst.initialize();
+    }
+    // Intentar cuenta existente primero
+    const accounts=msalInst.getAllAccounts();
+    if(accounts.length>0){
+      try{
+        const tr=await msalInst.acquireTokenSilent({scopes:SCOPES,account:accounts[0]});
+        token=tr.accessToken;
+        user={name:accounts[0].name,email:accounts[0].username,initials:accounts[0].name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()};
+        initApp();return;
+      }catch(e){}
+    }
+    // Login popup
+    const resp=await msalInst.loginPopup({
+      scopes:SCOPES,
+      prompt:'select_account',
+      loginHint:'@metarco.com.mx'
+    });
     const tr=await msalInst.acquireTokenSilent({scopes:SCOPES,account:resp.account});
     token=tr.accessToken;
     user={name:resp.account.name,email:resp.account.username,initials:resp.account.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()};
     initApp();
   }catch(e){
-    token='DEMO';
-    user={name:'Marco Antonio Simon',email:'m.simon@metarco.com.mx',initials:'MS'};
-    initApp();
+    console.error('Login error:',e);
+    if(e.errorCode==='popup_window_error'||e.message?.includes('popup')){
+      errEl.textContent='⚠️ El popup fue bloqueado. Permite popups para este sitio en tu navegador y vuelve a intentar.';
+    } else if(e.errorCode==='user_cancelled'){
+      errEl.textContent='ℹ️ Inicio de sesión cancelado.';
+    } else {
+      errEl.textContent='⚠️ Error al iniciar sesión: '+e.message;
+    }
+    errEl.style.display='block';
   }
 }
-function logout(){if(confirm('¿Cerrar sesión?')){location.reload();}}
+
+function loginDemo(){
+  token='DEMO';
+  user={name:'Marco Antonio Simon',email:'m.simon@metarco.com.mx',initials:'MS'};
+  initApp();
+}
+
+function logout(){if(confirm('¿Cerrar sesión?')){if(msalInst)msalInst.clearCache();location.reload();}}
 
 // ── GRAPH ─────────────────────────────────────────────────────────
 async function gGet(url){
@@ -516,21 +556,18 @@ async function initApp(){
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('appScreen').style.display='block';
   document.getElementById('fabBtn').style.display='flex';
-  document.getElementById('userBtn').textContent=user.initials+' Salir';
-  document.getElementById('hSub').textContent=user.name+' · WEG Estructura';
-  document.getElementById('semLabel').textContent='Sem '+SEM_ACTUAL;
-  document.getElementById('semPct').textContent='Sem '+SEM_ACTUAL+' de '+TOTAL_SEMS+' · '+Math.round(SEM_ACTUAL/TOTAL_SEMS*100)+'%';
-  document.getElementById('diaLabel').textContent='📍 Hoy: '+DIAS_MAP[HOY_DIA]+' '+HOY_FECHA;
+  document.getElementById('userBtn').textContent='● '+user.initials+' SALIR';
+  document.getElementById('hSub').textContent=user.name.split(' ').slice(0,2).join(' ').toUpperCase()+' · WEG';
+  document.getElementById('semLabel').textContent='SEM '+SEM_ACTUAL;
+  document.getElementById('semPct').textContent='SEM '+SEM_ACTUAL+' DE '+TOTAL_SEMS+' · '+Math.round(SEM_ACTUAL/TOTAL_SEMS*100)+'%';
+  document.getElementById('diaLabel').textContent='📍 HOY: '+DIAS_MAP[HOY_DIA].toUpperCase()+' '+HOY_FECHA.toUpperCase();
   await cargarDatos();
   buildHoy();buildSemana();buildRegistrar();buildRestricciones();buildDRHistorial();updatePPC();checkDRStatus();
 }
 
 async function cargarDatos(){
   try{
-    if(token==='DEMO'){
-      actividades=demoActs();registros=demoRegs();restricciones=demoRest();dailyReports=[];
-      return;
-    }
+    if(token==='DEMO'){actividades=demoActs();registros=demoRegs();restricciones=demoRest();dailyReports=[];return;}
     const [aId,rId,rsId,drId]=await Promise.all([getListId('CAO_Actividades'),getListId('CAO_Registros_Diarios'),getListId('CAO_Restricciones'),getListId('CAO_Daily_Report')]);
     const [aD,rD,rsD,drD]=await Promise.all([
       gGet(`/sites/${SITE_ID}/lists/${aId}/items?$expand=fields&$filter=fields/Supervisor_Email eq '${user.email}' and fields/Semana eq ${SEM_ACTUAL}&$top=50`),
@@ -542,7 +579,6 @@ async function cargarDatos(){
   }catch(e){actividades=demoActs();registros=demoRegs();restricciones=demoRest();dailyReports=[];}
 }
 
-// ── DEMO DATA ─────────────────────────────────────────────────────
 function demoActs(){return[
   {id:'1',fields:{Nombre_Actividad:'Fabricación PG Lab — frente norte',Partida:'PG Lab — Fabricación',Meta:12,Unidad:'ml',Dias_Programados:'L,M,X,J,V',Turno:'Turno completo',Status:'Activa'}},
   {id:'2',fields:{Nombre_Actividad:'Fabricación escalera subestación PB',Partida:'Escalera PB — Fabricación',Meta:1,Unidad:'pza',Dias_Programados:'L,M,X,J,V',Turno:'Turno completo',Status:'Activa'}},
@@ -552,9 +588,7 @@ function demoRegs(){return[
   {id:'r1',fields:{Actividad_ID:'1',Dia:'L',Cantidad:8,Cumplido:true,CNC:'',Observacion:'8ml sección norte'}},
   {id:'r2',fields:{Actividad_ID:'1',Dia:'M',Cantidad:6,Cumplido:false,CNC:'📦 Falta de material',Observacion:'PTR llegó tarde'}},
   {id:'r3',fields:{Actividad_ID:'2',Dia:'L',Cantidad:null,Cumplido:true,CNC:'',Observacion:'Iniciado corte'}},
-  {id:'r4',fields:{Actividad_ID:'2',Dia:'M',Cantidad:null,Cumplido:true,CNC:'',Observacion:'Armado alfardas'}},
-  {id:'r5',fields:{Actividad_ID:'3',Dia:'L',Cantidad:18,Cumplido:true,CNC:'',Observacion:''}},
-  {id:'r6',fields:{Actividad_ID:'3',Dia:'M',Cantidad:16,Cumplido:true,CNC:'',Observacion:''}},
+  {id:'r4',fields:{Actividad_ID:'3',Dia:'L',Cantidad:18,Cumplido:true,CNC:'',Observacion:''}},
 ];}
 function demoRest(){return[
   {id:'rs1',fields:{Descripcion:'Falta entrega acero fy=4200',Responsable:'Aceros MX',Fecha_Compromiso:'2026-05-20',Impacto:'Alto',Status:'En proceso'}},
@@ -573,30 +607,23 @@ function showToast(msg){const t=document.getElementById('toast');t.textContent=m
 function getReg(actId,dia){return registros.find(r=>r.fields.Actividad_ID===actId&&r.fields.Dia===dia);}
 function diasProg(act){return(act.fields.Dias_Programados||'').split(',').map(d=>d.trim()).filter(Boolean);}
 function calcPPC(){const r=registros.filter(x=>x.fields.Cumplido!==null&&x.fields.Cumplido!==undefined);if(!r.length)return null;return Math.round(r.filter(x=>x.fields.Cumplido).length/r.length*100);}
-function ppcColor(p){return p>=80?'#1d9e75':p>=60?'#ba7517':'#e24b4a';}
-function updatePPC(){const p=calcPPC();const chip=document.getElementById('ppcChip');if(p!==null){chip.textContent='🎯 PPC: '+p+'%';chip.style.background=p>=80?'rgba(29,158,117,.3)':p>=60?'rgba(186,117,23,.3)':'rgba(226,75,74,.3)';}}
+function ppcColor(p){return p>=80?'#1d9e75':p>=60?'#f9a825':'#e24b4a';}
+function updatePPC(){const p=calcPPC();const c=document.getElementById('ppcChip');if(p!==null){c.textContent='🎯 PPC: '+p+'%';c.style.borderColor=ppcColor(p);c.style.color=ppcColor(p);}}
 function previewFoto(input,previewId){
   const f=input.files[0];if(!f)return;
   const r=new FileReader();
-  r.onload=e=>{
-    const img=document.getElementById(previewId);
-    img.src=e.target.result;img.style.display='block';
-    if(previewId==='regFotoPreview')fotoBase64Reg=e.target.result;
-    else fotoBase64DR=e.target.result;
-  };
+  r.onload=e=>{const img=document.getElementById(previewId);img.src=e.target.result;img.style.display='block';if(previewId==='regFotoPreview')fotoBase64Reg=e.target.result;else fotoBase64DR=e.target.result;};
   r.readAsDataURL(f);
 }
 
-// ── CHECK DR STATUS ───────────────────────────────────────────────
+// ── DR STATUS ─────────────────────────────────────────────────────
 function checkDRStatus(){
   const arr=dailyReports.find(r=>r.fields.Tipo==='Arranque');
   const cie=dailyReports.find(r=>r.fields.Tipo==='Cierre');
-  const btnA=document.getElementById('btnArranque');
-  const btnC=document.getElementById('btnCierre');
-  if(arr){btnA.classList.add('done');document.getElementById('statusArranque').textContent='✅ Enviado';}
-  else{document.getElementById('statusArranque').textContent='7:00 AM — Pendiente';}
-  if(cie){btnC.classList.add('done');document.getElementById('statusCierre').textContent='✅ Enviado';}
-  else{document.getElementById('statusCierre').textContent='6:00 PM — Pendiente';}
+  if(arr){document.getElementById('btnArranque').classList.add('done');document.getElementById('statusArranque').textContent='✅ ENVIADO';}
+  else{document.getElementById('statusArranque').textContent='7:00 AM — PENDIENTE';}
+  if(cie){document.getElementById('btnCierre').classList.add('done');document.getElementById('statusCierre').textContent='✅ ENVIADO';}
+  else{document.getElementById('statusCierre').textContent='6:00 PM — PENDIENTE';}
 }
 
 // ── DAILY REPORT ──────────────────────────────────────────────────
@@ -604,38 +631,24 @@ function abrirDR(tipo){
   document.getElementById('drTipo').value=tipo;
   const esArr=tipo==='arranque';
   document.getElementById('drTitle').textContent=esArr?'🌅 Reporte de Arranque':'🌇 Reporte de Cierre';
-  document.getElementById('drSub').textContent=(esArr?'Miércoles 14 Mayo 2026':'Miércoles 14 Mayo 2026')+' — WEG Estructura';
+  document.getElementById('drSub').textContent='Miércoles 14 Mayo 2026 — WEG Estructura';
   document.getElementById('drArranqueForm').style.display=esArr?'block':'none';
   document.getElementById('drCierreForm').style.display=esArr?'none':'block';
-
-  // Llenar checkboxes de actividades del día
-  const misActs=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
-  const checksHTML=misActs.map((a,i)=>`
-    <div class="check-item" onclick="toggleCheck('dr_${i}')">
-      <div class="check-box" id="dr_${i}"></div>
-      <div class="check-label">${a.fields.Nombre_Actividad} <span style="font-size:11px;color:#888;">(${a.fields.Meta} ${a.fields.Unidad})</span></div>
-    </div>`).join('');
-
-  if(esArr){document.getElementById('drActsCheck').innerHTML=checksHTML||'<div style="color:#aaa;font-size:12px;">No hay actividades programadas para hoy.</div>';}
-  else{
-    document.getElementById('drActsCierreCheck').innerHTML=misActs.map((a,i)=>`
-      <div class="check-item" onclick="toggleCheck('drc_${i}')">
-        <div class="check-box" id="drc_${i}"></div>
-        <div class="check-label">${a.fields.Nombre_Actividad} — ¿Se completó?</div>
-      </div>`).join('')||'<div style="color:#aaa;font-size:12px;">No hay actividades.</div>';
-    // CNC opts
-    document.getElementById('drCNCOpts').innerHTML=CNC_OPTS.map(c=>`<button class="cnc-btn" onclick="this.classList.toggle('sel');toggleDRCNCOtra()">${c}</button>`).join('');
-  }
+  const mis=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
+  const html=mis.map((a,i)=>`<div class="check-item" onclick="toggleCheck('${esArr?'dr':'drc'}_${i}')"><div class="check-box" id="${esArr?'dr':'drc'}_${i}"></div><div class="check-label">${a.fields.Nombre_Actividad} <span style="color:#aaa;font-size:11px;">${a.fields.Meta} ${a.fields.Unidad}</span></div></div>`).join('');
+  if(esArr)document.getElementById('drActsCheck').innerHTML=html||'<div style="color:#aaa;font-size:12px;padding:8px 0;">No hay actividades para hoy.</div>';
+  else document.getElementById('drActsCierreCheck').innerHTML=mis.map((a,i)=>`<div class="check-item" onclick="toggleCheck('drc_${i}')"><div class="check-box" id="drc_${i}"></div><div class="check-label">${a.fields.Nombre_Actividad} — ¿Completada?</div></div>`).join('');
+  if(!esArr){document.getElementById('drCNCOpts').innerHTML=CNC_OPTS.map(c=>`<button class="cnc-btn" onclick="this.classList.toggle('sel')">${c}</button>`).join('');}
   cumplimientoSel=null;
   document.querySelectorAll('.cumpl-btn').forEach(b=>b.classList.remove('sel'));
   document.getElementById('drCNCSection').style.display='none';
   fotoBase64DR=null;
-  document.getElementById(esArr?'drFotoPreviewA':'drFotoPreviewC').style.display='none';
+  if(esArr)document.getElementById('drFotoPreviewA').style.display='none';
+  else document.getElementById('drFotoPreviewC').style.display='none';
   document.getElementById('modalDR').classList.add('open');
 }
 
-function toggleCheck(id){const el=document.getElementById(id);el.classList.toggle('checked');el.textContent=el.classList.contains('checked')?'✓':'';}
-function toggleDRCNCOtra(){document.getElementById('drCNCOtraWrap').style.display=document.querySelector('#drCNCOpts .cnc-btn.sel[onclick*="Otra"]')?'block':'none';}
+function toggleCheck(id){const el=document.getElementById(id);if(!el)return;el.classList.toggle('checked');el.textContent=el.classList.contains('checked')?'✓':'';}
 
 function selCumplimiento(val,btn){
   cumplimientoSel=val;
@@ -648,75 +661,48 @@ async function guardarDR(){
   const tipo=document.getElementById('drTipo').value;
   const esArr=tipo==='arranque';
   const btn=document.getElementById('btnGuardarDR');
-  btn.disabled=true;btn.textContent='Enviando...';
-
-  // Recopilar actividades chequeadas
-  const misActs=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
-  const actsCheck=misActs.map((a,i)=>{
-    const id=esArr?`dr_${i}`:`drc_${i}`;
-    const checked=document.getElementById(id)?.classList.contains('checked');
-    return checked?a.fields.Nombre_Actividad:null;
-  }).filter(Boolean).join(', ');
-
-  // CNC si aplica
+  btn.disabled=true;btn.textContent='ENVIANDO...';
+  const mis=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
+  const acts=mis.map((a,i)=>{const id=esArr?`dr_${i}`:`drc_${i}`;return document.getElementById(id)?.classList.contains('checked')?a.fields.Nombre_Actividad:null;}).filter(Boolean).join(', ');
   const cncs=!esArr?Array.from(document.querySelectorAll('#drCNCOpts .cnc-btn.sel')).map(b=>b.textContent).join(', '):'';
-  const cncOtra=document.getElementById('drCNCOtra')?.value||'';
-  const cncFinal=cncOtra?cncs+', '+cncOtra:cncs;
-
   const fields={
-    ID_Reporte:`DR_${tipo}_${HOY_DIA}_S${SEM_ACTUAL}_${user.email}`,
-    Obra:OBRA,
-    Supervisor_Email:user.email,
-    Supervisor_Nombre:user.name,
-    Fecha:new Date().toISOString(),
-    Tipo:tipo==='arranque'?'Arranque':'Cierre',
-    Semana:SEM_ACTUAL,
-    Actividades_Hoy:esArr?(actsCheck+(document.getElementById('drActsExtra')?.value?' | '+document.getElementById('drActsExtra').value:'')):(actsCheck+(document.getElementById('drLogrosExtra')?.value?' | '+document.getElementById('drLogrosExtra').value:'')),
-    Meta_Cantidad:esArr?(document.getElementById('drMetaHoy')?.value||''):(document.getElementById('drCantReal')?.value||''),
-    Real_Cantidad:!esArr?(document.getElementById('drCantReal')?.value||''):'',
-    Cumplimiento:!esArr?(cumplimientoSel||'Sin registrar'):'',
-    Restricciones_Activas:esArr?(document.getElementById('drRiesgos')?.value||''):(document.getElementById('drRestCierre')?.value||''),
-    Materiales_Requeridos:esArr?(`Personal: ${document.getElementById('drPersonal')?.value||'—'} | Equipos: ${document.getElementById('drEquipos')?.value||'—'}`):'',
-    Observaciones:esArr?(document.getElementById('drObsArranque')?.value||''):(document.getElementById('drObsCierre')?.value||'')+(!esArr&&cncFinal?' | CNC: '+cncFinal:''),
-    Foto_URL:fotoBase64DR?'Foto adjunta':'',
+    ID_Reporte:`DR_${tipo}_${HOY_DIA}_S${SEM_ACTUAL}_${user.email.split('@')[0]}`,
+    Obra:OBRA,Supervisor_Email:user.email,Supervisor_Nombre:user.name,
+    Fecha:new Date().toISOString(),Tipo:esArr?'Arranque':'Cierre',Semana:SEM_ACTUAL,
+    Actividades_Hoy:acts+(esArr&&document.getElementById('drActsExtra')?.value?' | '+document.getElementById('drActsExtra').value:(!esArr&&document.getElementById('drLogrosExtra')?.value?' | '+document.getElementById('drLogrosExtra').value:'')),
+    Meta_Cantidad:esArr?document.getElementById('drMetaHoy')?.value||'':document.getElementById('drCantReal')?.value||'',
+    Real_Cantidad:!esArr?document.getElementById('drCantReal')?.value||'':'',
+    Cumplimiento:!esArr?cumplimientoSel||'Sin registrar':'',
+    Restricciones_Activas:esArr?document.getElementById('drRiesgos')?.value||'':document.getElementById('drRestCierre')?.value||'',
+    Materiales_Requeridos:esArr?`Personal: ${document.getElementById('drPersonal')?.value||'—'} | Equipos: ${document.getElementById('drEquipos')?.value||'—'}`:'',
+    Observaciones:(esArr?document.getElementById('drObsArranque')?.value||'':document.getElementById('drObsCierre')?.value||'')+(!esArr&&cncs?' | CNC: '+cncs:''),
+    Foto_URL:fotoBase64DR?'Foto adjunta':''
   };
-
   try{
-    if(token!=='DEMO'){
-      const listId=await getListId('CAO_Daily_Report');
-      const nuevo=await gPost(`/sites/${SITE_ID}/lists/${listId}/items`,{fields});
-      dailyReports.push({id:nuevo.id,fields});
-    } else {
-      dailyReports.push({id:'dr'+Date.now(),fields});
-    }
-    cerrarModal('modalDR');
-    checkDRStatus();
-    buildDRHistorial();
-    showToast(tipo==='arranque'?'🌅 Reporte de arranque enviado':'🌇 Reporte de cierre enviado');
+    if(token!=='DEMO'){const lId=await getListId('CAO_Daily_Report');const n=await gPost(`/sites/${SITE_ID}/lists/${lId}/items`,{fields});dailyReports.push({id:n.id,fields});}
+    else{dailyReports.push({id:'dr'+Date.now(),fields});}
+    cerrarModal('modalDR');checkDRStatus();buildDRHistorial();
+    showToast(esArr?'🌅 Reporte de arranque enviado':'🌇 Reporte de cierre enviado');
   }catch(e){showToast('⚠️ Error: '+e.message);}
-  btn.disabled=false;btn.textContent='💾 Enviar reporte';
+  btn.disabled=false;btn.textContent='ENVIAR REPORTE';
 }
 
 // ── DR HISTORIAL ──────────────────────────────────────────────────
 function buildDRHistorial(){
-  const container=document.getElementById('drHistorial');
-  if(!dailyReports.length){
-    container.innerHTML=`<div class="empty"><div class="empty-icon">📊</div><div style="font-weight:500;">Sin reportes esta semana</div><div style="font-size:13px;margin-top:6px;">Usa los botones de Arranque y Cierre para generar reportes diarios.</div></div>`;
-    return;
-  }
-  container.innerHTML=dailyReports.map(r=>{
-    const f=r.fields;
-    const esArr=f.Tipo==='Arranque';
+  const c=document.getElementById('drHistorial');
+  if(!dailyReports.length){c.innerHTML=`<div class="empty"><div class="empty-icon">📊</div><div style="font-weight:700;color:#000;">Sin reportes esta semana</div><div style="font-size:13px;margin-top:6px;">Usa los botones de Arranque y Cierre al inicio y fin del turno.</div></div>`;return;}
+  c.innerHTML=dailyReports.map(r=>{
+    const f=r.fields;const esArr=f.Tipo==='Arranque';
     return`<div class="dr-card">
-      <div class="dr-card-header">
-        <span class="dr-tipo ${esArr?'arranque':'cierre'}">${esArr?'🌅 Arranque':'🌇 Cierre'}</span>
-        <span style="font-size:11px;color:#888;">${new Date(f.Fecha||Date.now()).toLocaleDateString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="dr-tipo ${esArr?'arranque':'cierre'}">${esArr?'🌅 ARRANQUE':'🌇 CIERRE'}</span>
+        <span style="font-size:11px;color:#aaa;">${new Date(f.Fecha||Date.now()).toLocaleDateString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
       </div>
       ${f.Actividades_Hoy?`<div style="font-size:12px;margin-bottom:4px;"><strong>Actividades:</strong> ${f.Actividades_Hoy}</div>`:''}
       ${f.Meta_Cantidad?`<div style="font-size:12px;margin-bottom:4px;"><strong>${esArr?'Meta:':'Ejecutado:'}</strong> ${f.Meta_Cantidad}</div>`:''}
       ${f.Cumplimiento?`<div style="font-size:12px;margin-bottom:4px;"><strong>Cumplimiento:</strong> ${f.Cumplimiento==='Completo'?'✅':f.Cumplimiento==='Parcial'?'⚠️':'❌'} ${f.Cumplimiento}</div>`:''}
-      ${f.Restricciones_Activas?`<div style="font-size:12px;margin-bottom:4px;color:#854f0b;"><strong>Restricciones:</strong> ${f.Restricciones_Activas}</div>`:''}
-      ${f.Observaciones?`<div style="font-size:11px;color:#666;font-style:italic;">"${f.Observaciones}"</div>`:''}
+      ${f.Restricciones_Activas?`<div style="font-size:12px;color:#f9a825;margin-bottom:4px;">⚠️ ${f.Restricciones_Activas}</div>`:''}
+      ${f.Observaciones?`<div style="font-size:11px;color:#888;font-style:italic;">"${f.Observaciones}"</div>`:''}
     </div>`;
   }).join('');
 }
@@ -725,21 +711,20 @@ function buildDRHistorial(){
 function buildHoy(){
   const mis=actividades.filter(a=>diasProg(a).includes(HOY_DIA));
   const c=document.getElementById('actsHoy');
-  if(!mis.length){c.innerHTML=`<div class="empty"><div class="empty-icon">🎉</div><div>Sin actividades hoy</div><div style="font-size:13px;margin-top:6px;">Usa el botón + para agregar una</div></div>`;return;}
+  if(!mis.length){c.innerHTML=`<div class="empty"><div class="empty-icon">🎉</div><div style="font-weight:700;color:#000;">Sin actividades hoy</div><div style="font-size:13px;margin-top:6px;">Usa el botón + para agregar una actividad.</div></div>`;return;}
   c.innerHTML=mis.map(a=>{
-    const r=getReg(a.id,HOY_DIA);
-    const reg=r&&r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined;
+    const r=getReg(a.id,HOY_DIA);const reg=r&&r.fields.Cumplido!==null&&r.fields.Cumplido!==undefined;
     const cls=reg?(r.fields.Cumplido?'cumplida':'retraso'):'hoy';
     return`<div class="act-card ${cls}">
       <div class="act-nombre">${a.fields.Nombre_Actividad}</div>
       <div class="act-meta">📂 ${a.fields.Partida||'—'} · 🎯 ${a.fields.Meta} ${a.fields.Unidad} · ⏱ ${a.fields.Turno||'—'}</div>
-      ${reg?`<div style="background:${r.fields.Cumplido?'#e8f5e9':'#fcebeb'};border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;">
+      ${reg?`<div style="background:${r.fields.Cumplido?'#f0f9f4':'#fff5f5'};border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:12px;border:1px solid ${r.fields.Cumplido?'#c8e6c9':'#ffcdd2'};">
         ${r.fields.Cumplido?'✅':'❌'} ${r.fields.Cumplido?'Cumplido':'No cumplido'}${r.fields.Cantidad?` · ${r.fields.Cantidad} ${a.fields.Unidad}`:''}
-        ${r.fields.CNC?`<div style="margin-top:3px;"><span class="badge rojo" style="font-size:10px;">${r.fields.CNC}</span></div>`:''}
+        ${r.fields.CNC?`<div style="margin-top:3px;"><span class="badge rojo">${r.fields.CNC}</span></div>`:''}
         ${r.fields.Observacion?`<div style="margin-top:3px;color:#666;">"${r.fields.Observacion}"</div>`:''}
       </div>
-      <button onclick="abrirRegistro('${a.id}')" class="btn-registrar ${r.fields.Cumplido?'ya':'cnc'}">✏️ Editar registro</button>`
-      :`<button onclick="abrirRegistro('${a.id}')" class="btn-registrar">📍 Registrar avance de hoy</button>`}
+      <button onclick="abrirRegistro('${a.id}')" class="btn-registrar ${r.fields.Cumplido?'ya':'cnc'}">✏️ EDITAR REGISTRO</button>`
+      :`<button onclick="abrirRegistro('${a.id}')" class="btn-registrar">📍 REGISTRAR AVANCE DE HOY</button>`}
     </div>`;
   }).join('');
 }
@@ -747,22 +732,22 @@ function buildHoy(){
 // ── SEMANA ────────────────────────────────────────────────────────
 function buildSemana(){
   const c=document.getElementById('actsSemana');
-  if(!actividades.length){c.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div>Sin actividades</div></div>`;return;}
+  if(!actividades.length){c.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div style="font-weight:700;color:#000;">Sin actividades</div></div>`;return;}
   c.innerHTML=actividades.map(a=>{
     const dp=diasProg(a);
-    const diasHTML=Object.keys(DIAS_MAP).map(d=>{
+    const dH=Object.keys(DIAS_MAP).map(d=>{
       const prog=dp.includes(d);const r=getReg(a.id,d);
       const cls=!prog?'no-prog':d===HOY_DIA&&prog?'hoy-prog':r?.fields.Cumplido===true?'cumplido':r?.fields.Cumplido===false?'retraso':'prog';
-      const em=!prog?'':r?.fields.Cumplido===true?'✅':r?.fields.Cumplido===false?'❌':d===HOY_DIA?'📍':'';
+      const em=!prog?'':r?.fields.Cumplido===true?'✅':r?.fields.Cumplido===false?'❌':d===HOY_DIA?'●':'';
       return`<div class="dia-chip ${cls}">${em||d}</div>`;
     }).join('');
-    const regsA=registros.filter(r=>r.fields.Actividad_ID===a.id&&r.fields.Cumplido!==null);
-    const ppcA=regsA.length>0?Math.round(regsA.filter(r=>r.fields.Cumplido).length/regsA.length*100):null;
+    const rA=registros.filter(r=>r.fields.Actividad_ID===a.id&&r.fields.Cumplido!==null);
+    const pA=rA.length>0?Math.round(rA.filter(r=>r.fields.Cumplido).length/rA.length*100):null;
     return`<div class="act-card">
       <div class="act-nombre">${a.fields.Nombre_Actividad}</div>
       <div class="act-meta">📂 ${a.fields.Partida||'—'} · 🎯 ${a.fields.Meta} ${a.fields.Unidad}/día</div>
-      <div class="dias-row">${diasHTML}</div>
-      ${ppcA!==null?`<div style="font-size:11px;color:#888;">PPC: <strong style="color:${ppcColor(ppcA)};">${ppcA}%</strong></div><div class="ppc-bar"><div class="ppc-fill" style="width:${ppcA}%;background:${ppcColor(ppcA)};"></div></div>`:''}
+      <div class="dias-row">${dH}</div>
+      ${pA!==null?`<div style="font-size:11px;color:#888;font-weight:600;">PPC: <span style="color:${ppcColor(pA)};">${pA}%</span></div><div class="ppc-bar"><div class="ppc-fill" style="width:${pA}%;background:${ppcColor(pA)};"></div></div>`:''}
     </div>`;
   }).join('');
 }
@@ -777,9 +762,9 @@ function buildRegistrar(){
     return`<div class="act-card" style="margin-bottom:10px;">
       <div class="act-nombre">${a.fields.Nombre_Actividad}</div>
       <div class="act-meta">${a.fields.Partida||'—'} · Meta: ${a.fields.Meta} ${a.fields.Unidad}</div>
-      ${reg?`<div style="background:${r.fields.Cumplido?'#e8f5e9':'#fcebeb'};border-radius:8px;padding:8px;margin-bottom:6px;font-size:12px;">${r.fields.Cumplido?'✅':'❌'} ${r.fields.Cumplido?'Cumplido':'No cumplido'} · ${r.fields.Cantidad||'—'} ${a.fields.Unidad}</div>
-      <button onclick="abrirRegistro('${a.id}')" class="btn-registrar ya">✏️ Editar</button>`
-      :`<button onclick="abrirRegistro('${a.id}')" class="btn-registrar">📍 Registrar ahora</button>`}
+      ${reg?`<div style="background:${r.fields.Cumplido?'#f0f9f4':'#fff5f5'};border-radius:8px;padding:8px;margin-bottom:6px;font-size:12px;border:1px solid ${r.fields.Cumplido?'#c8e6c9':'#ffcdd2'};">${r.fields.Cumplido?'✅':'❌'} ${r.fields.Cumplido?'Cumplido':'No cumplido'} · ${r.fields.Cantidad||'—'} ${a.fields.Unidad}</div>
+      <button onclick="abrirRegistro('${a.id}')" class="btn-registrar ya">✏️ EDITAR</button>`
+      :`<button onclick="abrirRegistro('${a.id}')" class="btn-registrar">📍 REGISTRAR AHORA</button>`}
     </div>`;
   }).join('');
 }
@@ -787,25 +772,25 @@ function buildRegistrar(){
 // ── RESTRICCIONES ─────────────────────────────────────────────────
 function buildRestricciones(){
   const c=document.getElementById('restList');
-  if(!restricciones.length){c.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div>Sin restricciones activas</div></div>`;return;}
+  if(!restricciones.length){c.innerHTML=`<div class="empty"><div class="empty-icon">✅</div><div style="font-weight:700;color:#000;">Sin restricciones activas</div></div>`;return;}
   c.innerHTML=restricciones.map(r=>`<div class="rest-card ${r.fields.Status==='Liberada'?'liberada':''}">
     <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
       <span class="badge ${r.fields.Impacto==='Alto'?'rojo':r.fields.Impacto==='Medio'?'amarillo':'gris'}">${r.fields.Impacto}</span>
       <span class="badge ${r.fields.Status==='Liberada'?'verde':r.fields.Status==='En proceso'?'amarillo':'rojo'}">${r.fields.Status}</span>
     </div>
-    <div style="font-size:13px;font-weight:500;margin-bottom:4px;">${r.fields.Descripcion}</div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:4px;color:#000;">${r.fields.Descripcion}</div>
     <div style="font-size:11px;color:#888;">👤 ${r.fields.Responsable||'—'} · 📅 ${r.fields.Fecha_Compromiso||'—'}</div>
-    ${r.fields.Status!=='Liberada'?`<button onclick="liberarRest('${r.id}')" style="margin-top:8px;width:100%;background:none;border:.5px solid #1d9e75;color:#1d9e75;padding:7px;border-radius:6px;cursor:pointer;font-size:12px;">✅ Marcar como liberada</button>`:''}
+    ${r.fields.Status!=='Liberada'?`<button onclick="liberarRest('${r.id}')" style="margin-top:8px;width:100%;background:#000;color:#fff;border:none;padding:8px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.5px;">✅ MARCAR COMO LIBERADA</button>`:''}
   </div>`).join('');
 }
 
-// ── REGISTRO DIARIO ───────────────────────────────────────────────
+// ── MODAL REGISTRO ────────────────────────────────────────────────
 function abrirRegistro(actId){
   regActual=actividades.find(a=>a.id===actId);if(!regActual)return;
   const r=getReg(actId,HOY_DIA);
   document.getElementById('regActId').value=actId;
-  document.getElementById('regTitle').textContent=regActual.fields.Nombre_Actividad.slice(0,36)+'…';
-  document.getElementById('regMetaLabel').textContent=`${regActual.fields.Meta} ${regActual.fields.Unidad} — ${DIAS_MAP[HOY_DIA]}`;
+  document.getElementById('regTitle').textContent=regActual.fields.Nombre_Actividad.slice(0,40);
+  document.getElementById('regMetaLabel').textContent=`${regActual.fields.Meta} ${regActual.fields.Unidad} — ${DIAS_MAP[HOY_DIA].toUpperCase()}`;
   document.getElementById('regUnidad').value=regActual.fields.Unidad;
   document.getElementById('regCant').value=r?.fields.Cantidad||'';
   document.getElementById('regObs').value=r?.fields.Observacion||'';
@@ -813,23 +798,19 @@ function abrirRegistro(actId){
   updateCumplidoBtns();
   document.getElementById('cncSection').style.display=cumplido===false?'block':'none';
   document.getElementById('cncOpts').innerHTML=CNC_OPTS.map(c=>`<button class="cnc-btn ${r?.fields.CNC?.includes(c)?'sel':''}" onclick="this.classList.toggle('sel')">${c}</button>`).join('');
-  fotoBase64Reg=null;
-  document.getElementById('regFotoPreview').style.display='none';
+  fotoBase64Reg=null;document.getElementById('regFotoPreview').style.display='none';
   document.getElementById('modalReg').classList.add('open');
 }
 
 function selCumplido(val){cumplido=val;updateCumplidoBtns();document.getElementById('cncSection').style.display=val===false?'block':'none';if(val===false)document.getElementById('cncOpts').innerHTML=CNC_OPTS.map(c=>`<button class="cnc-btn" onclick="this.classList.toggle('sel')">${c}</button>`).join('');}
-function updateCumplidoBtns(){
-  document.getElementById('btnSi').className='cumplido-btn si'+(cumplido===true?' sel':'');
-  document.getElementById('btnNo').className='cumplido-btn no'+(cumplido===false?' sel':'');
-}
+function updateCumplidoBtns(){document.getElementById('btnSi').className='cumplido-btn si'+(cumplido===true?' sel':'');document.getElementById('btnNo').className='cumplido-btn no'+(cumplido===false?' sel':'');}
 
 async function guardarRegistro(){
   const actId=document.getElementById('regActId').value;
   if(cumplido===null){showToast('⚠️ Indica si se cumplió o no');return;}
   const cncs=cumplido===false?Array.from(document.querySelectorAll('#cncOpts .cnc-btn.sel')).map(b=>b.textContent).join(','):[];
   if(cumplido===false&&!cncs.length){showToast('⚠️ Selecciona al menos una causa');return;}
-  const btn=document.getElementById('btnGuardarReg');btn.disabled=true;btn.textContent='Guardando...';
+  const btn=document.getElementById('btnGuardarReg');btn.disabled=true;btn.textContent='GUARDANDO...';
   const fields={ID_Registro:`${actId}_${HOY_DIA}_${SEM_ACTUAL}`,Actividad_ID:actId,Supervisor_Email:user.email,Supervisor_Nombre:user.name,Obra:OBRA,Fecha:new Date().toISOString().split('T')[0],Dia:HOY_DIA,Cantidad:parseFloat(document.getElementById('regCant').value)||null,Cumplido:cumplido,CNC:cncs.toString(),Observacion:document.getElementById('regObs').value.trim(),Semana:SEM_ACTUAL};
   try{
     const ex=getReg(actId,HOY_DIA);
@@ -842,7 +823,7 @@ async function guardarRegistro(){
     buildHoy();buildSemana();buildRegistrar();updatePPC();
     showToast('✅ Registro guardado');
   }catch(e){showToast('⚠️ Error: '+e.message);}
-  btn.disabled=false;btn.textContent='💾 Guardar registro';
+  btn.disabled=false;btn.textContent='GUARDAR REGISTRO';
 }
 
 // ── ACTIVIDAD ─────────────────────────────────────────────────────
