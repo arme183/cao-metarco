@@ -649,7 +649,7 @@ function cargarDemoData() {
     { id:3, desc:"Escalera PB — tramos superiores", partida:"Escalera PB — Montaje", meta:2, unidad:"pza", avance:0, cumplido:false },
   ];
   state.restricciones = [
-    { id:1, desc:"Falta tornillería de 5/8\" para remates", responsable:"Almacén", fecha:"2026-05-16", impacto:"alto" },
+    { id:1, desc:"Falta tornillería de 5/8" para remates", responsable:"Almacén", fecha:"2026-05-16", impacto:"alto" },
     { id:2, desc:"Acceso a zona norte bloqueado por colada", responsable:"Ing. Ramírez", fecha:"2026-05-18", impacto:"medio" },
   ];
 }
@@ -688,8 +688,17 @@ function mostrarApp() {
   setTab("hoy", document.querySelector(".tab-btn"));
 }
 
-function puedeEditar() {
-  return state.userRole === 'supervisor' || state.userRole === 'admin';
+function puedeEditar(actividadId = null) {
+  if (state.userRole === 'admin') return true;
+  if (state.userRole !== 'supervisor') return false;
+  // Supervisor: verificar ventana de 48hrs si se pasa un id
+  if (actividadId !== null) {
+    const a = state.actividades.find(x => x.id === actividadId);
+    if (a && a.avanceAt) {
+      if (Date.now() - a.avanceAt > 172800000) return false; // 48h en ms
+    }
+  }
+  return true;
 }
 
 function calcPPC() {
@@ -821,11 +830,13 @@ function renderSemana() {
 function renderRegistrar() {
   let rows = state.actividades.map(a => {
     const pct = a.meta>0?Math.round(a.avance/a.meta*100):0;
-    const clickable = puedeEditar() ? `onclick="abrirAvance(${a.id})" style="cursor:pointer"` : `style="cursor:default"`;
+    const editable = puedeEditar(a.id);
+    const clickable = editable ? `onclick="abrirAvance(${a.id})" style="cursor:pointer"` : `style="cursor:default"`;
+    const badgeLock = (!editable && state.userRole === 'supervisor') ? ' 🔒' : '';
     return `<div class="act-row" ${clickable}>
       <div class="act-dot act-dot-${pct>=100?"green":pct>0?"blue":"yellow"}"></div>
       <div class="act-info">
-        <div class="act-name">${a.desc}</div>
+        <div class="act-name">${a.desc}${badgeLock}</div>
         <div class="act-meta">Meta: ${a.meta} ${a.unidad} · Avance: ${a.avance}</div>
         <div class="prog-bar"><div class="prog-fill" style="width:${Math.min(pct,100)}%"></div></div>
       </div>
@@ -890,6 +901,7 @@ function abrirModal(id) { document.getElementById(id).classList.add("open"); }
 function cerrarModal(id) { document.getElementById(id).classList.remove("open"); }
 
 function abrirAvance(actId) {
+  if (!puedeEditar(actId)) return;
   const a = state.actividades.find(x => x.id === actId);
   if (!a) return;
   state.actividadActual = a;
@@ -919,6 +931,7 @@ function guardarAvance() {
   if (!a) return;
   a.avance = parseFloat(document.getElementById("avanceCantidad").value) || 0;
   a.cumplido = state.cumplimientoActual === true;
+  a.avanceAt = Date.now(); // timestamp para bloqueo 48hrs
   cerrarModal("modalAvance");
   calcPPC();
   setTab(state.tabActual, null);
@@ -933,7 +946,8 @@ function agregarActividad() {
     desc, meta,
     partida: document.getElementById("actPartida").value,
     unidad: document.getElementById("actUnidad").value,
-    avance: 0, cumplido: false
+    avance: 0, cumplido: false,
+    createdAt: Date.now(), avanceAt: null
   });
   cerrarModal("modalActividad");
   setTab(state.tabActual, null);
@@ -992,9 +1006,10 @@ window.addEventListener("load", async () => {
     if (state.modoDemo) cargarDemoData();
     mostrarApp(); return;
   }
-// Sin sesión: regresar al login principal
-    window.location.href = "index.html";
-  });
+  // Mostrar login
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("appScreen").style.display = "none";
+});
 </script>
 </body>
 </html>
