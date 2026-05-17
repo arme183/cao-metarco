@@ -989,8 +989,7 @@ window.addEventListener("load", async () => {
         state.usuario = resp.account.name || resp.account.username;
         sessionStorage.setItem("usuarioNombre", state.usuario);
         const email = (resp.account.username || "").toLowerCase();
-        state.userRole = email.startsWith("a.medina") ? "admin" : "supervisor";
-        sessionStorage.setItem("userRole", state.userRole);
+state.userRole = sessionStorage.getItem("userRole") || "supervisor";
         mostrarApp(); return;
       }
     } catch(e) { console.error(e); }
