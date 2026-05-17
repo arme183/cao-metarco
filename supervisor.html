@@ -1085,8 +1085,9 @@ function pintarAdmin() {
             </select>
           </div>
           <div style="display:flex;gap:8px">
-            <button onclick="guardarUsuario('${u.RowKey}')" style="flex:1;padding:8px;background:var(--azul-oscuro);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Guardar</button>
-            <button onclick="toggleUsuario('${u.RowKey}',${!u.activo})" style="flex:1;padding:8px;background:${u.activo?'var(--rojo)':'var(--verde)'};color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">${u.activo?'Desactivar':'Activar'}</button>
+            <button onclick="guardarUsuario('${u.RowKey}')" style="flex:2;padding:8px;background:var(--azul-oscuro);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Guardar</button>
+            <button onclick="toggleUsuario('${u.RowKey}',${!u.activo})" style="flex:2;padding:8px;background:${u.activo?'var(--amarillo)':'var(--verde)'};color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">${u.activo?'Desactivar':'Activar'}</button>
+            <button onclick="eliminarUsuario('${u.RowKey}','${u.nombre||u.email}')" style="flex:1;padding:8px;background:var(--rojo);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🗑</button>
           </div>
         </div>
       `).join('')}
@@ -1098,37 +1099,6 @@ function pintarAdmin() {
           <input id="nuevoEmail" type="email" placeholder="email@metarco.com.mx" style="padding:10px 12px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif">
           <div style="display:flex;gap:8px">
             <select id="nuevoRol" style="flex:1;padding:10px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif">
-              <option value="residente">Residente</option>
-              <option value="supervisor">Supervisor</option>
-              <option value="admin">Admin</option>
-            </select>
-            <select id="nuevasObras" style="flex:1;padding:10px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif">
-              <option value="todas">Todas</option>
-              ${obrasActivas.map(o => `<option value="${o}">${o}</option>`).join('')}
-            </select>
-          </div>
-          <button onclick="agregarUsuario()" style="padding:10px;background:var(--azul-medio);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Agregar usuario</button>
-        </div>
-      </div>
-
-      <div class="sec-title">Obras</div>
-      ${adminObras.map(o => `
-        <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--azul-oscuro)">${o.nombre}</div>
-            <span class="badge ${o.activo ? 'badge-ok' : 'badge-warn'}" style="margin-top:4px">${o.activo ? 'Activa' : 'Inactiva'}</span>
-          </div>
-          <button onclick="toggleObra('${o.RowKey}',${!o.activo})" style="padding:8px 12px;background:${o.activo?'var(--rojo)':'var(--verde)'};color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">${o.activo?'Desactivar':'Activar'}</button>
-        </div>
-      `).join('')}
-
-      <div class="sec-title" style="margin-top:20px">Nueva obra</div>
-      <div class="card">
-        <input id="nuevaObra" type="text" placeholder="Nombre de la obra" style="width:100%;padding:10px 12px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif;margin-bottom:10px">
-        <button onclick="agregarObra()" style="width:100%;padding:10px;background:var(--azul-medio);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Agregar obra</button>
-      </div>
-
-    </div>`;
 }
 
 async function guardarUsuario(rowKey) {
@@ -1201,6 +1171,27 @@ async function toggleObra(rowKey, nuevoActivo) {
       'If-Match': '*'
     },
     body: JSON.stringify({ activo: nuevoActivo })
+  });
+  await renderAdmin();
+}
+async function eliminarUsuario(rowKey, nombre) {
+  if (!confirm('¿Eliminar a ' + nombre + '?')) return;
+  if (!confirm('CONFIRMA: esta acción es permanente. ¿Eliminar a ' + nombre + '?')) return;
+  const url = `https://${AZURE_ACCOUNT_ADMIN}.table.core.windows.net/usuarios(PartitionKey='usuarios',RowKey='${rowKey}')${AZURE_SAS_ADMIN}`;
+  await fetch(url, {
+    method: 'DELETE',
+    headers: { 'Accept': 'application/json;odata=nometadata', 'x-ms-version': '2020-12-06', 'If-Match': '*' }
+  });
+  await renderAdmin();
+}
+
+async function eliminarObra(rowKey, nombre) {
+  if (!confirm('¿Eliminar la obra ' + nombre + '?')) return;
+  if (!confirm('CONFIRMA: esta acción es permanente. ¿Eliminar ' + nombre + '?')) return;
+  const url = `https://${AZURE_ACCOUNT_ADMIN}.table.core.windows.net/obras(PartitionKey='obras',RowKey='${encodeURIComponent(rowKey)}')${AZURE_SAS_ADMIN}`;
+  await fetch(url, {
+    method: 'DELETE',
+    headers: { 'Accept': 'application/json;odata=nometadata', 'x-ms-version': '2020-12-06', 'If-Match': '*' }
   });
   await renderAdmin();
 }
