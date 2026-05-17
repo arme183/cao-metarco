@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — CAO Metarco</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2/lib/msal-browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --azul-oscuro: #0b1e3d;
+  --azul-medio:  #1a3d7c;
+  --azul-claro:  #2563a8;
+  --azul-bg:     #f0f4fa;
+  --verde:       #10b981;
+  --rojo:        #ef4444;
+  --amarillo:    #f59e0b;
+  --borde:       #d8e2f0;
+  --gris-muted:  #8898b8;
+  --radio:       10px;
+  --sombra:      0 2px 12px rgba(11,30,61,0.08);
+  --sidebar-w:   220px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Inter',sans-serif; background:var(--azul-bg); color:var(--azul-oscuro); min-height:100vh; font-size:14px; }
+
+/* ── LOGIN ── */
+#loginScreen {
+  min-height:100vh;
+  background:radial-gradient(ellipse at 70% 50%, #4a90c4 0%, #2563a8 30%, #1a3d7c 60%, #0f2654 100%);
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+}
+.login-logo-wrap {
+  width:88px; height:88px; border-radius:50%;
+  background:#1a3d7c; border:3px solid rgba(255,255,255,0.3);
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; margin-bottom:-44px; z-index:2; position:relative;
+}
+.login-logo-wrap img { width:92%; height:92%; object-fit:contain; }
+.login-card {
+  background:rgba(255,255,255,0.97); border-radius:18px;
+  padding:60px 2.5rem 2.5rem; width:100%; max-width:420px;
+  box-shadow:0 24px 64px rgba(0,0,0,0.28);
+}
+.login-brand { text-align:center; margin-bottom:1.5rem; }
+.login-brand-name { font-family:'Orbitron',sans-serif; font-weight:900; font-size:24px; color:#0f2654; letter-spacing:4px; margin-bottom:4px; }
+.login-brand-sub  { font-family:'Orbitron',sans-serif; font-weight:700; font-size:8px; color:#7a90b8; letter-spacing:3px; text-transform:uppercase; }
+.login-title { font-size:15px; font-weight:600; color:#1a2f5c; text-align:center; margin-bottom:4px; }
+.login-desc  { font-size:12px; color:#7a90b8; text-align:center; margin-bottom:1.5rem; }
+.btn-ms {
+  width:100%; padding:13px; background:#1a2f5c; color:#fff;
+  border:none; border-radius:10px; font-size:14px; font-weight:600;
+  font-family:'Inter',sans-serif; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+}
+.btn-ms:hover { opacity:.88; }
+.ms-sq { width:18px; height:18px; flex-shrink:0; }
+.login-error { display:none; margin-top:1rem; background:#fef2f2; border:1px solid #fca5a5; border-radius:8px; padding:9px 12px; font-size:12px; color:#b91c1c; text-align:center; }
+.login-error.show { display:block; }
+.login-footer { margin-top:1.5rem; font-size:10px; color:rgba(255,255,255,0.4); display:flex; align-items:center; gap:6px; }
+.dot-green { width:6px; height:6px; border-radius:50%; background:#4ade80; }
+
+/* ── APP SHELL ── */
+#appScreen { display:none; min-height:100vh; flex-direction:row; }
+
+/* Sidebar */
+.sidebar {
+  width:var(--sidebar-w); background:var(--azul-oscuro);
+  min-height:100vh; position:fixed; top:0; left:0;
+  display:flex; flex-direction:column; z-index:50;
+}
+.sidebar-brand {
+  padding:20px 18px 16px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.sidebar-logo { display:flex; align-items:center; gap:10px; margin-bottom:4px; }
+.sidebar-logo-img {
+  width:34px; height:34px; border-radius:50%;
+  background:rgba(255,255,255,0.1); border:1.5px solid rgba(255,255,255,0.2);
+  overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.sidebar-logo-img img { width:90%; height:90%; object-fit:contain; }
+.sidebar-brand-name { font-family:'Orbitron',sans-serif; font-weight:900; font-size:12px; color:#fff; letter-spacing:2px; }
+.sidebar-brand-sub  { font-size:9px; color:rgba(255,255,255,0.4); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+.sidebar-user {
+  padding:12px 18px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.sidebar-user-name { font-size:12px; font-weight:600; color:#fff; }
+.sidebar-user-role { font-size:10px; color:rgba(255,255,255,0.45); margin-top:2px; text-transform:uppercase; letter-spacing:.5px; }
+
+.sidebar-nav { flex:1; padding:12px 0; }
+.nav-section-title {
+  font-size:9px; font-weight:700; color:rgba(255,255,255,0.3);
+  text-transform:uppercase; letter-spacing:1.5px;
+  padding:10px 18px 4px;
+}
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 18px; cursor:pointer;
+  font-size:13px; font-weight:500; color:rgba(255,255,255,0.6);
+  border-left:3px solid transparent;
+  transition:all .15s;
+}
+.nav-item:hover { background:rgba(255,255,255,0.05); color:#fff; }
+.nav-item.active { background:rgba(255,255,255,0.08); color:#fff; border-left-color:var(--azul-claro); }
+.nav-item-icon { font-size:16px; width:20px; text-align:center; }
+
+.sidebar-footer { padding:16px 18px; border-top:1px solid rgba(255,255,255,0.08); }
+.btn-salir {
+  width:100%; padding:9px; background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12); color:rgba(255,255,255,0.6);
+  border-radius:8px; font-size:12px; font-family:'Inter',sans-serif; cursor:pointer;
+}
+.btn-salir:hover { background:rgba(255,255,255,0.1); color:#fff; }
+
+/* Main content */
+.main {
+  margin-left:var(--sidebar-w);
+  min-height:100vh;
+  display:flex; flex-direction:column;
+}
+.topbar {
+  background:#fff; border-bottom:1px solid var(--borde);
+  padding:14px 28px; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:40;
+  box-shadow:0 1px 4px rgba(11,30,61,0.06);
+}
+.topbar-title { font-size:16px; font-weight:700; color:var(--azul-oscuro); }
+.topbar-sub   { font-size:12px; color:var(--gris-muted); margin-top:2px; }
+.topbar-actions { display:flex; gap:10px; align-items:center; }
+
+.page { display:none; padding:24px 28px; flex:1; }
+.page.active { display:block; }
+
+/* Cards */
+.card {
+  background:#fff; border-radius:var(--radio);
+  border:1px solid var(--borde); padding:20px 22px;
+  margin-bottom:16px; box-shadow:var(--sombra);
+}
+.card-title { font-size:11px; font-weight:700; color:var(--gris-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:16px; }
+
+/* KPI row */
+.kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; }
+.kpi { background:#fff; border-radius:var(--radio); border:1px solid var(--borde); padding:16px 18px; box-shadow:var(--sombra); }
+.kpi-label { font-size:10px; color:var(--gris-muted); text-transform:uppercase; letter-spacing:.8px; font-weight:700; margin-bottom:6px; }
+.kpi-value { font-size:28px; font-weight:700; line-height:1; }
+.kpi-sub   { font-size:11px; color:var(--gris-muted); margin-top:6px; }
+.kpi.blue   .kpi-value { color:var(--azul-claro); }
+.kpi.green  .kpi-value { color:var(--verde); }
+.kpi.amber  .kpi-value { color:var(--amarillo); }
+.kpi.red    .kpi-value { color:var(--rojo); }
+
+/* Tabla */
+.tbl-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th {
+  background:var(--azul-bg); padding:9px 12px; text-align:left;
+  font-weight:700; color:var(--gris-muted); font-size:10px;
+  text-transform:uppercase; letter-spacing:.8px;
+  border-bottom:1px solid var(--borde);
+}
+td { padding:10px 12px; border-bottom:1px solid #f0f4fa; vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:#f7faff; }
+
+/* Badges */
+.badge { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px; font-size:10px; font-weight:600; }
+.badge-ok      { background:#d1fae5; color:#065f46; }
+.badge-warn    { background:#fee2e2; color:#991b1b; }
+.badge-info    { background:#dbeafe; color:#1e40af; }
+.badge-pending { background:#fef9c3; color:#92400e; }
+
+/* Buttons */
+.btn {
+  padding:8px 16px; border:none; border-radius:8px;
+  font-size:12px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer;
+  display:inline-flex; align-items:center; gap:6px; transition:opacity .15s;
+}
+.btn:hover { opacity:.85; }
+.btn-primary { background:var(--azul-oscuro); color:#fff; }
+.btn-success { background:var(--verde); color:#fff; }
+.btn-danger  { background:var(--rojo); color:#fff; }
+.btn-outline { background:#fff; color:var(--azul-oscuro); border:1.5px solid var(--borde); }
+.btn-sm      { padding:5px 10px; font-size:11px; }
+
+/* Toolbar */
+.toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.search-input {
+  padding:9px 12px; border:1.5px solid var(--borde); border-radius:8px;
+  font-size:13px; font-family:'Inter',sans-serif; outline:none; width:260px;
+  color:var(--azul-oscuro); background:#f8fafc;
+}
+.search-input:focus { border-color:var(--azul-claro); }
+.filter-btn {
+  padding:8px 14px; border:1.5px solid var(--borde); border-radius:8px;
+  font-size:12px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer;
+  background:#fff; color:var(--gris-muted);
+}
+.filter-btn.active { background:var(--azul-oscuro); color:#fff; border-color:var(--azul-oscuro); }
+
+/* Modal */
+.modal-overlay {
+  display:none; position:fixed; inset:0; z-index:400;
+  background:rgba(11,30,61,0.5); align-items:center; justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal-box {
+  background:#fff; border-radius:14px;
+  width:100%; max-width:520px; max-height:90vh;
+  overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,0.2);
+}
+.modal-header {
+  padding:18px 22px 14px; border-bottom:1px solid var(--borde);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.modal-title { font-size:15px; font-weight:700; color:var(--azul-oscuro); }
+.btn-close { background:none; border:none; font-size:22px; color:var(--gris-muted); cursor:pointer; line-height:1; }
+.modal-body { padding:18px 22px; }
+.modal-footer { padding:14px 22px; border-top:1px solid var(--borde); display:flex; justify-content:flex-end; gap:10px; }
+
+/* Form */
+.form-group { margin-bottom:14px; }
+.form-label { display:block; font-size:10px; font-weight:700; color:var(--gris-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:6px; }
+.form-input, .form-select {
+  width:100%; padding:10px 12px; border:1.5px solid var(--borde); border-radius:8px;
+  font-size:13px; color:var(--azul-oscuro); background:#f8fafc;
+  font-family:'Inter',sans-serif; outline:none;
+}
+.form-input:focus, .form-select:focus { border-color:var(--azul-claro); background:#fff; }
+.form-select { -webkit-appearance:none; appearance:none; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Tags obras */
+.obras-tags { display:flex; flex-wrap:wrap; gap:6px; }
+.obra-tag {
+  padding:4px 10px; border-radius:20px; font-size:11px; font-weight:600;
+  background:#dbeafe; color:#1e40af; cursor:pointer; border:1.5px solid transparent;
+}
+.obra-tag.selected { background:var(--azul-oscuro); color:#fff; border-color:var(--azul-oscuro); }
+
+/* Progress bar */
+.prog-bar  { height:5px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-top:4px; }
+.prog-fill { height:100%; border-radius:3px; background:linear-gradient(90deg, var(--azul-claro), #60a5fa); }
+
+/* Upload area */
+.upload-area {
+  border:2px dashed var(--borde); border-radius:10px;
+  padding:2rem; text-align:center; cursor:pointer;
+  background:#f8fafc; transition:border-color .2s, background .2s;
+}
+.upload-area:hover { border-color:var(--azul-claro); background:#eef3fb; }
+.upload-area-icon { font-size:36px; margin-bottom:8px; }
+.upload-area-text { font-size:13px; color:var(--gris-muted); }
+input[type=file] { display:none; }
+
+/* Toast */
+.toast {
+  position:fixed; bottom:24px; right:24px; z-index:999;
+  padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600;
+  color:#fff; box-shadow:0 8px 24px rgba(0,0,0,0.15);
+  transform:translateY(80px); opacity:0; transition:all .3s;
+  pointer-events:none;
+}
+.toast.show { transform:translateY(0); opacity:1; }
+.toast.ok   { background:var(--verde); }
+.toast.err  { background:var(--rojo); }
+.toast.info { background:var(--azul-claro); }
+
+/* Loading */
+.loading { text-align:center; padding:3rem; color:var(--gris-muted); font-size:13px; }
+
+/* Avance bar en tabla catalogo */
+.avance-wrap { display:flex; align-items:center; gap:8px; }
+.avance-num { font-size:11px; font-weight:700; color:var(--azul-claro); min-width:32px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="loginScreen">
+  <div class="login-logo-wrap">
+    <img id="loginLogo" src="../LOGO_METARCO1.png" alt="Metarco" onerror="this.style.display='none'">
+  </div>
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-brand-name">METARCO</div>
+      <div class="login-brand-sub">Panel de Administración · CAO</div>
+    </div>
+    <p class="login-title">Acceso restringido</p>
+    <p class="login-desc">Solo disponible para administradores del sistema.</p>
+    <button class="btn-ms" id="btnLogin">
+      <svg class="ms-sq" viewBox="0 0 21 21" fill="none">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      Iniciar sesión con Microsoft
+    </button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+  <div class="login-footer">
+    <div class="dot-green"></div>
+    Sistema activo · Metarco 2026
+  </div>
+</div>
+
+<!-- ══════════════ APP ══════════════ -->
+<div id="appScreen">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-img">
+          <img src="../LOGO_METARCO1.png" alt="Metarco" onerror="this.style.display='none'">
+        </div>
+        <div>
+          <div class="sidebar-brand-name">METARCO</div>
+          <div class="sidebar-brand-sub">Admin · CAO</div>
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-name" id="sidebarNombre">—</div>
+      <div class="sidebar-user-role">Administrador</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-title">General</div>
+      <div class="nav-item active" data-page="resumen">
+        <span class="nav-item-icon">📊</span> Resumen
+      </div>
+      <div class="nav-section-title">Configuración</div>
+      <div class="nav-item" data-page="usuarios">
+        <span class="nav-item-icon">👤</span> Usuarios
+      </div>
+      <div class="nav-item" data-page="obras">
+        <span class="nav-item-icon">🏗</span> Obras
+      </div>
+      <div class="nav-item" data-page="catalogo">
+        <span class="nav-item-icon">📋</span> Catálogo
+      </div>
+      <div class="nav-section-title">Datos</div>
+      <div class="nav-item" data-page="registros">
+        <span class="nav-item-icon">📝</span> Registros
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-salir" id="btnSalir">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title" id="topbarTitle">Resumen</div>
+        <div class="topbar-sub" id="topbarSub">Panel de administración · CAO Metarco</div>
+      </div>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </div>
+
+    <!-- ── RESUMEN ── -->
+    <div class="page active" id="page-resumen">
+      <div class="kpi-row" id="kpiRow">
+        <div class="kpi blue"><div class="kpi-label">Usuarios</div><div class="kpi-value" id="kpiUsuarios">—</div><div class="kpi-sub">registrados</div></div>
+        <div class="kpi green"><div class="kpi-label">Obras activas</div><div class="kpi-value" id="kpiObras">—</div><div class="kpi-sub">en curso</div></div>
+        <div class="kpi amber"><div class="kpi-label">Registros hoy</div><div class="kpi-value" id="kpiRegistros">—</div><div class="kpi-sub">cambios</div></div>
+        <div class="kpi blue"><div class="kpi-label">Catálogo</div><div class="kpi-value" id="kpiCatalogo">—</div><div class="kpi-sub">conceptos WEG</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Usuarios por obra</div>
+        <table>
+          <thead><tr><th>Obra</th><th>Supervisores</th><th>Residentes</th><th>Total</th></tr></thead>
+          <tbody id="resumenObrasBody"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── USUARIOS ── -->
+    <div class="page" id="page-usuarios">
+      <div class="toolbar">
+        <input class="search-input" id="buscarUsuario" placeholder="Buscar usuario...">
+        <button class="filter-btn active" data-filtro="todos">Todos</button>
+        <button class="filter-btn" data-filtro="admin">Admin</button>
+        <button class="filter-btn" data-filtro="supervisor">Supervisor</button>
+        <button class="filter-btn" data-filtro="residente">Residente</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" id="btnNuevoUsuario">+ Nuevo usuario</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Obras</th><th>Acciones</th></tr></thead>
+            <tbody id="usuariosBody"><tr><td colspan="5" class="loading">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OBRAS ── -->
+    <div class="page" id="page-obras">
+      <div class="toolbar">
+        <button class="filter-btn active" data-filtro-obra="todas">Todas</button>
+        <button class="filter-btn" data-filtro-obra="activas">Activas</button>
+        <button class="filter-btn" data-filtro-obra="inactivas">Inactivas</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" id="btnNuevaObra">+ Nueva obra</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Estado</th><th>Usuarios asignados</th><th>Acciones</th></tr></thead>
+            <tbody id="obrasBody"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CATÁLOGO ── -->
+    <div class="page" id="page-catalogo">
+      <div class="toolbar">
+        <input class="search-input" id="buscarConcepto" placeholder="Buscar concepto o clave...">
+        <select class="filter-btn" id="filtroObraCatalogo" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--borde);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;">
+          <option value="">Todas las obras</option>
+        </select>
+        <div style="flex:1"></div>
+        <button class="btn btn-outline" id="btnCargarCatalogo">📂 Cargar catálogo Opus</button>
+        <button class="btn btn-primary" id="btnNuevoConcepto">+ Concepto manual</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Clave</th><th>Descripción</th><th>Unidad</th><th>Cantidad</th><th>P.U.</th><th>Subfases</th><th>Avance</th><th>Estado</th><th></th></tr></thead>
+            <tbody id="catalogoBody"><tr><td colspan="9" class="loading">Selecciona una obra para ver el catálogo</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REGISTROS ── -->
+    <div class="page" id="page-registros">
+      <div class="toolbar">
+        <select class="filter-btn" id="filtroObraRegistros" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--borde);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;">
+          <option value="">Todas las obras</option>
+        </select>
+        <input type="date" class="search-input" id="filtroFecha" style="width:160px;">
+        <div style="flex:1"></div>
+        <button class="btn btn-outline" id="btnExportarRegistros">↓ Exportar</button>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Fecha</th><th>Supervisor</th><th>Obra</th><th>Actividad</th><th>Subfase</th><th>Cantidad</th><th>PPC</th><th>Notas</th></tr></thead>
+            <tbody id="registrosBody"><tr><td colspan="8" class="loading">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /appScreen -->
+
+<!-- ══ MODAL USUARIO ══ -->
+<div class="modal-overlay" id="modalUsuario">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modalUsuarioTitulo">Nuevo usuario</div>
+      <button class="btn-close" data-close="modalUsuario">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="uPartitionKey">
+      <input type="hidden" id="uRowKey">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre</label>
+          <input class="form-input" id="uNombre" placeholder="Nombre completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" id="uEmail" placeholder="usuario@metarco.com.mx">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rol</label>
+        <select class="form-select" id="uRol">
+          <option value="residente">Residente</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Obras asignadas</label>
+        <div class="obras-tags" id="uObrasTag"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close="modalUsuario">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarUsuario">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL OBRA ══ -->
+<div class="modal-overlay" id="modalObra">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modalObraTitulo">Nueva obra</div>
+      <button class="btn-close" data-close="modalObra">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="oRowKey">
+      <div class="form-group">
+        <label class="form-label">Nombre de la obra</label>
+        <input class="form-input" id="oNombre" placeholder="ej. WEG, NACOBRE, ZAMORA">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="form-select" id="oActivo">
+          <option value="true">Activa</option>
+          <option value="false">Inactiva</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close="modalObra">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarObra">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CATÁLOGO ══ -->
+<div class="modal-overlay" id="modalCatalogo">
+  <div class="modal-box" style="max-width:600px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modalCatalogoTitulo">Cargar catálogo Opus</div>
+      <button class="btn-close" data-close="modalCatalogo">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Obra</label>
+        <select class="form-select" id="cObra"></select>
+      </div>
+      <div class="upload-area" id="uploadAreaCat">
+        <div class="upload-area-icon">📊</div>
+        <div class="upload-area-text">Arrastra el Excel de Opus aquí o haz clic para seleccionar</div>
+      </div>
+      <input type="file" id="fileCatalogo" accept=".xlsx,.xls">
+      <div id="previewCatalogo" style="margin-top:14px;display:none;">
+        <div style="font-size:12px;color:var(--gris-muted);margin-bottom:8px;" id="previewInfo"></div>
+        <div class="tbl-wrap" style="max-height:200px;overflow-y:auto;">
+          <table>
+            <thead><tr><th>Clave</th><th>Descripción</th><th>Unidad</th><th>Cantidad</th></tr></thead>
+            <tbody id="previewBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close="modalCatalogo">Cancelar</button>
+      <button class="btn btn-success" id="btnConfirmarCatalogo" disabled>Cargar a Azure</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL CONCEPTO ══ -->
+<div class="modal-overlay" id="modalConcepto">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title" id="modalConceptoTitulo">Nuevo concepto</div>
+      <button class="btn-close" data-close="modalConcepto">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ccRowKey">
+      <div class="form-group">
+        <label class="form-label">Obra</label>
+        <select class="form-select" id="ccObra"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Clave</label>
+          <input class="form-input" id="ccClave" placeholder="ej. A01.01.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Unidad</label>
+          <select class="form-select" id="ccUnidad">
+            <option>pza</option><option>ml</option><option>m</option>
+            <option>m2</option><option>kg</option><option>mts</option><option>lot</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción</label>
+        <input class="form-input" id="ccDesc" placeholder="Descripción completa del concepto">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cantidad contratada</label>
+          <input class="form-input" id="ccCantidad" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Precio unitario</label>
+          <input class="form-input" id="ccPU" type="number" placeholder="0.00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subfases</label>
+        <select class="form-select" id="ccSubfases">
+          <option value="Suministro,Fabricación,Montaje">Suministro · Fabricación · Montaje</option>
+          <option value="Suministro,Instalación">Suministro · Instalación</option>
+          <option value="Suministro,Ejecución">Suministro · Ejecución</option>
+          <option value="Diagnóstico,Suministro,Ejecución,Entrega">Diagnóstico · Suministro · Ejecución · Entrega</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" data-close="modalConcepto">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardarConcepto">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// CONFIG — reemplazar CLIENT_ID y TENANT_ID
+// ══════════════════════════════════════════════
+var CLIENT_ID = 'TU_CLIENT_ID_AQUI';
+var TENANT_ID = 'TU_TENANT_ID_AQUI';
+
+var msalConfig = {
+  auth: {
+    clientId: CLIENT_ID,
+    authority: 'https://login.microsoftonline.com/' + TENANT_ID,
+    redirectUri: window.location.origin + window.location.pathname
+  },
+  cache: { cacheLocation: 'sessionStorage' }
+};
+
+var AZURE_ACCOUNT = 'metarcostorage';
+var AZURE_SAS = '?sv=2026-02-06&ss=t&srt=o&sp=rwdau&se=2028-01-01T11:48:28Z&st=2026-05-17T03:33:28Z&spr=https&sig=25z4ZNljIvgFJmeaf2dGRv9UAAKaUAxsU9DB3aCproY%3D';
+var AZURE_BASE = 'https://' + AZURE_ACCOUNT + '.table.core.windows.net/';
+var AZURE_HEADERS = { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json', 'x-ms-version': '2020-12-06' };
+
+// ══════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════
+var msalInstance = new msal.PublicClientApplication(msalConfig);
+var userEmail = '';
+var userName  = '';
+var allUsuarios = [];
+var allObras    = [];
+var allCatalogo = [];
+var allRegistros = [];
+var catalogoPendiente = [];
+var filtroUsuario = 'todos';
+var filtroObra    = 'todas';
+var busquedaUsuario = '';
+var busquedaConcepto = '';
+var obraFiltCatalogo = '';
+var obraFiltRegistros = '';
+
+// ══════════════════════════════════════════════
+// HELPERS AZURE
+// ══════════════════════════════════════════════
+function azureUrl(tabla, filtro) {
+  var url = AZURE_BASE + tabla + AZURE_SAS;
+  if (filtro) url += '&$filter=' + encodeURIComponent(filtro);
+  return url;
+}
+
+async function azureGet(tabla, filtro) {
+  var r = await fetch(azureUrl(tabla, filtro), { headers: AZURE_HEADERS });
+  if (!r.ok) throw new Error('Error ' + r.status);
+  var d = await r.json();
+  return d.value || [];
+}
+
+async function azureUpsert(tabla, entity) {
+  var pk = encodeURIComponent(entity.PartitionKey);
+  var rk = encodeURIComponent(entity.RowKey);
+  var url = AZURE_BASE + tabla + "(PartitionKey='" + pk + "',RowKey='" + rk + "')" + AZURE_SAS;
+  var r = await fetch(url, { method:'PUT', headers: AZURE_HEADERS, body: JSON.stringify(entity) });
+  if (!r.ok) { var t = await r.text(); throw new Error(r.status + ': ' + t); }
+}
+
+async function azureDelete(tabla, pk, rk) {
+  var url = AZURE_BASE + tabla + "(PartitionKey='" + encodeURIComponent(pk) + "',RowKey='" + encodeURIComponent(rk) + "')" + AZURE_SAS;
+  var r = await fetch(url, { method:'DELETE', headers: Object.assign({}, AZURE_HEADERS, {'If-Match':'*'}) });
+  if (!r.ok) throw new Error('Error al eliminar: ' + r.status);
+}
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+var toastTimer;
+function showToast(msg, tipo) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (tipo || 'ok');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ══════════════════════════════════════════════
+// MSAL — LOGIN / LOGOUT
+// ══════════════════════════════════════════════
+document.getElementById('btnLogin').addEventListener('click', async function() {
+  try {
+    var result = await msalInstance.loginPopup({ scopes: ['User.Read'] });
+    var acc = result.account;
+    userEmail = (acc.username || '').toLowerCase();
+    userName  = acc.name || acc.username;
+    if (!userEmail.startsWith('a.medina')) {
+      showError('Acceso denegado. Solo administradores.');
+      return;
+    }
+    iniciarApp();
+  } catch(e) {
+    showError('Error al iniciar sesión: ' + e.message);
+  }
+});
+
+function showError(msg) {
+  var el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+document.getElementById('btnSalir').addEventListener('click', function() {
+  sessionStorage.clear();
+  location.reload();
+});
+
+// ══════════════════════════════════════════════
+// INICIAR APP
+// ══════════════════════════════════════════════
+async function iniciarApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display   = 'flex';
+  document.getElementById('sidebarNombre').textContent  = userName;
+  await cargarDatos();
+}
+
+async function cargarDatos() {
+  try {
+    var [us, ob] = await Promise.all([
+      azureGet('usuarios'),
+      azureGet('obras')
+    ]);
+    allUsuarios = us;
+    allObras    = ob;
+    actualizarKPIs();
+    renderResumenObras();
+    renderUsuarios();
+    renderObras();
+    poblarSelectObras();
+  } catch(e) {
+    showToast('Error cargando datos: ' + e.message, 'err');
+  }
+}
+
+// ══════════════════════════════════════════════
+// NAVEGACIÓN
+// ══════════════════════════════════════════════
+var pageTitles = {
+  resumen:   ['Resumen', 'Vista general del sistema'],
+  usuarios:  ['Usuarios', 'Gestión de usuarios y roles'],
+  obras:     ['Obras', 'Gestión de obras activas'],
+  catalogo:  ['Catálogo', 'Conceptos por obra — importar desde Opus'],
+  registros: ['Registros', 'Historial de avances registrados por supervisores']
+};
+
+document.querySelectorAll('.nav-item').forEach(function(item) {
+  item.addEventListener('click', function() {
+    var page = this.dataset.page;
+    document.querySelectorAll('.nav-item').forEach(function(i){ i.classList.remove('active'); });
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+    this.classList.add('active');
+    document.getElementById('page-' + page).classList.add('active');
+    var info = pageTitles[page] || [page, ''];
+    document.getElementById('topbarTitle').textContent = info[0];
+    document.getElementById('topbarSub').textContent   = info[1];
+    if (page === 'registros') cargarRegistros();
+    if (page === 'catalogo' && obraFiltCatalogo) cargarCatalogo(obraFiltCatalogo);
+  });
+});
+
+// ══════════════════════════════════════════════
+// RESUMEN
+// ══════════════════════════════════════════════
+function actualizarKPIs() {
+  document.getElementById('kpiUsuarios').textContent = allUsuarios.length;
+  document.getElementById('kpiObras').textContent    = allObras.filter(function(o){ return o.activo === true || o.activo === 'true'; }).length;
+  document.getElementById('kpiCatalogo').textContent = '—';
+  document.getElementById('kpiRegistros').textContent = '—';
+}
+
+function renderResumenObras() {
+  var obras = allObras.filter(function(o){ return o.activo === true || o.activo === 'true'; });
+  var html = obras.map(function(o) {
+    var nombre = o.RowKey || o.nombre || '';
+    var sups = allUsuarios.filter(function(u){ return (u.obras||'').includes(nombre) && u.rol === 'supervisor'; }).length;
+    var res  = allUsuarios.filter(function(u){ return (u.obras||'').includes(nombre) && u.rol === 'residente'; }).length;
+    return '<tr><td><strong>' + nombre + '</strong></td><td>' + sups + '</td><td>' + res + '</td><td>' + (sups+res) + '</td></tr>';
+  }).join('');
+  document.getElementById('resumenObrasBody').innerHTML = html || '<tr><td colspan="4" class="loading">Sin obras activas</td></tr>';
+}
+
+// ══════════════════════════════════════════════
+// USUARIOS
+// ══════════════════════════════════════════════
+function rolBadge(rol) {
+  var m = { admin:'badge-warn', supervisor:'badge-info', residente:'badge-ok' };
+  return '<span class="badge ' + (m[rol]||'badge-pending') + '">' + rol + '</span>';
+}
+
+function renderUsuarios() {
+  var lista = allUsuarios.filter(function(u) {
+    var matchFiltro = filtroUsuario === 'todos' || u.rol === filtroUsuario;
+    var matchBusq   = !busquedaUsuario ||
+      (u.nombre||'').toLowerCase().includes(busquedaUsuario) ||
+      (u.email||'').toLowerCase().includes(busquedaUsuario);
+    return matchFiltro && matchBusq;
+  });
+  var html = lista.map(function(u) {
+    var pk = u.PartitionKey || 'metarco';
+    var rk = u.RowKey || u.email || '';
+    return '<tr>' +
+      '<td><strong>' + (u.nombre||'—') + '</strong></td>' +
+      '<td style="color:var(--gris-muted);">' + (u.email||'—') + '</td>' +
+      '<td>' + rolBadge(u.rol||'residente') + '</td>' +
+      '<td style="font-size:11px;color:var(--gris-muted);">' + (u.obras||'—') + '</td>' +
+      '<td style="white-space:nowrap;">' +
+        '<button class="btn btn-outline btn-sm" onclick="editarUsuario(\'' + encodeURIComponent(JSON.stringify(u)) + '\')">Editar</button> ' +
+        '<button class="btn btn-danger btn-sm" onclick="eliminarUsuario(\'' + pk + '\',\'' + rk + '\')">Eliminar</button>' +
+      '</td></tr>';
+  }).join('');
+  document.getElementById('usuariosBody').innerHTML = html || '<tr><td colspan="5" class="loading">Sin resultados</td></tr>';
+}
+
+document.getElementById('buscarUsuario').addEventListener('input', function() {
+  busquedaUsuario = this.value.toLowerCase();
+  renderUsuarios();
+});
+
+document.querySelectorAll('[data-filtro]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    filtroUsuario = this.dataset.filtro;
+    document.querySelectorAll('[data-filtro]').forEach(function(b){ b.classList.remove('active'); });
+    this.classList.add('active');
+    renderUsuarios();
+  });
+});
+
+document.getElementById('btnNuevoUsuario').addEventListener('click', function() {
+  limpiarModalUsuario();
+  document.getElementById('modalUsuarioTitulo').textContent = 'Nuevo usuario';
+  abrirModal('modalUsuario');
+});
+
+function editarUsuario(encoded) {
+  var u = JSON.parse(decodeURIComponent(encoded));
+  document.getElementById('modalUsuarioTitulo').textContent = 'Editar usuario';
+  document.getElementById('uPartitionKey').value = u.PartitionKey || 'metarco';
+  document.getElementById('uRowKey').value       = u.RowKey || u.email || '';
+  document.getElementById('uNombre').value = u.nombre || '';
+  document.getElementById('uEmail').value  = u.email  || '';
+  document.getElementById('uRol').value    = u.rol    || 'residente';
+  renderObrasTagsUsuario(u.obras || '');
+  abrirModal('modalUsuario');
+}
+
+function limpiarModalUsuario() {
+  document.getElementById('uPartitionKey').value = 'metarco';
+  document.getElementById('uRowKey').value = '';
+  document.getElementById('uNombre').value = '';
+  document.getElementById('uEmail').value  = '';
+  document.getElementById('uRol').value    = 'residente';
+  renderObrasTagsUsuario('');
+}
+
+function renderObrasTagsUsuario(obrasStr) {
+  var seleccionadas = obrasStr ? obrasStr.split(' ') : [];
+  var html = allObras.map(function(o) {
+    var nombre = o.RowKey || o.nombre || '';
+    var sel = seleccionadas.includes(nombre);
+    return '<span class="obra-tag ' + (sel?'selected':'') + '" data-obra="' + nombre + '" onclick="toggleObraTag(this)">' + nombre + '</span>';
+  }).join('');
+  document.getElementById('uObrasTag').innerHTML = html || '<span style="font-size:12px;color:var(--gris-muted);">Sin obras disponibles</span>';
+}
+
+function toggleObraTag(el) {
+  el.classList.toggle('selected');
+}
+
+document.getElementById('btnGuardarUsuario').addEventListener('click', async function() {
+  var nombre = document.getElementById('uNombre').value.trim();
+  var email  = document.getElementById('uEmail').value.trim().toLowerCase();
+  var rol    = document.getElementById('uRol').value;
+  if (!nombre || !email) { showToast('Nombre y email son requeridos', 'err'); return; }
+  var tags = document.querySelectorAll('#uObrasTag .obra-tag.selected');
+  var obras = Array.from(tags).map(function(t){ return t.dataset.obra; }).join(' ');
+  var pk = document.getElementById('uPartitionKey').value || 'metarco';
+  var rk = document.getElementById('uRowKey').value || email;
+  var entity = { PartitionKey:pk, RowKey:rk, nombre:nombre, email:email, rol:rol, obras:obras };
+  try {
+    await azureUpsert('usuarios', entity);
+    cerrarModal('modalUsuario');
+    await cargarDatos();
+    showToast('Usuario guardado', 'ok');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+});
+
+async function eliminarUsuario(pk, rk) {
+  if (!confirm('¿Eliminar este usuario?')) return;
+  try {
+    await azureDelete('usuarios', pk, rk);
+    await cargarDatos();
+    showToast('Usuario eliminado', 'ok');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
+
+// ══════════════════════════════════════════════
+// OBRAS
+// ══════════════════════════════════════════════
+function renderObras() {
+  var lista = allObras.filter(function(o) {
+    if (filtroObra === 'activas')   return o.activo === true || o.activo === 'true';
+    if (filtroObra === 'inactivas') return o.activo === false || o.activo === 'false';
+    return true;
+  });
+  var html = lista.map(function(o) {
+    var nombre  = o.RowKey || o.nombre || '';
+    var activo  = (o.activo === true || o.activo === 'true');
+    var usuarios = allUsuarios.filter(function(u){ return (u.obras||'').includes(nombre); }).length;
+    return '<tr>' +
+      '<td><strong>' + nombre + '</strong></td>' +
+      '<td><span class="badge ' + (activo?'badge-ok':'badge-warn') + '">' + (activo?'Activa':'Inactiva') + '</span></td>' +
+      '<td>' + usuarios + ' usuarios</td>' +
+      '<td style="white-space:nowrap;">' +
+        '<button class="btn btn-outline btn-sm" onclick="editarObra(\'' + encodeURIComponent(JSON.stringify(o)) + '\')">Editar</button> ' +
+        '<button class="btn ' + (activo?'btn-danger':'btn-success') + ' btn-sm" onclick="toggleObra(\'' + encodeURIComponent(JSON.stringify(o)) + '\')">' + (activo?'Desactivar':'Activar') + '</button>' +
+      '</td></tr>';
+  }).join('');
+  document.getElementById('obrasBody').innerHTML = html || '<tr><td colspan="4" class="loading">Sin resultados</td></tr>';
+}
+
+document.querySelectorAll('[data-filtro-obra]').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    filtroObra = this.dataset.filtroObra;
+    document.querySelectorAll('[data-filtro-obra]').forEach(function(b){ b.classList.remove('active'); });
+    this.classList.add('active');
+    renderObras();
+  });
+});
+
+document.getElementById('btnNuevaObra').addEventListener('click', function() {
+  document.getElementById('modalObraTitulo').textContent = 'Nueva obra';
+  document.getElementById('oRowKey').value  = '';
+  document.getElementById('oNombre').value  = '';
+  document.getElementById('oActivo').value  = 'true';
+  abrirModal('modalObra');
+});
+
+function editarObra(encoded) {
+  var o = JSON.parse(decodeURIComponent(encoded));
+  document.getElementById('modalObraTitulo').textContent = 'Editar obra';
+  document.getElementById('oRowKey').value  = o.RowKey || '';
+  document.getElementById('oNombre').value  = o.RowKey || o.nombre || '';
+  document.getElementById('oActivo').value  = String(o.activo);
+  abrirModal('modalObra');
+}
+
+async function toggleObra(encoded) {
+  var o = JSON.parse(decodeURIComponent(encoded));
+  var activo = !(o.activo === true || o.activo === 'true');
+  if (!activo) {
+    var activas = allObras.filter(function(x){ return (x.activo === true || x.activo === 'true') && x.RowKey !== o.RowKey; });
+    if (activas.length === 0) { showToast('Debe haber al menos una obra activa', 'err'); return; }
+  }
+  try {
+    var entity = Object.assign({}, o, { activo: activo });
+    await azureUpsert('obras', entity);
+    await cargarDatos();
+    showToast('Obra ' + (activo?'activada':'desactivada'), 'ok');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+}
+
+document.getElementById('btnGuardarObra').addEventListener('click', async function() {
+  var nombre = document.getElementById('oNombre').value.trim().toUpperCase();
+  var activo = document.getElementById('oActivo').value === 'true';
+  var rk     = document.getElementById('oRowKey').value || nombre;
+  if (!nombre) { showToast('El nombre es requerido', 'err'); return; }
+  var entity = { PartitionKey:'obras', RowKey: rk || nombre, activo: activo };
+  try {
+    await azureUpsert('obras', entity);
+    cerrarModal('modalObra');
+    await cargarDatos();
+    showToast('Obra guardada', 'ok');
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+});
+
+// ══════════════════════════════════════════════
+// CATÁLOGO
+// ══════════════════════════════════════════════
+function poblarSelectObras() {
+  var selectores = ['filtroObraCatalogo','filtroObraRegistros','cObra','ccObra'];
+  selectores.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var hasEmpty = id === 'filtroObraCatalogo' || id === 'filtroObraRegistros';
+    el.innerHTML = (hasEmpty ? '<option value="">Todas las obras</option>' : '') +
+      allObras.map(function(o){ var n = o.RowKey||''; return '<option value="' + n + '">' + n + '</option>'; }).join('');
+  });
+}
+
+document.getElementById('filtroObraCatalogo').addEventListener('change', function() {
+  obraFiltCatalogo = this.value;
+  if (obraFiltCatalogo) cargarCatalogo(obraFiltCatalogo);
+  else document.getElementById('catalogoBody').innerHTML = '<tr><td colspan="9" class="loading">Selecciona una obra</td></tr>';
+});
+
+async function cargarCatalogo(obra) {
+  document.getElementById('catalogoBody').innerHTML = '<tr><td colspan="9" class="loading">Cargando...</td></tr>';
+  try {
+    allCatalogo = await azureGet('actividades', "PartitionKey eq '" + obra + "'");
+    renderCatalogo();
+  } catch(e) {
+    showToast('Error cargando catálogo: ' + e.message, 'err');
+  }
+}
+
+function renderCatalogo() {
+  var lista = allCatalogo.filter(function(c) {
+    return !busquedaConcepto ||
+      (c.clave||'').toLowerCase().includes(busquedaConcepto) ||
+      (c.descripcion||'').toLowerCase().includes(busquedaConcepto);
+  });
+  var html = lista.map(function(c) {
+    var activo = c.activo !== false && c.activo !== 'false';
+    var avance = parseFloat(c.avanceReal || 0);
+    var color  = avance >= 100 ? 'var(--verde)' : avance > 0 ? 'var(--azul-claro)' : '#e2e8f0';
+    return '<tr>' +
+      '<td style="font-size:11px;font-weight:700;">' + (c.clave||'—') + '</td>' +
+      '<td style="font-size:11px;max-width:280px;">' + (c.descripcion||'—') + '</td>' +
+      '<td style="text-align:center;">' + (c.unidad||'—') + '</td>' +
+      '<td style="text-align:right;">' + (c.cantidadContrato||0) + '</td>' +
+      '<td style="text-align:right;">$' + ((c.precioUnitario||0)).toLocaleString('es-MX') + '</td>' +
+      '<td style="font-size:11px;color:var(--gris-muted);">' + (c.subfases||'—').replace(/,/g,' · ') + '</td>' +
+      '<td style="min-width:90px;">' +
+        '<div class="avance-wrap"><div class="avance-num">' + avance + '%</div>' +
+        '<div class="prog-bar" style="flex:1;"><div class="prog-fill" style="width:' + Math.min(100,avance) + '%;background:' + color + ';"></div></div></div>' +
+      '</td>' +
+      '<td><span class="badge ' + (activo?'badge-ok':'badge-warn') + '">' + (activo?'Activo':'Inactivo') + '</span></td>' +
+      '<td><button class="btn btn-outline btn-sm" onclick="editarConcepto(\'' + encodeURIComponent(JSON.stringify(c)) + '\')">Editar</button></td>' +
+      '</tr>';
+  }).join('');
+  document.getElementById('catalogoBody').innerHTML = html || '<tr><td colspan="9" class="loading">Sin conceptos</td></tr>';
+  document.getElementById('kpiCatalogo').textContent = allCatalogo.length;
+}
+
+document.getElementById('buscarConcepto').addEventListener('input', function() {
+  busquedaConcepto = this.value.toLowerCase();
+  renderCatalogo();
+});
+
+// Cargar catálogo desde Excel Opus
+document.getElementById('btnCargarCatalogo').addEventListener('click', function() {
+  document.getElementById('previewCatalogo').style.display = 'none';
+  document.getElementById('btnConfirmarCatalogo').disabled = true;
+  catalogoPendiente = [];
+  abrirModal('modalCatalogo');
+});
+
+var uploadArea = document.getElementById('uploadAreaCat');
+uploadArea.addEventListener('click', function(){ document.getElementById('fileCatalogo').click(); });
+uploadArea.addEventListener('dragover', function(e){ e.preventDefault(); this.style.borderColor='var(--azul-claro)'; });
+uploadArea.addEventListener('dragleave', function(){ this.style.borderColor=''; });
+uploadArea.addEventListener('drop', function(e){ e.preventDefault(); this.style.borderColor=''; procesarExcelOpus(e.dataTransfer.files[0]); });
+document.getElementById('fileCatalogo').addEventListener('change', function(){ procesarExcelOpus(this.files[0]); });
+
+function procesarExcelOpus(file) {
+  if (!file) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, {type:'binary'});
+      var ws  = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null});
+      catalogoPendiente = [];
+      rows.forEach(function(row) {
+        var clave   = row[0] ? String(row[0]).trim() : '';
+        var desc    = row[1] ? String(row[1]).trim() : '';
+        var unidad  = row[2] ? String(row[2]).trim().toLowerCase() : '';
+        var cantidad = parseFloat(row[3]);
+        var pu       = parseFloat(row[4]);
+        if (!clave || !unidad || isNaN(cantidad) || isNaN(pu)) return;
+        if (!/\d/.test(clave) || !clave.includes('.')) return;
+        var d = desc.toLowerCase();
+        var sf = (d.includes('lamina') || d.includes('lámina') || d.includes('roofing')) ?
+          'Suministro,Instalación' : 'Suministro,Fabricación,Montaje';
+        catalogoPendiente.push({
+          clave: clave, descripcion: desc, unidad: unidad,
+          cantidadContrato: cantidad, precioUnitario: pu,
+          importeContrato: Math.round(cantidad * pu * 100) / 100,
+          subfases: sf, tipoTrabajo: 'estructura', activo: true,
+          avanceReal: 0, avanceProg: 0
+        });
+      });
+      document.getElementById('previewInfo').textContent = catalogoPendiente.length + ' conceptos detectados en el archivo.';
+      var html = catalogoPendiente.slice(0,10).map(function(c) {
+        return '<tr><td style="font-size:11px;">' + c.clave + '</td><td style="font-size:11px;">' + c.descripcion.substring(0,60) + '...</td><td>' + c.unidad + '</td><td>' + c.cantidadContrato + '</td></tr>';
+      }).join('');
+      document.getElementById('previewBody').innerHTML = html;
+      document.getElementById('previewCatalogo').style.display = 'block';
+      document.getElementById('btnConfirmarCatalogo').disabled = catalogoPendiente.length === 0;
+    } catch(err) {
+      showToast('Error leyendo el archivo: ' + err.message, 'err');
+    }
+  };
+  r.readAsBinaryString(file);
+}
+
+document.getElementById('btnConfirmarCatalogo').addEventListener('click', async function() {
+  var obra = document.getElementById('cObra').value;
+  if (!obra) { showToast('Selecciona una obra', 'err'); return; }
+  this.disabled = true;
+  this.textContent = 'Cargando...';
+  var ok = 0; var err = 0;
+  for (var i = 0; i < catalogoPendiente.length; i++) {
+    var c = catalogoPendiente[i];
+    var rk = c.clave.replace(/\./g, '-');
+    var entity = Object.assign({ PartitionKey: obra, RowKey: rk }, c);
+    try {
+      await azureUpsert('actividades', entity);
+      ok++;
+    } catch(e) {
+      err++;
+    }
+    await new Promise(function(r){ setTimeout(r, 60); });
+  }
+  cerrarModal('modalCatalogo');
+  this.disabled = false;
+  this.textContent = 'Cargar a Azure';
+  showToast(ok + ' conceptos cargados' + (err?', ' + err + ' errores':''), err?'info':'ok');
+  if (obraFiltCatalogo === obra) cargarCatalogo(obra);
+});
+
+// Concepto manual
+document.getElementById('btnNuevoConcepto').addEventListener('click', function() {
+  document.getElementById('modalConceptoTitulo').textContent = 'Nuevo concepto';
+  document.getElementById('ccRowKey').value   = '';
+  document.getElementById('ccClave').value    = '';
+  document.getElementById('ccDesc').value     = '';
+  document.getElementById('ccCantidad').value = '';
+  document.getElementById('ccPU').value       = '';
+  abrirModal('modalConcepto');
+});
+
+function editarConcepto(encoded) {
+  var c = JSON.parse(decodeURIComponent(encoded));
+  document.getElementById('modalConceptoTitulo').textContent = 'Editar concepto';
+  document.getElementById('ccRowKey').value   = c.RowKey || '';
+  document.getElementById('ccObra').value     = c.PartitionKey || '';
+  document.getElementById('ccClave').value    = c.clave || '';
+  document.getElementById('ccDesc').value     = c.descripcion || '';
+  document.getElementById('ccUnidad').value   = c.unidad || 'pza';
+  document.getElementById('ccCantidad').value = c.cantidadContrato || '';
+  document.getElementById('ccPU').value       = c.precioUnitario || '';
+  document.getElementById('ccSubfases').value = c.subfases || 'Suministro,Fabricación,Montaje';
+  abrirModal('modalConcepto');
+}
+
+document.getElementById('btnGuardarConcepto').addEventListener('click', async function() {
+  var obra    = document.getElementById('ccObra').value;
+  var clave   = document.getElementById('ccClave').value.trim();
+  var desc    = document.getElementById('ccDesc').value.trim();
+  var unidad  = document.getElementById('ccUnidad').value;
+  var cantidad = parseFloat(document.getElementById('ccCantidad').value);
+  var pu       = parseFloat(document.getElementById('ccPU').value);
+  var subfases = document.getElementById('ccSubfases').value;
+  var rk       = document.getElementById('ccRowKey').value || clave.replace(/\./g,'-');
+  if (!obra || !clave || !desc) { showToast('Obra, clave y descripción son requeridos', 'err'); return; }
+  var entity = {
+    PartitionKey: obra, RowKey: rk, clave: clave, descripcion: desc,
+    unidad: unidad, cantidadContrato: cantidad||0, precioUnitario: pu||0,
+    importeContrato: Math.round((cantidad||0)*(pu||0)*100)/100,
+    subfases: subfases, tipoTrabajo:'estructura', activo:true, avanceReal:0, avanceProg:0
+  };
+  try {
+    await azureUpsert('actividades', entity);
+    cerrarModal('modalConcepto');
+    showToast('Concepto guardado', 'ok');
+    if (obraFiltCatalogo === obra) cargarCatalogo(obra);
+  } catch(e) {
+    showToast('Error: ' + e.message, 'err');
+  }
+});
+
+// ══════════════════════════════════════════════
+// REGISTROS
+// ══════════════════════════════════════════════
+async function cargarRegistros() {
+  document.getElementById('registrosBody').innerHTML = '<tr><td colspan="8" class="loading">Cargando...</td></tr>';
+  try {
+    var filtro = '';
+    if (obraFiltRegistros) filtro = "PartitionKey eq '" + obraFiltRegistros + "'";
+    allRegistros = await azureGet('cambios', filtro || null);
+    renderRegistros();
+    document.getElementById('kpiRegistros').textContent = allRegistros.length;
+  } catch(e) {
+    showToast('Error cargando registros: ' + e.message, 'err');
+  }
+}
+
+function renderRegistros() {
+  var fecha = document.getElementById('filtroFecha').value;
+  var lista = allRegistros.filter(function(r) {
+    if (fecha && !(r.fecha||'').startsWith(fecha)) return false;
+    return true;
+  });
+  var html = lista.slice(0,200).map(function(r) {
+    var d = (r.fecha||'').slice(0,10);
+    var ppc = r.ppc === true || r.ppc === 'true';
+    return '<tr>' +
+      '<td style="font-size:11px;">' + d + '</td>' +
+      '<td style="font-size:11px;">' + (r.supervisor||'—') + '</td>' +
+      '<td><strong>' + (r.PartitionKey||'—') + '</strong></td>' +
+      '<td style="font-size:11px;">' + (r.actividad||'—') + '</td>' +
+      '<td style="font-size:11px;">' + (r.subfase||'—') + '</td>' +
+      '<td style="text-align:right;">' + (r.cantidad||0) + ' ' + (r.unidad||'') + '</td>' +
+      '<td><span class="badge ' + (ppc?'badge-ok':'badge-warn') + '">' + (ppc?'Sí':'No') + '</span></td>' +
+      '<td style="font-size:11px;color:var(--gris-muted);max-width:200px;">' + (r.notas||'—') + '</td>' +
+      '</tr>';
+  }).join('');
+  document.getElementById('registrosBody').innerHTML = html || '<tr><td colspan="8" class="loading">Sin registros</td></tr>';
+}
+
+document.getElementById('filtroObraRegistros').addEventListener('change', function() {
+  obraFiltRegistros = this.value;
+  cargarRegistros();
+});
+
+document.getElementById('filtroFecha').addEventListener('change', renderRegistros);
+
+document.getElementById('btnExportarRegistros').addEventListener('click', function() {
+  if (!allRegistros.length) { showToast('Sin datos para exportar', 'info'); return; }
+  var ws = XLSX.utils.json_to_sheet(allRegistros);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Registros');
+  XLSX.writeFile(wb, 'registros_cao_' + new Date().toISOString().slice(0,10) + '.xlsx');
+});
+
+// ══════════════════════════════════════════════
+// MODALES
+// ══════════════════════════════════════════════
+function abrirModal(id)  { document.getElementById(id).classList.add('open'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('[data-close]').forEach(function(btn) {
+  btn.addEventListener('click', function(){ cerrarModal(this.dataset.close); });
+});
+
+document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+  overlay.addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal(this.id);
+  });
+});
+
+// Verificar sesión cacheada al cargar
+(async function() {
+  var accounts = msalInstance.getAllAccounts();
+  if (accounts.length > 0) {
+    var acc = accounts[0];
+    userEmail = (acc.username || '').toLowerCase();
+    userName  = acc.name || acc.username;
+    if (userEmail.startsWith('a.medina')) {
+      iniciarApp();
+    }
+  }
+})();
+</script>
+</body>
+</html>
