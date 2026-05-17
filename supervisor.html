@@ -1023,6 +1023,7 @@ const AZURE_SAS_ADMIN = '?sv=2026-02-06&ss=t&srt=o&sp=rwdau&se=2028-01-01T11:48:
 let adminUsuarios = [];
 let adminObras = [];
 let adminFiltro = 'activos';
+let adminFiltroObras = 'activas';
 
 async function renderAdmin() {
   const c = document.getElementById("mainContent");
@@ -1096,8 +1097,13 @@ function pintarAdmin() {
   html += '<button onclick="agregarUsuario()" style="padding:10px;background:var(--azul-medio);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Agregar usuario</button>';
   html += '</div></div>';
 
-html += '<div class="sec-title">Obras</div>';
-  adminObras.filter(function(o){ return o.activo; }).forEach(function(o) {
+html += '<div class="sec-title">Obras ';
+  html += '<button onclick="adminFiltroObras=\'activas\';pintarAdmin()" style="border:none;background:' + (adminFiltroObras==='activas'?'var(--azul-oscuro)':'var(--azul-bg)') + ';color:' + (adminFiltroObras==='activas'?'#fff':'var(--gris-muted)') + ';padding:3px 8px;border-radius:20px;font-size:10px;cursor:pointer;margin-left:8px">Activas</button>';
+  html += '<button onclick="adminFiltroObras=\'inactivas\';pintarAdmin()" style="border:none;background:' + (adminFiltroObras==='inactivas'?'var(--azul-oscuro)':'var(--azul-bg)') + ';color:' + (adminFiltroObras==='inactivas'?'#fff':'var(--gris-muted)') + ';padding:3px 8px;border-radius:20px;font-size:10px;cursor:pointer">Inactivas</button>';
+  html += '<button onclick="adminFiltroObras=\'todas\';pintarAdmin()" style="border:none;background:' + (adminFiltroObras==='todas'?'var(--azul-oscuro)':'var(--azul-bg)') + ';color:' + (adminFiltroObras==='todas'?'#fff':'var(--gris-muted)') + ';padding:3px 8px;border-radius:20px;font-size:10px;cursor:pointer">Todas</button>';
+  html += '</div>';
+  const obrasFiltradas = adminFiltroObras === 'activas' ? adminObras.filter(function(o){return o.activo;}) : adminFiltroObras === 'inactivas' ? adminObras.filter(function(o){return !o.activo;}) : adminObras;
+  obrasFiltradas.forEach(function(o) {
     html += '<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">';
     html += '<div><div style="font-size:13px;font-weight:600;color:var(--azul-oscuro)">' + o.nombre + '</div>';
     html += '<span class="badge ' + (o.activo?'badge-ok':'badge-warn') + '" style="margin-top:4px">' + (o.activo?'Activa':'Inactiva') + '</span></div>';
