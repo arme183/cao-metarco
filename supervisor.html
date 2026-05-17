@@ -1053,54 +1053,68 @@ function pintarAdmin() {
       ? adminUsuarios.filter(u => !u.activo)
       : adminUsuarios;
 
-  c.innerHTML = `
-    <div style="padding:14px 14px 80px">
+  let html = '<div style="padding:14px 14px 80px">';
 
-      <div class="sec-title">Usuarios
-        <span style="font-weight:400;margin-left:8px">
-          <button onclick="adminFiltro='activos';pintarAdmin()" style="border:none;background:${adminFiltro==='activos'?'var(--azul-oscuro)':'var(--azul-bg)'};color:${adminFiltro==='activos'?'#fff':'var(--gris-muted)'};padding:3px 8px;border-radius:20px;font-size:10px;cursor:pointer">Activos</button>
-          <button onclick="adminFiltro='inactivos';pintarAdmin()" style="border:none;background:${adminFiltro==='inactivos'?'var(--azul-oscuro)':'var(--azul-bg)'};color:${adminFiltro==='inactivos'?'#fff':'var(--gris-muted)'};padding:3px 8px;border-radius:20px;font-size:10px;cursor:pointer">Inactivos</button>
-          <button onclick="adminFiltro='todos';pintarAdmin()" style="border:none;background:${adminFiltro==='todos'?'var(--azul-oscuro)':'var(--azul-bg)'};color:${adminFiltro==='todos'?'#fff':'var(--gris-muted)'};padding:3px 8px;border-radius:20px;font-size:10px;cursor:pointer">Todos</button>
-        </span>
-      </div>
+  html += '<div class="sec-title">Usuarios ';
+  html += '<button onclick="adminFiltro=\'activos\';pintarAdmin()" style="border:none;background:' + (adminFiltro==='activos'?'var(--azul-oscuro)':'var(--azul-bg)') + ';color:' + (adminFiltro==='activos'?'#fff':'var(--gris-muted)') + ';padding:3px 8px;border-radius:20px;font-size:10px;cursor:pointer;margin-left:8px">Activos</button>';
+  html += '<button onclick="adminFiltro=\'inactivos\';pintarAdmin()" style="border:none;background:' + (adminFiltro==='inactivos'?'var(--azul-oscuro)':'var(--azul-bg)') + ';color:' + (adminFiltro==='inactivos'?'#fff':'var(--gris-muted)') + ';padding:3px 8px;border-radius:20px;font-size:10px;cursor:pointer">Inactivos</button>';
+  html += '<button onclick="adminFiltro=\'todos\';pintarAdmin()" style="border:none;background:' + (adminFiltro==='todos'?'var(--azul-oscuro)':'var(--azul-bg)') + ';color:' + (adminFiltro==='todos'?'#fff':'var(--gris-muted)') + ';padding:3px 8px;border-radius:20px;font-size:10px;cursor:pointer">Todos</button>';
+  html += '</div>';
 
-      ${usuariosFiltrados.map(u => `
-        <div class="card" style="margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:var(--azul-oscuro)">${u.nombre || '—'}</div>
-              <div style="font-size:10px;color:var(--gris-muted)">${u.email || u.RowKey}</div>
-            </div>
-            <span class="badge ${u.activo ? 'badge-ok' : 'badge-warn'}">${u.activo ? 'Activo' : 'Inactivo'}</span>
-          </div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <select id="rol_${u.RowKey}" style="flex:1;padding:6px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:12px;font-family:Inter,sans-serif">
-              <option value="residente" ${u.rol==='residente'?'selected':''}>Residente</option>
-              <option value="supervisor" ${u.rol==='supervisor'?'selected':''}>Supervisor</option>
-              <option value="admin" ${u.rol==='admin'?'selected':''}>Admin</option>
-            </select>
-            <select id="obras_${u.RowKey}" style="flex:1;padding:6px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:12px;font-family:Inter,sans-serif">
-              <option value="todas" ${u.obras==='todas'?'selected':''}>Todas</option>
-              ${obrasActivas.map(o => `<option value="${o}" ${u.obras===o?'selected':''}>${o}</option>`).join('')}
-            </select>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button onclick="guardarUsuario('${u.RowKey}')" style="flex:2;padding:8px;background:var(--azul-oscuro);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Guardar</button>
-            <button onclick="toggleUsuario('${u.RowKey}',${!u.activo})" style="flex:2;padding:8px;background:${u.activo?'var(--amarillo)':'var(--verde)'};color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">${u.activo?'Desactivar':'Activar'}</button>
-            <button onclick="eliminarUsuario('${u.RowKey}','${u.nombre||u.email}')" style="flex:1;padding:8px;background:var(--rojo);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🗑</button>
-          </div>
-        </div>
-      `).join('')}
+  usuariosFiltrados.forEach(function(u) {
+    const rolOpts = ['residente','supervisor','admin'].map(function(r) {
+      return '<option value="' + r + '"' + (u.rol===r?' selected':'') + '>' + r.charAt(0).toUpperCase()+r.slice(1) + '</option>';
+    }).join('');
+    const obraOpts = '<option value="todas"' + (u.obras==='todas'?' selected':'') + '>Todas</option>' +
+      obrasActivas.map(function(o) {
+        return '<option value="' + o + '"' + (u.obras===o?' selected':'') + '>' + o + '</option>';
+      }).join('');
+    html += '<div class="card" style="margin-bottom:10px">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">';
+    html += '<div><div style="font-size:13px;font-weight:600;color:var(--azul-oscuro)">' + (u.nombre||'—') + '</div>';
+    html += '<div style="font-size:10px;color:var(--gris-muted)">' + (u.email||u.RowKey) + '</div></div>';
+    html += '<span class="badge ' + (u.activo?'badge-ok':'badge-warn') + '">' + (u.activo?'Activo':'Inactivo') + '</span></div>';
+    html += '<div style="display:flex;gap:8px;margin-bottom:8px">';
+    html += '<select id="rol_' + u.RowKey + '" style="flex:1;padding:6px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:12px;font-family:Inter,sans-serif">' + rolOpts + '</select>';
+    html += '<select id="obras_' + u.RowKey + '" style="flex:1;padding:6px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:12px;font-family:Inter,sans-serif">' + obraOpts + '</select>';
+    html += '</div>';
+    html += '<div style="display:flex;gap:8px">';
+    html += '<button onclick="guardarUsuario(\'' + u.RowKey + '\')" style="flex:2;padding:8px;background:var(--azul-oscuro);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Guardar</button>';
+    html += '<button onclick="toggleUsuario(\'' + u.RowKey + '\',' + (!u.activo) + ')" style="flex:2;padding:8px;background:' + (u.activo?'var(--amarillo)':'var(--verde)') + ';color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">' + (u.activo?'Desactivar':'Activar') + '</button>';
+    html += '<button onclick="eliminarUsuario(\'' + u.RowKey + '\',\'' + (u.nombre||u.email) + '\')" style="flex:1;padding:8px;background:var(--rojo);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🗑</button>';
+    html += '</div></div>';
+  });
 
-      <div class="sec-title" style="margin-top:20px">Agregar usuario</div>
-      <div class="card" style="margin-bottom:20px">
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <input id="nuevoNombre" type="text" placeholder="Nombre completo" style="padding:10px 12px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif">
-          <input id="nuevoEmail" type="email" placeholder="email@metarco.com.mx" style="padding:10px 12px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif">
-          <div style="display:flex;gap:8px">
-            <select id="nuevoRol" style="flex:1;padding:10px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif">
+  html += '<div class="sec-title" style="margin-top:20px">Agregar usuario</div>';
+  html += '<div class="card" style="margin-bottom:20px"><div style="display:flex;flex-direction:column;gap:8px">';
+  html += '<input id="nuevoNombre" type="text" placeholder="Nombre completo" style="padding:10px 12px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif">';
+  html += '<input id="nuevoEmail" type="email" placeholder="email@metarco.com.mx" style="padding:10px 12px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif">';
+  html += '<div style="display:flex;gap:8px">';
+  html += '<select id="nuevoRol" style="flex:1;padding:10px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif"><option value="residente">Residente</option><option value="supervisor">Supervisor</option><option value="admin">Admin</option></select>';
+  html += '<select id="nuevasObras" style="flex:1;padding:10px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif"><option value="todas">Todas</option>' + obrasActivas.map(function(o){return '<option value="'+o+'">'+o+'</option>';}).join('') + '</select>';
+  html += '</div>';
+  html += '<button onclick="agregarUsuario()" style="padding:10px;background:var(--azul-medio);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Agregar usuario</button>';
+  html += '</div></div>';
+
+  html += '<div class="sec-title">Obras</div>';
+  adminObras.forEach(function(o) {
+    html += '<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">';
+    html += '<div><div style="font-size:13px;font-weight:600;color:var(--azul-oscuro)">' + o.nombre + '</div>';
+    html += '<span class="badge ' + (o.activo?'badge-ok':'badge-warn') + '" style="margin-top:4px">' + (o.activo?'Activa':'Inactiva') + '</span></div>';
+    html += '<div style="display:flex;gap:8px">';
+    html += '<button onclick="toggleObra(\'' + o.RowKey + '\',' + (!o.activo) + ')" style="padding:8px 12px;background:' + (o.activo?'var(--amarillo)':'var(--verde)') + ';color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">' + (o.activo?'Desactivar':'Activar') + '</button>';
+    html += '<button onclick="eliminarObra(\'' + o.RowKey + '\',\'' + o.nombre + '\')" style="padding:8px 12px;background:var(--rojo);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🗑</button>';
+    html += '</div></div>';
+  });
+
+  html += '<div class="sec-title" style="margin-top:20px">Nueva obra</div>';
+  html += '<div class="card">';
+  html += '<input id="nuevaObra" type="text" placeholder="Nombre de la obra" style="width:100%;padding:10px 12px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif;margin-bottom:10px">';
+  html += '<button onclick="agregarObra()" style="width:100%;padding:10px;background:var(--azul-medio);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Agregar obra</button>';
+  html += '</div></div>';
+
+  c.innerHTML = html;
 }
-
 async function guardarUsuario(rowKey) {
   const rol = document.getElementById('rol_' + rowKey).value;
   const obras = document.getElementById('obras_' + rowKey).value;
