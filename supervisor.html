@@ -1096,8 +1096,8 @@ function pintarAdmin() {
   html += '<button onclick="agregarUsuario()" style="padding:10px;background:var(--azul-medio);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Agregar usuario</button>';
   html += '</div></div>';
 
-  html += '<div class="sec-title">Obras</div>';
-  adminObras.forEach(function(o) {
+html += '<div class="sec-title">Obras</div>';
+  adminObras.filter(function(o){ return o.activo; }).forEach(function(o) {
     html += '<div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">';
     html += '<div><div style="font-size:13px;font-weight:600;color:var(--azul-oscuro)">' + o.nombre + '</div>';
     html += '<span class="badge ' + (o.activo?'badge-ok':'badge-warn') + '" style="margin-top:4px">' + (o.activo?'Activa':'Inactiva') + '</span></div>';
