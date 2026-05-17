@@ -199,7 +199,7 @@
 
     <div class="sep">o</div>
 
-    <button class="btn-demo" onclick="loginDemo()">Continuar en modo demo</button>
+    <button class="btn-demo" id="btnDemo" style="display:none" onclick="loginDemo()">Continuar en modo demo</button>
 
     <div class="users-row">
       <div class="avatar" title="a.medina@metarco.com.mx">AM</div>
@@ -324,6 +324,7 @@ const email = (resp.account.username || "").toLowerCase();
       }
 sessionStorage.setItem("userRole", usuario.rol);
       sessionStorage.setItem("userObras", usuario.obras || "todas");
+      if (usuario.rol === 'admin') document.getElementById('btnDemo').style.display = 'block';
       const obraActiva = sessionStorage.getItem("obraActiva");
       const obras = (usuario.obras || "todas").toLowerCase();
       if (obras !== "todas" && obraActiva) {
