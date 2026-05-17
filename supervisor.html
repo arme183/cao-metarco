@@ -995,7 +995,7 @@ state.userRole = sessionStorage.getItem("userRole") || "supervisor";
     } catch(e) { console.error(e); }
     // Verificar cuenta activa
     const accounts = msalInstance.getAllAccounts();
-    if (accounts.length > 0) { state.usuario = accounts[0].name; mostrarApp(); return; }
+   if (accounts.length > 0) { state.usuario = accounts[0].name; state.userRole = sessionStorage.getItem("userRole") || "supervisor"; mostrarApp(); return; } 
   }
   // Verificar sesión existente
   if (sessionStorage.getItem("usuarioNombre")) {
