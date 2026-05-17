@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
+
+<link rel="manifest" href="/cao-metarco/manifest.json">
+<meta name="theme-color" content="#0b1e3d">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -302,6 +305,9 @@ function loginDemo() {
 }
 
 window.addEventListener("load", async () => {
+ if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/cao-metarco/sw.js');
+  }
   cargarObras();
   if (!msalInstance) return;
   try {
