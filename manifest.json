@@ -1,0 +1,25 @@
+{
+  "name": "CAO Metarco",
+  "short_name": "CAO Metarco",
+  "description": "Sistema de Control de Avance de Obra — Metarco",
+  "start_url": "/cao-metarco/",
+  "scope": "/cao-metarco/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1e3d",
+  "theme_color": "#0b1e3d",
+  "icons": [
+    {
+      "src": "/cao-metarco/LOGO_METARCO1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/cao-metarco/LOGO_METARCO1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
