@@ -218,7 +218,9 @@
  const AZURE_ACCOUNT = 'metarcostorage';
 const AZURE_TABLE   = 'usuarios';
 const AZURE_TABLE_OBRAS = 'obras';
-const AZURE_SAS     = '?sv=2026-02-06&ss=t&srt=o&sp=rwa&se=2028-01-01T08:01:59Z&st=2026-05-16T23:46:59Z&spr=https&sig=f6P91scgQ%2FhCTz%2FAkD5Zu2LhHDVjziATZKe6A2Baydc%3D';
+const AZURE_SAS     = '?sv=2026-02-06&ss=t&srt=o&sp=rwdau&se=2028-01-01T11:48:28Z&st=2026-05-17T03:33:28Z&spr=https&sig=25z4ZNljIvgFJmeaf2dGRv9UAAKaUAxsU9DB3aCproY%3D';
+
+ 
 async function cargarObras() {
   const url = `https://${AZURE_ACCOUNT}.table.core.windows.net/${AZURE_TABLE_OBRAS}${AZURE_SAS}`;
   try {
