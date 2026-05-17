@@ -606,14 +606,19 @@ input[type=file] { display:none; }
           <input class="form-input" id="ccPU" type="number" placeholder="0.00">
         </div>
       </div>
-      <div class="form-group">
+<div class="form-group">
         <label class="form-label">Subfases</label>
-        <select class="form-select" id="ccSubfases">
-          <option value="Suministro,Fabricación,Montaje">Suministro · Fabricación · Montaje</option>
-          <option value="Suministro,Instalación">Suministro · Instalación</option>
-          <option value="Suministro,Ejecución">Suministro · Ejecución</option>
-          <option value="Diagnóstico,Suministro,Ejecución,Entrega">Diagnóstico · Suministro · Ejecución · Entrega</option>
-        </select>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;padding:10px 0;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="sfSuministro" value="Suministro"> Suministro
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="sfFabricacion" value="Fabricación"> Fabricación
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="sfInstalacion" value="Instalación"> Instalación
+          </label>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1179,7 +1184,10 @@ function editarConcepto(encoded) {
   document.getElementById('ccUnidad').value   = c.unidad || 'pza';
   document.getElementById('ccCantidad').value = c.cantidadContrato || '';
   document.getElementById('ccPU').value       = c.precioUnitario || '';
-  document.getElementById('ccSubfases').value = c.subfases || 'Suministro,Fabricación,Montaje';
+  var sfs = (c.subfases || '').split(',');
+  document.getElementById('sfSuministro').checked = sfs.includes('Suministro');
+  document.getElementById('sfFabricacion').checked = sfs.includes('Fabricación');
+  document.getElementById('sfInstalacion').checked = sfs.includes('Instalación');
   abrirModal('modalConcepto');
 }
 
@@ -1190,7 +1198,11 @@ document.getElementById('btnGuardarConcepto').addEventListener('click', async fu
   var unidad  = document.getElementById('ccUnidad').value;
   var cantidad = parseFloat(document.getElementById('ccCantidad').value);
   var pu       = parseFloat(document.getElementById('ccPU').value);
-  var subfases = document.getElementById('ccSubfases').value;
+  var sfChecked = ['sfSuministro','sfFabricacion','sfInstalacion']
+    .filter(function(id){ return document.getElementById(id).checked; })
+    .map(function(id){ return document.getElementById(id).value; });
+  var subfases = sfChecked.join(',');
+  if (!subfases) { showToast('Selecciona al menos una subfase', 'err'); return; }
   var rk       = document.getElementById('ccRowKey').value || clave.replace(/\./g,'-');
   if (!obra || !clave || !desc) { showToast('Obra, clave y descripción son requeridos', 'err'); return; }
   var entity = {
