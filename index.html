@@ -291,7 +291,18 @@ const email = (resp.account.username || "").toLowerCase();
         mostrarAlerta("Acceso no autorizado. Contacta al administrador.");
         return;
       }
-      sessionStorage.setItem("userRole", usuario.rol);
+sessionStorage.setItem("userRole", usuario.rol);
+      sessionStorage.setItem("userObras", usuario.obras || "todas");
+      const obraActiva = sessionStorage.getItem("obraActiva");
+      const obras = (usuario.obras || "todas").toLowerCase();
+      if (obras !== "todas" && obraActiva) {
+        const lista = obras.split(",").map(o => o.trim().toLowerCase());
+        if (!lista.includes(obraActiva.toLowerCase())) {
+          mostrarAlerta("No tienes acceso a esa obra. Tus obras asignadas: " + usuario.obras);
+          sessionStorage.removeItem("obraActiva");
+          return;
+        }
+      }
       window.location.href = "supervisor.html";
     }
   } catch(e) { console.error(e); }
