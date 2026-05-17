@@ -408,6 +408,10 @@ input[type=file] { display:none; }
       <span class="tab-icon">📊</span>
       <span class="tab-label">REPORTES</span>
     </button>
+    <button class="tab-btn" id="tabAdmin" style="display:none" onclick="setTab('admin',this)">
+      <span class="tab-icon">⚙️</span>
+      <span class="tab-label">ADMIN</span>
+    </button>
   </nav>
 </div>
 
@@ -658,6 +662,7 @@ function cargarDemoData() {
 function mostrarApp() {
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("appScreen").style.display = "flex";
+  if (state.userRole === 'admin') document.getElementById("tabAdmin").style.display = "flex";
 
   const obraMap = { reforma:"Torre Reforma 400", tizayuca:"Planta Tizayuca", norte:"Centro Logístico Norte" };
   const obraKey = sessionStorage.getItem("obraActiva") || "reforma";
@@ -723,7 +728,8 @@ function setTab(tab, btn) {
   else if (tab === "semana") { c.innerHTML = renderSemana(); }
   else if (tab === "registrar") { c.innerHTML = renderRegistrar(); }
   else if (tab === "restricciones") { c.innerHTML = renderRestricciones(); fab.style.display = "flex"; }
-  else if (tab === "reportes") { c.innerHTML = renderReportes(); }
+else if (tab === "reportes") { c.innerHTML = renderReportes(); }
+  else if (tab === "admin") { c.innerHTML = '<div class="content" style="padding:16px"><p style="color:var(--gris-muted);font-size:13px">Cargando panel admin...</p></div>'; renderAdmin(); }
   state.tabActual = tab;
 }
 
@@ -1009,6 +1015,126 @@ state.userRole = sessionStorage.getItem("userRole") || "supervisor";
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("appScreen").style.display = "none";
 });
+
+// ======= PANEL ADMIN =======
+const AZURE_ACCOUNT_ADMIN = 'metarcostorage';
+const AZURE_SAS_ADMIN = '?sv=2026-02-06&ss=t&srt=o&sp=rwa&se=2028-01-01T08:01:59Z&st=2026-05-16T23:46:59Z&spr=https&sig=f6P91scgQ%2FhCTz%2FAkD5Zu2LhHDVjziATZKe6A2Baydc%3D';
+
+async function renderAdmin() {
+  const c = document.getElementById("mainContent");
+  try {
+    // Cargar usuarios y obras en paralelo
+    const [resU, resO] = await Promise.all([
+      fetch(`https://${AZURE_ACCOUNT_ADMIN}.table.core.windows.net/usuarios${AZURE_SAS_ADMIN}`, {
+        headers: { 'Accept': 'application/json;odata=nometadata', 'x-ms-version': '2020-12-06' }
+      }),
+      fetch(`https://${AZURE_ACCOUNT_ADMIN}.table.core.windows.net/obras${AZURE_SAS_ADMIN}`, {
+        headers: { 'Accept': 'application/json;odata=nometadata', 'x-ms-version': '2020-12-06' }
+      })
+    ]);
+    const dataU = await resU.json();
+    const dataO = await resO.json();
+    const usuarios = dataU.value || [];
+    const obras = dataO.value || [];
+    const obrasActivas = obras.filter(o => o.activo).map(o => o.nombre);
+
+    let html = `
+      <div style="padding:14px">
+        <div class="sec-title">Usuarios</div>
+        ${usuarios.map(u => `
+          <div class="card" style="margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--azul-oscuro)">${u.nombre}</div>
+                <div style="font-size:10px;color:var(--gris-muted)">${u.email}</div>
+              </div>
+              <span class="badge ${u.activo ? 'badge-ok' : 'badge-warn'}">${u.activo ? 'Activo' : 'Inactivo'}</span>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+              <select id="rol_${u.RowKey}" style="flex:1;padding:6px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:12px;font-family:Inter,sans-serif">
+                <option value="residente" ${u.rol==='residente'?'selected':''}>Residente</option>
+                <option value="supervisor" ${u.rol==='supervisor'?'selected':''}>Supervisor</option>
+                <option value="admin" ${u.rol==='admin'?'selected':''}>Admin</option>
+              </select>
+              <select id="obras_${u.RowKey}" style="flex:1;padding:6px 8px;border:1.5px solid var(--borde);border-radius:8px;font-size:12px;font-family:Inter,sans-serif">
+                <option value="todas" ${u.obras==='todas'?'selected':''}>Todas</option>
+                ${obrasActivas.map(o => `<option value="${o}" ${u.obras===o?'selected':''}>${o}</option>`).join('')}
+              </select>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onclick="guardarUsuario('${u.RowKey}')" style="flex:1;padding:8px;background:var(--azul-oscuro);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">Guardar</button>
+              <button onclick="toggleUsuario('${u.RowKey}',${!u.activo})" style="flex:1;padding:8px;background:${u.activo?'var(--rojo)':'var(--verde)'};color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">${u.activo?'Desactivar':'Activar'}</button>
+            </div>
+          </div>
+        `).join('')}
+
+        <div class="sec-title" style="margin-top:20px">Obras</div>
+        ${obras.map(o => `
+          <div class="card" style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--azul-oscuro)">${o.nombre}</div>
+              <span class="badge ${o.activo ? 'badge-ok' : 'badge-warn'}" style="margin-top:4px">${o.activo ? 'Activa' : 'Inactiva'}</span>
+            </div>
+            <button onclick="toggleObra('${o.RowKey}',${!o.activo})" style="padding:8px 12px;background:${o.activo?'var(--rojo)':'var(--verde)'};color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">${o.activo?'Desactivar':'Activar'}</button>
+          </div>
+        `).join('')}
+
+        <div class="sec-title" style="margin-top:20px">Nueva obra</div>
+        <div class="card">
+          <input id="nuevaObra" type="text" placeholder="Nombre de la obra" style="width:100%;padding:10px 12px;border:1.5px solid var(--borde);border-radius:8px;font-size:13px;font-family:Inter,sans-serif;margin-bottom:10px">
+          <button onclick="agregarObra()" style="width:100%;padding:10px;background:var(--azul-medio);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">+ Agregar obra</button>
+        </div>
+      </div>`;
+    c.innerHTML = html;
+  } catch(e) {
+    c.innerHTML = '<div style="padding:16px;color:var(--rojo)">Error cargando panel admin.</div>';
+  }
+}
+
+async function guardarUsuario(rowKey) {
+  const rol = document.getElementById('rol_' + rowKey).value;
+  const obras = document.getElementById('obras_' + rowKey).value;
+  const url = `https://${AZURE_ACCOUNT_ADMIN}.table.core.windows.net/usuarios(PartitionKey='usuarios',RowKey='${rowKey}')${AZURE_SAS_ADMIN}`;
+  await fetch(url, {
+    method: 'MERGE',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json;odata=nometadata', 'x-ms-version': '2020-12-06' },
+    body: JSON.stringify({ rol, obras })
+  });
+  alert('Usuario actualizado.');
+}
+
+async function toggleUsuario(rowKey, nuevoActivo) {
+  const url = `https://${AZURE_ACCOUNT_ADMIN}.table.core.windows.net/usuarios(PartitionKey='usuarios',RowKey='${rowKey}')${AZURE_SAS_ADMIN}`;
+  await fetch(url, {
+    method: 'MERGE',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json;odata=nometadata', 'x-ms-version': '2020-12-06' },
+    body: JSON.stringify({ activo: nuevoActivo })
+  });
+  setTab('admin', null);
+}
+
+async function toggleObra(rowKey, nuevoActivo) {
+  const url = `https://${AZURE_ACCOUNT_ADMIN}.table.core.windows.net/obras(PartitionKey='obras',RowKey='${encodeURIComponent(rowKey)}')${AZURE_SAS_ADMIN}`;
+  await fetch(url, {
+    method: 'MERGE',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json;odata=nometadata', 'x-ms-version': '2020-12-06' },
+    body: JSON.stringify({ activo: nuevoActivo })
+  });
+  setTab('admin', null);
+}
+
+async function agregarObra() {
+  const nombre = document.getElementById('nuevaObra').value.trim();
+  if (!nombre) { alert('Ingresa el nombre de la obra.'); return; }
+  const rowKey = nombre.replace(/ /g, '_');
+  const url = `https://${AZURE_ACCOUNT_ADMIN}.table.core.windows.net/obras${AZURE_SAS_ADMIN}`;
+  await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json;odata=nometadata', 'x-ms-version': '2020-12-06' },
+    body: JSON.stringify({ PartitionKey: 'obras', RowKey: rowKey, nombre, activo: true })
+  });
+  setTab('admin', null);
+}
 </script>
 </body>
 </html>
