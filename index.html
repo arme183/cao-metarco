@@ -178,10 +178,8 @@
     <label class="field-label">Obra activa</label>
     <div class="sel-wrap">
       <select id="obraSelect">
+<select id="obraSelect">
         <option value="">— Selecciona una obra —</option>
-        <option value="reforma">Torre Reforma 400</option>
-        <option value="tizayuca">Planta Tizayuca</option>
-        <option value="norte">Centro Logístico Norte</option>
       </select>
     </div>
 
@@ -220,8 +218,33 @@
 
  const AZURE_ACCOUNT = 'metarcostorage';
 const AZURE_TABLE   = 'usuarios';
+const AZURE_TABLE_OBRAS = 'obras';
 const AZURE_SAS     = '?sv=2026-02-06&ss=t&srt=o&sp=rwa&se=2028-01-01T08:01:59Z&st=2026-05-16T23:46:59Z&spr=https&sig=f6P91scgQ%2FhCTz%2FAkD5Zu2LhHDVjziATZKe6A2Baydc%3D';
-
+async function cargarObras() {
+  const url = `https://${AZURE_ACCOUNT}.table.core.windows.net/${AZURE_TABLE_OBRAS}${AZURE_SAS}`;
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'Accept': 'application/json;odata=nometadata',
+        'x-ms-version': '2020-12-06'
+      }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const select = document.getElementById('obraSelect');
+    select.innerHTML = '<option value="">— Selecciona una obra —</option>';
+    data.value
+      .filter(o => o.activo)
+      .forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.nombre;
+        opt.textContent = o.nombre;
+        select.appendChild(opt);
+      });
+  } catch(e) {
+    console.error('Error cargando obras:', e);
+  }
+}
 async function consultarUsuario(email) {
   const rowKey = email.replace('@', '_AT_').replace(/\./g, '_');
   const url = `https://${AZURE_ACCOUNT}.table.core.windows.net/${AZURE_TABLE}(PartitionKey='usuarios',RowKey='${rowKey}')${AZURE_SAS}`;
@@ -278,6 +301,7 @@ function loginDemo() {
 }
 
 window.addEventListener("load", async () => {
+  cargarObras();
   if (!msalInstance) return;
   try {
     const resp = await msalInstance.handleRedirectPromise();
