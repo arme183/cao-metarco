@@ -182,20 +182,7 @@ body {
 .prog-fill-yellow { background:linear-gradient(90deg, var(--amarillo), #fcd34d); }
 .prog-fill-red { background:linear-gradient(90deg, var(--rojo), #fca5a5); }
 
-/* Turno cards */
-.turno-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
-.turno-card { background:#fff; border-radius:var(--radio); border:1px solid var(--borde); padding:12px; text-align:center; box-shadow:var(--sombra); }
-.turno-icon { font-size:20px; margin-bottom:4px; }
-.turno-label { font-size:11px; font-weight:600; color:var(--azul-oscuro); }
-.turno-status { font-size:10px; margin-top:3px; }
-.turno-pending { color:var(--gris-muted); }
-.turno-done { color:var(--verde); font-weight:600; }
-.btn-turno {
-  width:100%; padding:10px; border:none; border-radius:8px;
-  font-size:12px; font-weight:600; font-family:"Inter",sans-serif; cursor:pointer; margin-top:8px;
-}
-.btn-turno-arranque { background:var(--azul-oscuro); color:#fff; }
-.btn-turno-cierre { background:var(--verde); color:#fff; }
+
 
 /* FAB */
 .fab {
@@ -762,21 +749,6 @@ function renderHoy() {
   }).join("") || '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Sin actividades hoy. Toca + para agregar.</div></div>';
 
   return `
-    <div class="turno-grid">
-      <div class="turno-card">
-        <div class="turno-icon">🌅</div>
-        <div class="turno-label">Arranque</div>
-        <div class="turno-status turno-pending">7:00 AM — Pendiente</div>
-        ${puedeEditar() ? '<button class="btn-turno btn-turno-arranque" onclick="abrirReporte(\'arranque\')">REGISTRAR</button>' : ''}
-      </div>
-      <div class="turno-card">
-        <div class="turno-icon">🌇</div>
-        <div class="turno-label">Cierre</div>
-        <div class="turno-status turno-pending">6:00 PM — Pendiente</div>
-        ${puedeEditar() ? '<button class="btn-turno btn-turno-cierre" onclick="abrirReporte(\'cierre\')">REGISTRAR</button>' : ''}
-      </div>
-    </div>
-
     <div class="card">
       <div class="card-header">
         <div>
@@ -929,9 +901,6 @@ function abrirAvance(actId) {
   abrirModal("modalAvance");
 }
 
-function abrirReporte(tipo) {
-  abrirModal("modalActividad");
-}
 
 function setCumplimiento(val) {
   state.cumplimientoActual = val;
