@@ -883,34 +883,22 @@ async function renderHoy() {
   var obra = sessionStorage.getItem('obraActiva') || state.obra;
   var prog = Math.round(state.semana / state.totalSemanas * 100);
   var c = document.getElementById('mainContent');
-
-  var actHtml = state.actividades.map(function(a) {
-    var pct = a.meta > 0 ? Math.round(a.avance / a.meta * 100) : 0;
-    var color = pct >= 100 ? "green" : pct >= 50 ? "blue" : "yellow";
-    return '<div class="act-row">' +
-      '<div class="act-dot act-dot-' + color + '"></div>' +
-      '<div class="act-info">' +
-        '<div class="act-name">' + a.desc + '</div>' +
-        '<div class="act-meta">' + a.partida + ' · Meta: ' + a.meta + ' ' + a.unidad + '</div>' +
-        '<div class="prog-bar"><div class="prog-fill prog-fill-' + color + '" style="width:' + Math.min(pct,100) + '%"></div></div>' +
-      '</div>' +
-      '<div class="act-pct">' + pct + '%</div>' +
-    '</div>';
-  }).join('') || '<div class="empty-state"><div class="empty-icon">&#128203;</div><div class="empty-text">Sin actividades hoy. Toca + para agregar.</div></div>';
+  var hoy = new Date().toISOString().slice(0, 10);
+  var sem = getSemanaISO();
 
   c.innerHTML =
     '<div class="card">' +
       '<div class="card-header">' +
         '<div>' +
           '<div class="card-title">&#128205; ' + fechaHoy() + '</div>' +
-          '<div class="card-sub">Semana ' + state.semana + ' de ' + state.totalSemanas + ' · ' + prog + '% avance general</div>' +
+          '<div class="card-sub">Semana ' + state.semana + ' de ' + state.totalSemanas + ' \xb7 ' + prog + '% avance general</div>' +
         '</div>' +
         '<span class="badge badge-info">SEM ' + state.semana + '</span>' +
       '</div>' +
       '<div class="prog-bar" style="height:6px;margin-bottom:4px"><div class="prog-fill" style="width:' + prog + '%"></div></div>' +
     '</div>' +
-    '<div class="sec-title">Actividades de hoy</div>' +
-    '<div class="card">' + actHtml + '</div>' +
+    '<div class="sec-title">Avances registrados hoy</div>' +
+    '<div class="card" id="actividadesHoyCard"><div style="padding:16px;text-align:center;color:var(--gris-muted);font-size:13px">Cargando...</div></div>' +
     '<div class="sec-title">Resumen</div>' +
     '<div class="stats-bar" style="border-radius:12px;border:1px solid var(--borde)">' +
       '<div class="stat-pill"><div class="stat-val" id="statPpcHoy">&#8212;</div><div class="stat-lbl">PPC HOY</div></div>' +
@@ -921,6 +909,41 @@ async function renderHoy() {
     '</div>';
 
   try {
+    // Cargar cierres de hoy desde Azure
+    var urlHoy = azureUrlSup('cambios', "PartitionKey eq '" + obra + "' and tipRegistro eq 'cierre' and semanaISO eq '" + sem + "'");
+    var resHoy = await fetch(urlHoy, { headers: azureHdrSup() });
+    var todosLosCierres = resHoy.ok ? ((await resHoy.json()).value || []) : [];
+    var cierresHoy = todosLosCierres.filter(function(c) { return c.fecha && c.fecha.slice(0,10) === hoy; });
+
+    var cardEl = document.getElementById('actividadesHoyCard');
+    if (cardEl) {
+      if (!cierresHoy.length) {
+        cardEl.innerHTML = '<div class="empty-state">' +
+          '<div class="empty-icon">&#128203;</div>' +
+          '<div class="empty-text">Sin avances registrados hoy.<br>Ve al tab SEMANA para registrar.</div>' +
+        '</div>';
+      } else {
+        cardEl.style.padding = '0';
+        cardEl.innerHTML = cierresHoy.map(function(ci) {
+          var pct = ci.cantidadPlan > 0 ? Math.round(ci.cantidadReal / ci.cantidadPlan * 100) : 0;
+          var color = ci.ppc ? 'green' : pct > 0 ? 'blue' : 'yellow';
+          var badge = ci.ppc
+            ? '<span style="font-size:10px;background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-weight:600">&#10003; CUMPLIDO</span>'
+            : '<span style="font-size:10px;background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:10px;font-weight:600">&#10007; NO CUMPLIDO</span>';
+          return '<div style="padding:12px 14px;border-bottom:1px solid #f0f4fa;display:flex;align-items:center;gap:10px">' +
+            '<div class="act-dot act-dot-' + color + '" style="flex-shrink:0"></div>' +
+            '<div style="flex:1">' +
+              '<div class="act-name">' + (ci.descripcion || ci.actividad) + '</div>' +
+              '<div class="act-meta">' + ci.subfase + ' \xb7 ' + ci.cantidadReal + ' ' + ci.unidad + ' registrados</div>' +
+              '<div style="margin-top:4px">' + badge + '</div>' +
+              (ci.esRestriccion ? '<div style="font-size:10px;color:#f59e0b;margin-top:3px">&#9888; Restricci\xf3n registrada</div>' : '') +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+    }
+
+    // Cargar stats
     var stats = await cargarStatsHoy(obra);
     var elPH = document.getElementById('statPpcHoy');
     var elPS = document.getElementById('statPpcSem');
@@ -929,19 +952,19 @@ async function renderHoy() {
     var elR  = document.getElementById('statRest');
     if (elPH) {
       var ph = stats.ppcHoy;
-      elPH.textContent = ph !== null ? ph + '%' : '—';
+      elPH.textContent = ph !== null ? ph + '%' : '\u2014';
       elPH.style.color = ph !== null ? (ph>=90?'#10b981':ph>=80?'#f59e0b':'#ef4444') : 'var(--gris-muted)';
     }
     if (elPS) {
       var ps = stats.ppcSem;
-      elPS.textContent = ps !== null ? ps + '%' : '—';
+      elPS.textContent = ps !== null ? ps + '%' : '\u2014';
       elPS.style.color = ps !== null ? (ps>=90?'#10b981':ps>=80?'#f59e0b':'#ef4444') : 'var(--gris-muted)';
     }
     if (elCH) elCH.textContent = stats.cHoy;
     if (elCS) elCS.textContent = stats.cSem;
     if (elR)  elR.textContent  = stats.restricciones;
   } catch(e) {
-    console.warn('Stats no cargados:', e.message);
+    console.warn('Error renderHoy:', e.message);
   }
 }
 
