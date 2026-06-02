@@ -61,18 +61,20 @@ function log(msg, tipo) {
   d.scrollTop = d.scrollHeight;
 }
 
-function buildSasUrl(account, table, sas) {
+function buildSasUrl(account, table) {
+  return 'https://' + account + '.table.core.windows.net/' + table;
+}
+function normalizeSas(sas) {
   var s = sas.trim();
-  if (!s.startsWith('?')) s = '?' + s;
-  return 'https://' + account + '.table.core.windows.net/' + table + s;
+  return s.startsWith('?') ? s : '?' + s;
 }
 
 function sleep(ms){ return new Promise(function(r){ setTimeout(r,ms); }); }
 
-async function upsertEntity(url, entity) {
+async function upsertEntity(baseUrl, sasStr, entity) {
   var rowKey = encodeURIComponent(entity.RowKey);
   var pk = encodeURIComponent(entity.PartitionKey);
-  var upsertUrl = url + "(PartitionKey='" + pk + "',RowKey='" + rowKey + "')";
+  var upsertUrl = baseUrl + "(PartitionKey='" + pk + "',RowKey='" + rowKey + "')" + sasStr;
   var resp = await fetch(upsertUrl, {
     method: 'PUT',
     headers: {
@@ -99,7 +101,8 @@ document.getElementById('btnCargar').addEventListener('click', async function() 
   document.getElementById('estado').textContent = 'Cargando...';
   document.getElementById('progressBox').style.display = 'block';
 
-  var baseUrl = buildSasUrl(account, 'actividades', sas);
+  var baseUrl = buildSasUrl(account, 'actividades');
+  var sasStr = normalizeSas(sas);
   var total = CONCEPTOS.length;
   var ok = 0, err = 0;
 
@@ -125,7 +128,7 @@ document.getElementById('btnCargar').addEventListener('click', async function() 
     };
 
     try {
-      await upsertEntity(baseUrl, entity);
+      await upsertEntity(baseUrl, sasStr, entity);
       ok++;
       log('[' + (i+1) + '/' + total + '] OK — ' + c.clave, 'ok');
     } catch(e) {
