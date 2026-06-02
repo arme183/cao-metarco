@@ -923,20 +923,40 @@ async function renderHoy() {
           '<div class="empty-text">Sin avances registrados hoy.<br>Ve al tab SEMANA para registrar.</div>' +
         '</div>';
       } else {
+        // Agrupar por actividad — estado final del dia
+        var plan = state.planSemana || [];
+        var planMap = {};
+        plan.forEach(function(p) { planMap[p.actividad] = p; });
+        var sumasActHoy = {}, restricPorAct = {}, subfasePorAct = {}, unidadPorAct = {}, descPorAct = {};
+        cierresHoy.forEach(function(ci) {
+          sumasActHoy[ci.actividad] = (sumasActHoy[ci.actividad] || 0) + (parseFloat(ci.cantidadReal) || 0);
+          if (ci.esRestriccion) restricPorAct[ci.actividad] = true;
+          subfasePorAct[ci.actividad] = ci.subfase;
+          unidadPorAct[ci.actividad] = ci.unidad;
+          descPorAct[ci.actividad] = ci.descripcion || ci.actividad;
+        });
+        var sumasActSem = {};
+        todosLosCierres.forEach(function(ci) {
+          sumasActSem[ci.actividad] = (sumasActSem[ci.actividad] || 0) + (parseFloat(ci.cantidadReal) || 0);
+        });
         cardEl.style.padding = '0';
-        cardEl.innerHTML = cierresHoy.map(function(ci) {
-          var pct = ci.cantidadPlan > 0 ? Math.round(ci.cantidadReal / ci.cantidadPlan * 100) : 0;
-          var color = ci.ppc ? 'green' : pct > 0 ? 'blue' : 'yellow';
-          var badge = ci.ppc
+        cardEl.innerHTML = Object.keys(sumasActHoy).map(function(actId) {
+          var p = planMap[actId];
+          var cantPlan = p ? p.cantidadPlan : 0;
+          var acumSem = sumasActSem[actId] || 0;
+          var avHoy = sumasActHoy[actId] || 0;
+          var cumplido = cantPlan > 0 && acumSem >= cantPlan;
+          var color = cumplido ? 'green' : avHoy > 0 ? 'blue' : 'yellow';
+          var badge = cumplido
             ? '<span style="font-size:10px;background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-weight:600">&#10003; CUMPLIDO</span>'
             : '<span style="font-size:10px;background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:10px;font-weight:600">&#10007; NO CUMPLIDO</span>';
           return '<div style="padding:12px 14px;border-bottom:1px solid #f0f4fa;display:flex;align-items:center;gap:10px">' +
             '<div class="act-dot act-dot-' + color + '" style="flex-shrink:0"></div>' +
             '<div style="flex:1">' +
-              '<div class="act-name">' + (ci.descripcion || ci.actividad) + '</div>' +
-              '<div class="act-meta">' + ci.subfase + ' \xb7 ' + ci.cantidadReal + ' ' + ci.unidad + ' registrados</div>' +
+              '<div class="act-name">' + descPorAct[actId] + '</div>' +
+              '<div class="act-meta">' + (subfasePorAct[actId]||'') + ' \xb7 ' + avHoy + ' ' + (unidadPorAct[actId]||'') + ' hoy' + (cantPlan > 0 ? ' \xb7 Plan: ' + cantPlan : '') + '</div>' +
               '<div style="margin-top:4px">' + badge + '</div>' +
-              (ci.esRestriccion ? '<div style="font-size:10px;color:#f59e0b;margin-top:3px">&#9888; Restricci\xf3n registrada</div>' : '') +
+              (restricPorAct[actId] ? '<div style="font-size:10px;color:#f59e0b;margin-top:3px">&#9888; Restricci\xf3n registrada</div>' : '') +
             '</div>' +
           '</div>';
         }).join('');
