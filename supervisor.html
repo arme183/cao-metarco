@@ -231,6 +231,10 @@ body {
 .modal-date { font-size:11px; color:var(--gris-muted); }
 .btn-close { background:none; border:none; font-size:22px; color:var(--gris-muted); cursor:pointer; line-height:1; }
 .modal-body { padding:14px 16px; }
+.btn-impacto { padding:8px 4px; border:2px solid var(--borde); border-radius:8px; background:#fff; font-size:12px; font-weight:600; cursor:pointer; color:var(--gris-muted); }
+.btn-impacto.active-alto { border-color:#ef4444; background:#fef2f2; color:#ef4444; }
+.btn-impacto.active-medio { border-color:#f59e0b; background:#fffbeb; color:#f59e0b; }
+.btn-impacto.active-bajo { border-color:#10b981; background:#f0fdf4; color:#10b981; }
 
 /* Form elements */
 .form-group { margin-bottom:14px; }
@@ -431,16 +435,42 @@ input[type=file] { display:none; }
         </div>
       </div>
       <div class="form-group" id="causaGroup" style="display:none">
-        <label class="form-label">🚫 Causa de no cumplimiento</label>
+        <label class="form-label">&#128683; Causa de no cumplimiento</label>
         <select class="form-select" id="avanceCausa">
           <option value="">Selecciona...</option>
-          <option>Falta de material</option>
-          <option>Falta de personal</option>
-          <option>Problema técnico</option>
-          <option>Condiciones climáticas</option>
-          <option>Acceso bloqueado</option>
+          <option>Coordinacion</option>
+          <option>Mano de Obra</option>
+          <option>Materiales</option>
+          <option>Trabajo prerequisito</option>
+          <option>Clima</option>
+          <option>Equipo</option>
+          <option>Contratos/OC</option>
+          <option>Autorizacion</option>
+          <option>Ing/Diseno</option>
+          <option>Decision de cliente</option>
+          <option>Espacio</option>
+          <option>Condiciones del area</option>
+          <option>Inspecciones</option>
+          <option>RFI</option>
           <option>Otra causa</option>
         </select>
+      </div>
+      <div class="form-group" id="restriccionGroup" style="display:none">
+        <div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#856404;">
+          &#9888; Registrar como restriccion para dar seguimiento
+        </div>
+        <label class="form-label">Descripcion de la restriccion</label>
+        <textarea class="form-textarea" id="restDesc" placeholder="Describe que esta bloqueando esta actividad..." style="margin-bottom:10px"></textarea>
+        <label class="form-label">Fecha compromiso de resolucion</label>
+        <input type="date" class="form-input" id="restFecha" style="margin-bottom:10px">
+        <label class="form-label">Impacto</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+          <button type="button" class="btn-impacto" id="impAlto" onclick="setImpacto('alto')">Alto</button>
+          <button type="button" class="btn-impacto" id="impMedio" onclick="setImpacto('medio')">Medio</button>
+          <button type="button" class="btn-impacto" id="impBajo" onclick="setImpacto('bajo')">Bajo</button>
+        </div>
+        <label class="form-label">Responsable de resolver</label>
+        <input type="text" class="form-input" id="restResponsable" placeholder="Nombre o area responsable">
       </div>
       <div class="form-group">
         <label class="form-label">Observación</label>
@@ -1258,11 +1288,21 @@ function abrirAvance(actId) {
 }
 
 
+function setImpacto(nivel) {
+  ['alto','medio','bajo'].forEach(function(n) {
+    var el = document.getElementById('imp' + n.charAt(0).toUpperCase() + n.slice(1));
+    if (el) el.className = 'btn-impacto' + (n === nivel ? ' active-' + n : '');
+  });
+  _avanceActual.impacto = nivel;
+}
+
 function setCumplimiento(val) {
-  state.cumplimientoActual = val;
   document.getElementById("btnSi").className = "btn-cumpl" + (val?" active-si":"");
   document.getElementById("btnNo").className = "btn-cumpl" + (!val?" active-no":"");
   document.getElementById("causaGroup").style.display = val ? "none" : "block";
+  var rg = document.getElementById("restriccionGroup");
+  if (rg) rg.style.display = val ? "none" : "block";
+  _avanceActual.cumplido = val;
 }
 
 function guardarAvance() {
@@ -1612,9 +1652,21 @@ function abrirModalCierre(btn) {
   document.getElementById('avanceCantidad').value = '';
   document.getElementById('avanceObs').value = '';
   document.getElementById('causaGroup').style.display = 'none';
+  document.getElementById('restriccionGroup').style.display = 'none';
   document.getElementById('btnSi').classList.remove('active');
   document.getElementById('btnNo').classList.remove('active');
   _avanceActual.cumplido = null;
+  _avanceActual.impacto = null;
+  var restDesc = document.getElementById('restDesc');
+  var restFecha = document.getElementById('restFecha');
+  var restResp = document.getElementById('restResponsable');
+  if (restDesc) restDesc.value = '';
+  if (restFecha) restFecha.value = '';
+  if (restResp) restResp.value = '';
+  ['Alto','Medio','Bajo'].forEach(function(n) {
+    var el = document.getElementById('imp' + n);
+    if (el) el.className = 'btn-impacto';
+  });
 
   document.getElementById('modalAvance').classList.add('open');
 }
@@ -1638,6 +1690,13 @@ async function guardarAvanceCierre() {
   var ts = Date.now();
   var rowKey = (email + '_cierre_' + _avanceActual.actividad + '_' + ts).replace(/[^a-zA-Z0-9_\-]/g, '_');
 
+  // Datos de restriccion si aplica
+  var tieneRestriccion = !cumplido && document.getElementById('restDesc') && document.getElementById('restDesc').value.trim().length > 0;
+  var restDesc = tieneRestriccion ? document.getElementById('restDesc').value.trim() : '';
+  var restFecha = tieneRestriccion ? (document.getElementById('restFecha').value || '') : '';
+  var restResp = tieneRestriccion ? (document.getElementById('restResponsable').value.trim() || '') : '';
+  var restImpacto = tieneRestriccion ? (_avanceActual.impacto || 'medio') : '';
+
   var body = {
     PartitionKey: obra,
     RowKey: rowKey,
@@ -1655,7 +1714,11 @@ async function guardarAvanceCierre() {
     notas: obs,
     causa: causa,
     fecha: new Date().toISOString(),
-    esRestriccion: false
+    esRestriccion: tieneRestriccion,
+    restriccionDesc: restDesc,
+    restriccionFecha: restFecha,
+    restriccionImpacto: restImpacto,
+    restriccionResponsable: restResp
   };
 
   var btn = document.querySelector('#modalAvance .btn-submit');
