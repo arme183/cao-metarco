@@ -569,86 +569,58 @@ input[type=file] { display:none; }
 const SHAREPOINT_SITE_ID = "173d71cd-18eb-456a-93af-7b6b3d086f9b";
 
 // ======= AZURE — FLUJO LEAN PPC =======
-const AZURE_ACCOUNT = 'metarcostorage';
-const AZURE_SAS = '?sv=2026-02-06&ss=bfqt&srt=o&sp=rwdlacupiytfx&se=2028-01-01T09:03:16Z&st=2026-06-02T00:48:16Z&spr=https&sig=jopE8S7LFpN79M86LWlZ5B%2Bws5%2BYbZvECNdVUAtHiGI%3D';
+var AZURE_ACCOUNT_SUP = 'metarcostorage';
+var AZURE_SAS_SUP = '?sv=2026-02-06&ss=bfqt&srt=o&sp=rwdlacupiytfx&se=2028-01-01T09:03:16Z&st=2026-06-02T00:48:16Z&spr=https&sig=jopE8S7LFpN79M86LWlZ5B%2Bws5%2BYbZvECNdVUAtHiGI%3D';
 
-function azureUrl(tabla, filtro) {
-  var url = 'https://' + AZURE_ACCOUNT + '.table.core.windows.net/' + tabla + AZURE_SAS;
+function azureUrlSup(tabla, filtro) {
+  var url = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/' + tabla + AZURE_SAS_SUP;
   if (filtro) url += '&$filter=' + encodeURIComponent(filtro);
   return url;
 }
-
-function azureHeaders() {
-  return {
-    'Accept': 'application/json;odata=nometadata',
-    'Content-Type': 'application/json',
-    'x-ms-version': '2020-12-06'
-  };
+function azureHdrSup() {
+  return { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json', 'x-ms-version': '2020-12-06' };
 }
-
 function getSemanaISO() {
   var d = new Date();
   var jan4 = new Date(d.getFullYear(), 0, 4);
   var start = new Date(jan4);
   start.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
-  var weekNum = Math.ceil(((d - start) / 86400000 + 1) / 7);
-  return d.getFullYear() + '-W' + String(weekNum).padStart(2, '0');
+  var wn = Math.ceil(((d - start) / 86400000 + 1) / 7);
+  return d.getFullYear() + '-W' + String(wn).padStart(2, '0');
 }
-
 async function cargarActividadesCatalogo(obra) {
-  var url = azureUrl('actividades', "PartitionKey eq '" + obra + "' and activo eq true");
-  var res = await fetch(url, { headers: azureHeaders() });
-  if (!res.ok) throw new Error('Error cargando catálogo ' + res.status);
-  var data = await res.json();
-  return data.value || [];
+  var url = azureUrlSup('actividades', "PartitionKey eq '" + obra + "' and activo eq true");
+  var res = await fetch(url, { headers: azureHdrSup() });
+  if (!res.ok) throw new Error('Error catálogo ' + res.status);
+  return (await res.json()).value || [];
 }
-
 async function cargarPlanSemana(obra) {
-  var semana = getSemanaISO();
-  var url = azureUrl('cambios', "PartitionKey eq '" + obra + "' and tipRegistro eq 'plan' and semanaISO eq '" + semana + "'");
-  var res = await fetch(url, { headers: azureHeaders() });
+  var sem = getSemanaISO();
+  var url = azureUrlSup('cambios', "PartitionKey eq '" + obra + "' and tipRegistro eq 'plan' and semanaISO eq '" + sem + "'");
+  var res = await fetch(url, { headers: azureHdrSup() });
   if (!res.ok) return [];
-  var data = await res.json();
-  return data.value || [];
+  return (await res.json()).value || [];
 }
-
 async function guardarPlanSemana(actividades) {
   var obra = sessionStorage.getItem('obraActiva');
   var email = sessionStorage.getItem('usuarioEmail') || 'demo';
   var nombre = sessionStorage.getItem('usuarioNombre') || 'Supervisor';
-  var semana = getSemanaISO();
-
-  // Borrar plan anterior de esta semana
-  var planExistente = await cargarPlanSemana(obra);
-  for (var i = 0; i < planExistente.length; i++) {
-    var fila = planExistente[i];
-    var pk = encodeURIComponent(fila.PartitionKey);
-    var rk = encodeURIComponent(fila.RowKey);
-    var delUrl = "https://metarcostorage.table.core.windows.net/cambios(PartitionKey='" + pk + "',RowKey='" + rk + "')" + AZURE_SAS;
-    await fetch(delUrl, { method: 'DELETE', headers: Object.assign({}, azureHeaders(), {'If-Match':'*'}) });
+  var sem = getSemanaISO();
+  var planViejo = await cargarPlanSemana(obra);
+  for (var i = 0; i < planViejo.length; i++) {
+    var pk = encodeURIComponent(planViejo[i].PartitionKey);
+    var rk = encodeURIComponent(planViejo[i].RowKey);
+    var du = "https://" + AZURE_ACCOUNT_SUP + ".table.core.windows.net/cambios(PartitionKey='" + pk + "',RowKey='" + rk + "')" + AZURE_SAS_SUP;
+    await fetch(du, { method: 'DELETE', headers: Object.assign({}, azureHdrSup(), { 'If-Match': '*' }) });
   }
-
-  // Insertar filas nuevas
   for (var j = 0; j < actividades.length; j++) {
     var act = actividades[j];
-    var rowKey = (email + '_plan_' + act.rowKey + '_' + semana).replace(/[^a-zA-Z0-9_\-]/g, '_');
-    var body = {
-      PartitionKey: obra,
-      RowKey: rowKey,
-      supervisor: email,
-      supervisorNombre: nombre,
-      actividad: act.rowKey,
-      descripcion: act.descripcion,
-      subfase: act.subfase,
-      cantidadPlan: act.cantidadPlan,
-      unidad: act.unidad,
-      semanaISO: semana,
-      tipRegistro: 'plan',
-      fecha: new Date().toISOString(),
-      ppc: false,
-      esRestriccion: false
-    };
-    await fetch(azureUrl('cambios'), { method: 'POST', headers: azureHeaders(), body: JSON.stringify(body) });
+    var rk2 = (email + '_plan_' + act.rowKey + '_' + sem).replace(/[^a-zA-Z0-9_\-]/g, '_');
+    var body = { PartitionKey: obra, RowKey: rk2, supervisor: email, supervisorNombre: nombre,
+      actividad: act.rowKey, descripcion: act.descripcion, subfase: act.subfase,
+      cantidadPlan: act.cantidadPlan, unidad: act.unidad, semanaISO: sem,
+      tipRegistro: 'plan', fecha: new Date().toISOString(), ppc: false, esRestriccion: false };
+    await fetch(azureUrlSup('cambios'), { method: 'POST', headers: azureHdrSup(), body: JSON.stringify(body) });
   }
 }
 
@@ -869,61 +841,87 @@ function renderHoy() {
 async function renderSemana() {
   var c = document.getElementById('mainContent');
   var obra = sessionStorage.getItem('obraActiva') || state.obra;
-  var semana = getSemanaISO();
-
-  c.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris-muted);font-size:13px">Cargando plan...</div>';
-
+  var sem = getSemanaISO();
+  c.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris-muted);font-size:13px">Cargando plan semanal...</div>';
   try {
-    var resultados = await Promise.all([
-      cargarPlanSemana(obra),
-      cargarActividadesCatalogo(obra)
-    ]);
-    var planGuardado = resultados[0];
-    var catalogo = resultados[1];
-
-    state.catalogoActividades = catalogo;
-    state.planSemana = planGuardado;
-
-    if (planGuardado.length > 0) {
-      c.innerHTML = _renderConPlan(planGuardado, semana, obra);
+    var res = await Promise.all([ cargarPlanSemana(obra), cargarActividadesCatalogo(obra) ]);
+    state.planSemana = res[0];
+    state.catalogoActividades = res[1];
+    if (res[0].length > 0) {
+      renderSemanaConPlan(res[0], sem, obra);
     } else {
-      c.innerHTML = _renderCrearPlan(catalogo, semana, obra);
+      renderSemanaCrearPlan(res[1], sem, obra);
     }
   } catch(e) {
     c.innerHTML = '<div style="padding:16px;color:var(--rojo);font-size:13px">Error: ' + e.message + '</div>';
   }
 }
 
-function _renderConPlan(plan, semana, obra) {
-  var rows = plan.map(function(p) {
+function renderSemanaConPlan(plan, sem, obra) {
+  var c = document.getElementById('mainContent');
+  var header = document.createElement('div');
+  header.className = 'card';
+  header.style.cssText = 'background:linear-gradient(135deg,var(--azul-oscuro),var(--azul-medio));border:none;margin-bottom:10px';
+  header.innerHTML = '<div style="color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:4px">' + sem + '</div>' +
+    '<div style="color:#fff;font-size:20px;font-weight:700">' + obra + '</div>' +
+    '<div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">Plan activo · ' + plan.length + ' actividades comprometidas</div>';
+
+  var titulo = document.createElement('div');
+  titulo.className = 'sec-title';
+  titulo.textContent = 'Actividades comprometidas esta semana';
+
+  var card = document.createElement('div');
+  card.className = 'card';
+  plan.forEach(function(p) {
     var cierre = parseFloat(p.cantidadCierre) || 0;
     var pct = p.cantidadPlan > 0 ? Math.round(cierre / p.cantidadPlan * 100) : 0;
     var color = pct >= 100 ? 'green' : pct > 0 ? 'blue' : 'yellow';
-    return '<div class="act-row">' +
-      '<div class="act-dot act-dot-' + color + '"></div>' +
+    var row = document.createElement('div');
+    row.className = 'act-row';
+    row.innerHTML = '<div class="act-dot act-dot-' + color + '"></div>' +
       '<div class="act-info">' +
         '<div class="act-name">' + p.descripcion + '</div>' +
         '<div class="act-meta">' + p.subfase + ' · Plan: ' + p.cantidadPlan + ' ' + p.unidad + '</div>' +
         '<div class="prog-bar"><div class="prog-fill prog-fill-' + color + '" style="width:' + Math.min(pct,100) + '%"></div></div>' +
       '</div>' +
-      '<div class="act-pct">' + pct + '%</div>' +
-    '</div>';
-  }).join('');
+      '<div class="act-pct">' + pct + '%</div>';
+    card.appendChild(row);
+  });
 
-  return '<div class="card" style="background:linear-gradient(135deg,var(--azul-oscuro),var(--azul-medio));border:none;margin-bottom:10px">' +
-      '<div style="color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:4px">' + semana + '</div>' +
-      '<div style="color:#fff;font-size:20px;font-weight:700">' + obra + '</div>' +
-      '<div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">Plan activo · ' + plan.length + ' actividades comprometidas</div>' +
-    '</div>' +
-    '<div class="sec-title">Actividades comprometidas esta semana</div>' +
-    '<div class="card">' + rows + '</div>' +
-    '<button class="btn-add" id="btnModificarPlan" style="margin-bottom:16px">✏️ Modificar plan semanal</button>';
+  var btnMod = document.createElement('button');
+  btnMod.className = 'btn-add';
+  btnMod.id = 'btnModificarPlan';
+  btnMod.style.marginBottom = '16px';
+  btnMod.textContent = '✏️ Modificar plan semanal';
+
+  c.innerHTML = '';
+  c.appendChild(header);
+  c.appendChild(titulo);
+  c.appendChild(card);
+  c.appendChild(btnMod);
 }
 
-function _renderCrearPlan(catalogo, semana, obra) {
+function renderSemanaCrearPlan(catalogo, sem, obra) {
+  var c = document.getElementById('mainContent');
+  c.innerHTML = '';
+
   if (!catalogo.length) {
-    return '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Sin actividades en el catálogo para ' + obra + '.</div></div>';
+    c.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Sin actividades en el catálogo para ' + obra + '.</div></div>';
+    return;
   }
+
+  var header = document.createElement('div');
+  header.className = 'card';
+  header.style.cssText = 'background:linear-gradient(135deg,var(--azul-oscuro),var(--azul-medio));border:none;margin-bottom:10px';
+  header.innerHTML = '<div style="color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:4px">' + sem + '</div>' +
+    '<div style="color:#fff;font-size:20px;font-weight:700">' + obra + '</div>' +
+    '<div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">Sin plan — selecciona actividades para esta semana</div>';
+  c.appendChild(header);
+
+  var hint = document.createElement('div');
+  hint.style.cssText = 'font-size:11px;color:var(--gris-muted);margin-bottom:10px';
+  hint.textContent = 'Marca las actividades que trabajarás, elige subfase y cantidad prometida.';
+  c.appendChild(hint);
 
   var grupos = {};
   catalogo.forEach(function(a) {
@@ -932,45 +930,93 @@ function _renderCrearPlan(catalogo, semana, obra) {
     grupos[tipo].push(a);
   });
 
-  var html = '<div class="card" style="background:linear-gradient(135deg,var(--azul-oscuro),var(--azul-medio));border:none;margin-bottom:10px">' +
-    '<div style="color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:4px">' + semana + '</div>' +
-    '<div style="color:#fff;font-size:20px;font-weight:700">' + obra + '</div>' +
-    '<div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">Sin plan — selecciona actividades para esta semana</div>' +
-  '</div>' +
-  '<div style="font-size:11px;color:var(--gris-muted);margin-bottom:10px">Marca las actividades que trabajarás, elige subfase y cantidad prometida.</div>';
-
   Object.keys(grupos).forEach(function(tipo) {
-    html += '<div class="sec-title" style="margin-top:12px">' + tipo.toUpperCase() + '</div>';
+    var tit = document.createElement('div');
+    tit.className = 'sec-title';
+    tit.style.marginTop = '12px';
+    tit.textContent = tipo.toUpperCase();
+    c.appendChild(tit);
+
     grupos[tipo].forEach(function(a) {
       var subfases = (a.subfases || 'Montaje').split(',').map(function(s){ return s.trim(); });
-      var sfOpts = subfases.map(function(s){ return '<option value="' + s + '">' + s + '</option>'; }).join('');
-      html += '<div class="card plan-item" id="pi_' + a.RowKey + '" style="margin-bottom:8px;opacity:0.55;border:2px solid var(--borde);padding:12px">' +
-        '<div style="display:flex;align-items:flex-start;gap:10px">' +
-          '<input type="checkbox" id="chk_' + a.RowKey + '" style="margin-top:2px;width:18px;height:18px;accent-color:var(--azul-claro);flex-shrink:0" onchange="togglePlanItem('' + a.RowKey + '')">' +
-          '<div style="flex:1">' +
-            '<div style="font-size:12px;font-weight:600;color:var(--azul-oscuro)">' + a.descripcion + '</div>' +
-            '<div style="font-size:10px;color:var(--gris-muted);margin-top:2px">' + a.RowKey + ' · ' + a.unidad + (a.cantidadContrato ? ' · Contrato: ' + a.cantidadContrato : '') + '</div>' +
-            '<div id="ctrl_' + a.RowKey + '" style="display:none;margin-top:10px">' +
-              '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
-                '<div><div class="form-label">Subfase</div><select class="form-select" id="sf_' + a.RowKey + '" style="padding:8px">' + sfOpts + '</select></div>' +
-                '<div><div class="form-label">Cantidad (' + a.unidad + ')</div><input type="number" class="form-input" id="qty_' + a.RowKey + '" placeholder="0" min="0" style="padding:8px"></div>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
+
+      var item = document.createElement('div');
+      item.className = 'card';
+      item.id = 'pi_' + a.RowKey;
+      item.style.cssText = 'margin-bottom:8px;opacity:0.55;border:2px solid var(--borde);padding:12px';
+
+      var chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.id = 'chk_' + a.RowKey;
+      chk.style.cssText = 'margin-top:2px;width:18px;height:18px;accent-color:var(--azul-claro);flex-shrink:0';
+      chk.addEventListener('change', (function(rk){ return function(){ togglePlanItem(rk); }; })(a.RowKey));
+
+      var info = document.createElement('div');
+      info.style.flex = '1';
+      info.innerHTML = '<div style="font-size:12px;font-weight:600;color:var(--azul-oscuro)">' + a.descripcion + '</div>' +
+        '<div style="font-size:10px;color:var(--gris-muted);margin-top:2px">' + a.RowKey + ' · ' + a.unidad + (a.cantidadContrato ? ' · Contrato: ' + a.cantidadContrato : '') + '</div>';
+
+      var ctrl = document.createElement('div');
+      ctrl.id = 'ctrl_' + a.RowKey;
+      ctrl.style.cssText = 'display:none;margin-top:10px';
+
+      var sfSel = document.createElement('select');
+      sfSel.className = 'form-select';
+      sfSel.id = 'sf_' + a.RowKey;
+      sfSel.style.padding = '8px';
+      subfases.forEach(function(s) {
+        var opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        sfSel.appendChild(opt);
+      });
+
+      var qtyInp = document.createElement('input');
+      qtyInp.type = 'number';
+      qtyInp.className = 'form-input';
+      qtyInp.id = 'qty_' + a.RowKey;
+      qtyInp.placeholder = '0';
+      qtyInp.min = '0';
+      qtyInp.style.padding = '8px';
+
+      var grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px';
+
+      var d1 = document.createElement('div');
+      d1.innerHTML = '<div class="form-label">Subfase</div>';
+      d1.appendChild(sfSel);
+
+      var d2 = document.createElement('div');
+      d2.innerHTML = '<div class="form-label">Cantidad (' + a.unidad + ')</div>';
+      d2.appendChild(qtyInp);
+
+      grid.appendChild(d1);
+      grid.appendChild(d2);
+      ctrl.appendChild(grid);
+      info.appendChild(ctrl);
+
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex;align-items:flex-start;gap:10px';
+      wrap.appendChild(chk);
+      wrap.appendChild(info);
+      item.appendChild(wrap);
+      c.appendChild(item);
     });
   });
 
-  html += '<button class="btn-submit" id="btnGuardarPlan" style="margin-top:8px;margin-bottom:20px">GUARDAR PLAN SEMANAL</button>';
-  return html;
+  var btnGuardar = document.createElement('button');
+  btnGuardar.className = 'btn-submit';
+  btnGuardar.id = 'btnGuardarPlan';
+  btnGuardar.style.cssText = 'margin-top:8px;margin-bottom:20px';
+  btnGuardar.textContent = 'GUARDAR PLAN SEMANAL';
+  c.appendChild(btnGuardar);
 }
 
 function togglePlanItem(rowKey) {
   var chk = document.getElementById('chk_' + rowKey);
   var item = document.getElementById('pi_' + rowKey);
   var ctrl = document.getElementById('ctrl_' + rowKey);
-  if (chk && chk.checked) {
+  if (!chk || !item || !ctrl) return;
+  if (chk.checked) {
     item.style.opacity = '1';
     item.style.borderColor = 'var(--azul-claro)';
     ctrl.style.display = 'block';
@@ -983,54 +1029,26 @@ function togglePlanItem(rowKey) {
 
 async function ejecutarGuardarPlan() {
   var catalogo = state.catalogoActividades || [];
-  var seleccionadas = [];
-
+  var sel = [];
   for (var i = 0; i < catalogo.length; i++) {
     var act = catalogo[i];
     var chk = document.getElementById('chk_' + act.RowKey);
     if (!chk || !chk.checked) continue;
-    var qty = parseFloat(document.getElementById('qty_' + act.RowKey).value) || 0;
-    var sf = document.getElementById('sf_' + act.RowKey).value || '';
+    var qty = parseFloat((document.getElementById('qty_' + act.RowKey) || {}).value) || 0;
+    var sf = (document.getElementById('sf_' + act.RowKey) || {}).value || '';
     if (qty <= 0) { alert('Ingresa una cantidad para: ' + act.descripcion); return; }
-    seleccionadas.push({ rowKey: act.RowKey, descripcion: act.descripcion, subfase: sf, cantidadPlan: qty, unidad: act.unidad });
+    sel.push({ rowKey: act.RowKey, descripcion: act.descripcion, subfase: sf, cantidadPlan: qty, unidad: act.unidad });
   }
-
-  if (!seleccionadas.length) { alert('Selecciona al menos una actividad.'); return; }
-
+  if (!sel.length) { alert('Selecciona al menos una actividad.'); return; }
   var btn = document.getElementById('btnGuardarPlan');
   if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
-
   try {
-    await guardarPlanSemana(seleccionadas);
+    await guardarPlanSemana(sel);
     await renderSemana();
   } catch(e) {
-    alert('Error al guardar plan: ' + e.message);
+    alert('Error: ' + e.message);
     if (btn) { btn.disabled = false; btn.textContent = 'GUARDAR PLAN SEMANAL'; }
   }
-}</div>
-        <div class="semana-card-badge">${pct}% completado</div>
-      </div>
-      <div class="semana-card-body">
-        <div style="font-size:11px;color:var(--gris-muted)">${a.partida}</div>
-        <div style="margin-top:6px;display:flex;justify-content:space-between;font-size:12px">
-          <span>Meta diaria: <strong>${a.meta} ${a.unidad}</strong></span>
-          <span>Avance: <strong>${a.avance} ${a.unidad}</strong></span>
-        </div>
-        <div class="prog-bar" style="height:6px;margin-top:8px">
-          <div class="prog-fill${pct>=100?" prog-fill-green":pct>=50?"":" prog-fill-yellow"}" style="width:${Math.min(pct,100)}%"></div>
-        </div>
-      </div>
-    </div>`;
-  }).join("") || '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Sin plan semanal. Toca + para agregar actividades.</div></div>';
-
-  return `
-    <div class="card" style="background:linear-gradient(135deg,var(--azul-oscuro),var(--azul-medio));border:none">
-      <div style="color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:4px">SEMANA ${state.semana} · ${semanaLabel()}</div>
-      <div style="color:#fff;font-size:22px;font-weight:700">${state.obra}</div>
-      <div style="color:rgba(255,255,255,0.6);font-size:11px;margin-top:2px">Plan semanal · ${state.actividades.length} actividades</div>
-    </div>
-    <div class="sec-title">Plan de actividades</div>
-    ${cards}`;
 }
 
 // ======= RENDER REGISTRAR =======
@@ -1441,20 +1459,19 @@ document.addEventListener('click', function(e) {
   }
   if (e.target && e.target.id === 'btnModificarPlan') {
     var obra = sessionStorage.getItem('obraActiva') || state.obra;
-    var semana = getSemanaISO();
+    var sem = getSemanaISO();
     var catalogo = state.catalogoActividades || [];
     var plan = state.planSemana || [];
-    var c = document.getElementById('mainContent');
-    c.innerHTML = _renderCrearPlan(catalogo, semana, obra);
+    renderSemanaCrearPlan(catalogo, sem, obra);
     plan.forEach(function(p) {
       var chk = document.getElementById('chk_' + p.actividad);
       if (chk) {
         chk.checked = true;
         togglePlanItem(p.actividad);
-        var qtyEl = document.getElementById('qty_' + p.actividad);
-        var sfEl  = document.getElementById('sf_'  + p.actividad);
-        if (qtyEl) qtyEl.value = p.cantidadPlan;
-        if (sfEl)  sfEl.value  = p.subfase;
+        var qEl = document.getElementById('qty_' + p.actividad);
+        var sEl = document.getElementById('sf_' + p.actividad);
+        if (qEl) qEl.value = p.cantidadPlan;
+        if (sEl) sEl.value = p.subfase;
       }
     });
   }
