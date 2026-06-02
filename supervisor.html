@@ -624,7 +624,7 @@ async function guardarPlanSemana(actividades) {
     var fila = planExistente[i];
     var pk = encodeURIComponent(fila.PartitionKey);
     var rk = encodeURIComponent(fila.RowKey);
-    var delUrl = 'https://metarcostorage.table.core.windows.net/cambios(PartitionKey='' + pk + '',RowKey='' + rk + '')' + AZURE_SAS;
+    var delUrl = "https://metarcostorage.table.core.windows.net/cambios(PartitionKey='" + pk + "',RowKey='" + rk + "')" + AZURE_SAS;
     await fetch(delUrl, { method: 'DELETE', headers: Object.assign({}, azureHeaders(), {'If-Match':'*'}) });
   }
 
