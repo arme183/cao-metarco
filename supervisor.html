@@ -2048,12 +2048,12 @@ async function getSharePointToken() {
   try {
     var accounts = msalInstance.getAllAccounts();
     if (!accounts.length) return null;
-    var req = { scopes: ['https://metarco2025.sharepoint.com/.default'], account: accounts[0] };
+    var req = { scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All'], account: accounts[0] };
     var resp = await msalInstance.acquireTokenSilent(req);
     return resp.accessToken;
   } catch(e) {
     try {
-      var resp2 = await msalInstance.acquireTokenPopup({ scopes: ['https://metarco2025.sharepoint.com/.default'] });
+      var resp2 = await msalInstance.acquireTokenPopup({ scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All'] });
       return resp2.accessToken;
     } catch(e2) { return null; }
   }
@@ -2062,8 +2062,8 @@ async function getSharePointToken() {
 async function escribirRestriccionSP(datos) {
   var token = await getSharePointToken();
   if (!token) { console.warn('SP: sin token, restriccion no enviada a SharePoint'); return; }
-  var url = SP_SITE + '/_api/web/lists(guid\'' + SP_LIST_RESTRICCIONES + '\')/items';
-  var body = {
+  var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com:/sites/MetarcoAsuntos:/lists/' + SP_LIST_RESTRICCIONES + '/items';
+  var fields = {
     'Title': datos.descripcion || 'Sin descripcion',
     'Obra': datos.obra || '',
     'Supervisor_Email': datos.supervisorEmail || '',
@@ -2073,17 +2073,15 @@ async function escribirRestriccionSP(datos) {
     'Semana': datos.semana || '',
     'Observacion': datos.notas || ''
   };
-  // Fecha_Compromiso solo si tiene valor (campo de fecha no acepta string vacio)
-  if (datos.fechaCompromiso) body['Fecha_Compromiso'] = datos.fechaCompromiso;
+  if (datos.fechaCompromiso) fields['Fecha_Compromiso'] = datos.fechaCompromiso;
+  var body = { fields: fields };
   try {
-    var digest = await getSPDigest(token);
     var postRes = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + token,
-        'Accept': 'application/json;odata=nometadata',
-        'Content-Type': 'application/json',
-        'X-RequestDigest': digest
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     });
@@ -2145,12 +2143,12 @@ async function getSharePointToken() {
   try {
     var accounts = msalInstance.getAllAccounts();
     if (!accounts.length) return null;
-    var req = { scopes: ['https://metarco2025.sharepoint.com/.default'], account: accounts[0] };
+    var req = { scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All'], account: accounts[0] };
     var resp = await msalInstance.acquireTokenSilent(req);
     return resp.accessToken;
   } catch(e) {
     try {
-      var resp2 = await msalInstance.acquireTokenPopup({ scopes: ['https://metarco2025.sharepoint.com/.default'] });
+      var resp2 = await msalInstance.acquireTokenPopup({ scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All'] });
       return resp2.accessToken;
     } catch(e2) { return null; }
   }
@@ -2159,8 +2157,8 @@ async function getSharePointToken() {
 async function escribirRestriccionSP(datos) {
   var token = await getSharePointToken();
   if (!token) { console.warn('SP: sin token, restriccion no enviada a SharePoint'); return; }
-  var url = SP_SITE + '/_api/web/lists(guid\'' + SP_LIST_RESTRICCIONES + '\')/items';
-  var body = {
+  var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com:/sites/MetarcoAsuntos:/lists/' + SP_LIST_RESTRICCIONES + '/items';
+  var fields = {
     'Title': datos.descripcion || 'Sin descripcion',
     'Obra': datos.obra || '',
     'Supervisor_Email': datos.supervisorEmail || '',
@@ -2170,17 +2168,15 @@ async function escribirRestriccionSP(datos) {
     'Semana': datos.semana || '',
     'Observacion': datos.notas || ''
   };
-  // Fecha_Compromiso solo si tiene valor (campo de fecha no acepta string vacio)
-  if (datos.fechaCompromiso) body['Fecha_Compromiso'] = datos.fechaCompromiso;
+  if (datos.fechaCompromiso) fields['Fecha_Compromiso'] = datos.fechaCompromiso;
+  var body = { fields: fields };
   try {
-    var digest = await getSPDigest(token);
     var postRes = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + token,
-        'Accept': 'application/json;odata=nometadata',
-        'Content-Type': 'application/json',
-        'X-RequestDigest': digest
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     });
