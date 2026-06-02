@@ -1229,8 +1229,13 @@ function renderReportes() {
 // ======= FAB =======
 function abrirFAB() {
   if (!puedeEditar()) return;
-  if (state.tabActual === "restricciones") abrirModal("modalRestriccion");
-  else abrirModal("modalActividad");
+  if (state.tabActual === "restricciones") {
+    abrirModal("modalRestriccion");
+  } else {
+    // Redirigir al tab SEMANA para registrar avance
+    var btn = document.querySelector('.tab-btn[onclick*="semana"]');
+    setTab("semana", btn);
+  }
 }
 
 // ======= MODALES =======
