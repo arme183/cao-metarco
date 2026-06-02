@@ -286,6 +286,7 @@ body {
 .restric-card { background:#fff; border-radius:var(--radio); border-left:4px solid var(--rojo); padding:12px; margin-bottom:8px; box-shadow:var(--sombra); }
 .restric-card.medio { border-left-color:var(--amarillo); }
 .restric-card.bajo { border-left-color:var(--azul-claro); }
+.restric-card.restric-vencida { background:#fff5f5; }
 .restric-title { font-size:13px; font-weight:600; color:var(--azul-oscuro); }
 .restric-meta { font-size:10px; color:var(--gris-muted); margin-top:4px; }
 
@@ -1283,44 +1284,71 @@ function renderRegistrar() {
 }
 
 // ======= RENDER RESTRICCIONES =======
-async function renderRestricciones() {
+async function renderRestricciones(verHistorial) {
   var c = document.getElementById('mainContent');
   var obra = sessionStorage.getItem('obraActiva') || state.obra;
 
   c.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris-muted);font-size:13px">Cargando restricciones...</div>';
 
   try {
-    var rests = await cargarRestriccionesAzure(obra);
+    var rests = await cargarRestriccionesAzure(obra, verHistorial);
     state.restriccionesAzure = rests;
 
+    var titulo = verHistorial ? 'Historial de restricciones' : 'Restricciones activas';
+    var btnToggle = '<button class="btn-add" id="btnToggleHistorial" style="margin-bottom:8px;background:transparent;border:1.5px solid var(--azul-claro);color:var(--azul-claro)">' +
+      (verHistorial ? '&#128274; Ver activas' : '&#128337; Ver historial') + '</button>';
+
     if (!rests.length) {
-      c.innerHTML = '<div class="sec-title">Restricciones activas</div>' +
-        '<div class="empty-state"><div class="empty-icon">&#128274;</div><div class="empty-text">Sin restricciones activas.</div></div>' +
-        (puedeEditar() ? '<button class="btn-add" id="btnNuevaRestriccion">+ Nueva restriccion</button>' : '');
+      c.innerHTML =
+        btnToggle +
+        '<div class="sec-title">' + titulo + '</div>' +
+        '<div class="empty-state"><div class="empty-icon">&#128274;</div>' +
+        '<div class="empty-text">' + (verHistorial ? 'Sin restricciones en el historial.' : 'Sin restricciones activas.') + '</div></div>' +
+        (puedeEditar() && !verHistorial ? '<button class="btn-add" id="btnNuevaRestriccion">+ Nueva restriccion</button>' : '');
       return;
     }
 
+    var hoy = new Date().toISOString().slice(0,10);
     var cards = rests.map(function(r) {
       var impacto = r.restriccionImpacto || 'medio';
       var badgeClass = impacto === 'alto' ? 'badge-warn' : impacto === 'medio' ? 'badge-pending' : 'badge-info';
       var desc = r.restriccionDesc || r.notas || 'Sin descripcion';
-      var fecha = r.restriccionFecha ? r.restriccionFecha : (r.fecha ? r.fecha.slice(0,10) : '—');
+      var fechaComp = r.restriccionFecha || '';
+      var fechaDisplay = fechaComp || (r.fecha ? r.fecha.slice(0,10) : '—');
       var resp = r.restriccionResponsable || r.supervisorNombre || '—';
       var actDesc = r.descripcion || r.actividad || '—';
-      return '<div class="restric-card ' + impacto + '">' +
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
-          '<div class="restric-title">' + desc + '</div>' +
+      var vencida = fechaComp && fechaComp < hoy && !r.resuelta;
+      var resuelta = r.resuelta === true || r.resuelta === 'true';
+
+      var estadoBadge = resuelta
+        ? '<span style="font-size:10px;background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-weight:600">&#10003; RESUELTA</span>'
+        : vencida
+          ? '<span style="font-size:10px;background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:10px;font-weight:600">&#9888; VENCIDA</span>'
+          : '';
+
+      var btnResolver = (!resuelta && puedeEditar())
+        ? '<button class="btn-resolver" data-pk="' + r.PartitionKey + '" data-rk="' + r.RowKey + '" ' +
+          'style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;width:100%">' +
+          '&#10003; Marcar como resuelta</button>'
+        : '';
+
+      return '<div class="restric-card ' + impacto + (vencida?' restric-vencida':'') + '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">' +
+          '<div class="restric-title" style="flex:1">' + desc + '</div>' +
           '<span class="badge ' + badgeClass + '">' + impacto.toUpperCase() + '</span>' +
         '</div>' +
         '<div style="font-size:11px;color:var(--azul-oscuro);margin:4px 0">&#128736; ' + actDesc + '</div>' +
-        '<div class="restric-meta">&#128100; ' + resp + ' &middot; &#128197; ' + fecha + '</div>' +
+        '<div class="restric-meta">&#128100; ' + resp + ' &middot; &#128197; Compromiso: ' + (fechaDisplay||'—') + '</div>' +
+        (estadoBadge ? '<div style="margin-top:4px">' + estadoBadge + '</div>' : '') +
+        btnResolver +
       '</div>';
     }).join('');
 
     c.innerHTML =
-      '<div class="sec-title">Restricciones activas &mdash; ' + rests.length + '</div>' +
+      btnToggle +
+      '<div class="sec-title">' + titulo + ' &mdash; ' + rests.length + '</div>' +
       cards +
-      (puedeEditar() ? '<button class="btn-add" id="btnNuevaRestriccion" style="margin-top:8px">+ Nueva restriccion</button>' : '');
+      (!verHistorial && puedeEditar() ? '<button class="btn-add" id="btnNuevaRestriccion" style="margin-top:8px">+ Nueva restriccion</button>' : '');
 
   } catch(e) {
     c.innerHTML = '<div style="padding:16px;color:var(--rojo);font-size:13px">Error: ' + e.message + '</div>';
@@ -1705,11 +1733,25 @@ async function agregarObra() {
 
 
 // ======= RESTRICCIONES AZURE =======
-async function cargarRestriccionesAzure(obra) {
-  var url = azureUrlSup('cambios', "PartitionKey eq '" + obra + "' and esRestriccion eq true");
+async function cargarRestriccionesAzure(obra, incluirResueltas) {
+  var filtro = "PartitionKey eq '" + obra + "' and esRestriccion eq true";
+  if (!incluirResueltas) filtro += " and resuelta ne true";
+  var url = azureUrlSup('cambios', filtro);
   var res = await fetch(url, { headers: azureHdrSup() });
   if (!res.ok) return [];
   return (await res.json()).value || [];
+}
+
+async function resolverRestriccion(pk, rk) {
+  var pkE = encodeURIComponent(pk);
+  var rkE = encodeURIComponent(rk);
+  var url = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/cambios(PartitionKey=\'' + pkE + '\',RowKey=\'' + rkE + '\')' + AZURE_SAS_SUP;
+  await fetch(url, {
+    method: 'MERGE',
+    headers: Object.assign({}, azureHdrSup(), { 'If-Match': '*' }),
+    body: JSON.stringify({ resuelta: true, fechaResolucion: new Date().toISOString() })
+  });
+  await renderRestricciones();
 }
 
 // ======= CIERRE DIARIO — FASE B =======
@@ -1861,6 +1903,32 @@ async function actualizarAvanceRealAct(obra, actRowKey, cantidadNueva) {
     body: JSON.stringify({ avanceReal: avActual + cantidadNueva })
   });
 }
+
+// ======= EVENT DELEGATION — RESTRICCIONES =======
+document.addEventListener('click', function(e) {
+  // Resolver restriccion
+  var btnRes = e.target.closest('.btn-resolver');
+  if (btnRes) {
+    var pk = btnRes.dataset.pk;
+    var rk = btnRes.dataset.rk;
+    if (confirm('\xbfMarcar esta restricci\xf3n como resuelta?')) {
+      btnRes.disabled = true;
+      btnRes.textContent = 'Guardando...';
+      resolverRestriccion(pk, rk).catch(function(err) {
+        alert('Error: ' + err.message);
+        btnRes.disabled = false;
+        btnRes.textContent = '\u2713 Marcar como resuelta';
+      });
+    }
+    return;
+  }
+  // Toggle historial
+  if (e.target && e.target.id === 'btnToggleHistorial') {
+    var esHistorial = e.target.textContent.indexOf('activas') >= 0;
+    renderRestricciones(!esHistorial);
+    return;
+  }
+});
 
 // ======= EVENT DELEGATION — RESTRICCIONES =======
 document.addEventListener('click', function(e) {
