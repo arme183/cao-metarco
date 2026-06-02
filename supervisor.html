@@ -2062,7 +2062,7 @@ async function getSharePointToken() {
 async function escribirRestriccionSP(datos) {
   var token = await getSharePointToken();
   if (!token) { console.warn('SP: sin token, restriccion no enviada a SharePoint'); return; }
-  var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com:/sites/MetarcoAsuntos:/lists/' + SP_LIST_RESTRICCIONES + '/items';
+  var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com,173d71cd-18eb-456a-93af-7b6b3d086f9b,c094e1d2-4329-4131-9d6b-0e248d1d26f1/lists/6d813fdf-b2d0-498a-8869-59b19b39fca9/items';
   var fields = {
     'Title': datos.descripcion || 'Sin descripcion',
     'Obra': datos.obra || '',
@@ -2157,7 +2157,7 @@ async function getSharePointToken() {
 async function escribirRestriccionSP(datos) {
   var token = await getSharePointToken();
   if (!token) { console.warn('SP: sin token, restriccion no enviada a SharePoint'); return; }
-  var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com:/sites/MetarcoAsuntos:/lists/' + SP_LIST_RESTRICCIONES + '/items';
+  var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com,173d71cd-18eb-456a-93af-7b6b3d086f9b,c094e1d2-4329-4131-9d6b-0e248d1d26f1/lists/6d813fdf-b2d0-498a-8869-59b19b39fca9/items';
   var fields = {
     'Title': datos.descripcion || 'Sin descripcion',
     'Obra': datos.obra || '',
