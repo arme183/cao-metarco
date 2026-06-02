@@ -384,7 +384,7 @@ input[type=file] { display:none; }
       <span class="tab-icon">📋</span>
       <span class="tab-label">SEMANA</span>
     </button>
-    <button class="tab-btn" onclick="setTab('registrar',this)">
+    <button class="tab-btn" style="display:none" onclick="setTab('registrar',this)">
       <span class="tab-icon">✏️</span>
       <span class="tab-label">REGISTRAR</span>
     </button>
@@ -774,7 +774,7 @@ function setTab(tab, btn) {
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   if (btn) btn.classList.add("active");
   const fab = document.getElementById("fabBtn");
-  const tabsConFAB = ["hoy","semana","registrar","restricciones"];
+  const tabsConFAB = ["hoy","semana","restricciones"];
   fab.style.display = (tabsConFAB.includes(tab) && puedeEditar()) ? "flex" : "none";
 
   const c = document.getElementById("mainContent");
