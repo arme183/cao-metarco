@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard CAO — WEG Estructura | Metarco</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.7.1/lib/msal-browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -218,6 +219,23 @@ input[type=file] { display:none; }
 </head>
 <body>
 
+<div id="loginScreen" style="min-height:100vh;background:radial-gradient(ellipse at 70% 50%,#4a90c4 0%,#2563a8 30%,#1a3d7c 60%,#0f2654 100%);display:flex;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:400px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="width:80px;height:80px;border-radius:50%;background:#1a3d7c;margin:0 auto 20px;overflow:hidden">
+      <img src="../LOGO_METARCO1.png" style="width:100%;height:100%;object-fit:contain">
+    </div>
+    <div style="font-family:Orbitron,sans-serif;font-weight:900;font-size:22px;letter-spacing:4px;color:#0b1e3d;margin-bottom:4px">METARCO</div>
+    <div style="font-size:11px;color:#8898b8;letter-spacing:2px;margin-bottom:8px">DASHBOARD CAO</div>
+    <div style="font-size:15px;font-weight:700;color:#0b1e3d;margin-bottom:6px">Acceso restringido</div>
+    <div style="font-size:13px;color:#8898b8;margin-bottom:24px">Disponible para administradores y coordinadores.</div>
+    <button id="btnLoginDash" style="width:100%;padding:14px;background:#0b1e3d;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px">
+      <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      Iniciar sesion con Microsoft
+    </button>
+    <div id="loginError" style="margin-top:12px;font-size:12px;color:#ef4444;display:none"></div>
+  </div>
+</div>
+
 <!-- ── UPLOAD SCREEN ─────────────────────────────────────── -->
 <div id="uploadScreen">
   <div class="upload-logo-wrap">
@@ -264,7 +282,10 @@ input[type=file] { display:none; }
           <div class="sub" id="hSub"></div>
         </div>
         <span class="header-corte" id="hFecha"></span>
+        <select id="obraSelectorDash" style="padding:6px 10px;border:1.5px solid var(--borde);border-radius:8px;font-size:12px;color:var(--azul-oscuro);background:#fff;cursor:pointer"></select>
+        <span id="dashUserBadge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:#ef4444;color:#fff"></span>
         <button class="btn-reload" id="btnReload">↺ Cambiar archivo</button>
+        <button id="btnLogoutDash" style="padding:6px 12px;background:transparent;border:1.5px solid var(--borde);border-radius:8px;font-size:12px;color:var(--gris-muted);cursor:pointer">Salir</button>
       </div>
     </div>
   </div>
@@ -551,6 +572,7 @@ function renderDashboard(data){
   }
 
   buildCharts(curvaS, estimaciones);
+  actualizarTabsAzure();
 }
 
 function buildGantt(programa){
@@ -667,6 +689,141 @@ function mkBar(id,labels,data,yFmt){
               y:{ticks:{callback:yFmt,font:{size:10,family:'Inter'}},grid:{color:'rgba(0,0,0,.04)'}}}}
   });
 }
+
+// === AZURE + MSAL DASHBOARD ===
+var DASH_ACCOUNT = "metarcostorage";
+var DASH_SAS = "?sv=2026-02-06&ss=bfqt&srt=o&sp=rwdlacupiytfx&se=2028-01-01T09:03:16Z&st=2026-06-02T00:48:16Z&spr=https&sig=jopE8S7LFpN79M86LWlZ5B%2Bws5%2BYbZvECNdVUAtHiGI%3D";
+var DASH_OBRA_ACT = "";
+function dashUrl(tabla, filtro) {
+  var url = "https://" + DASH_ACCOUNT + ".table.core.windows.net/" + tabla + DASH_SAS;
+  if (filtro) url += "&$filter=" + encodeURIComponent(filtro);
+  return url;
+}
+function dashHdr() { return { "Accept": "application/json;odata=nometadata", "Content-Type": "application/json", "x-ms-version": "2020-12-06" }; }
+
+var msalDash = new msal.PublicClientApplication({
+  auth: {
+    clientId: "9f85ee63-a011-4636-857e-b72128ed61e9",
+    authority: "https://login.microsoftonline.com/3fce0139-013b-4c64-a04d-8605a9eb8088",
+    redirectUri: "https://arme183.github.io/cao-metarco/dashboard/index.html"
+  },
+  cache: { cacheLocation: "sessionStorage" }
+});
+
+async function iniciarDashboard() {
+  await msalDash.initialize();
+  try { await msalDash.handleRedirectPromise(); } catch(e) {}
+  var accounts = msalDash.getAllAccounts();
+  if (accounts.length > 0) { await cargarDashConCuenta(accounts[0]); return; }
+  document.getElementById("loginScreen").style.display = "flex";
+  document.getElementById("uploadScreen").style.display = "none";
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("btnLoginDash").addEventListener("click", function() {
+    msalDash.loginRedirect({ scopes: ["User.Read"] });
+  });
+}
+
+async function cargarDashConCuenta(account) {
+  try {
+    var resU = await fetch(dashUrl("usuarios", "email eq '" + account.username + "'"), { headers: dashHdr() });
+    var usuarios = resU.ok ? ((await resU.json()).value || []) : [];
+    var usuario = usuarios[0];
+    if (!usuario || (usuario.rol !== "admin" && usuario.rol !== "coordinador")) {
+      document.getElementById("loginScreen").style.display = "flex";
+      document.getElementById("loginError").style.display = "block";
+      document.getElementById("loginError").textContent = "Acceso restringido a administradores y coordinadores.";
+      return;
+    }
+    var badge = document.getElementById("dashUserBadge");
+    if (badge) { badge.textContent = usuario.rol === "admin" ? "ADMIN" : "COORD"; badge.style.background = usuario.rol === "admin" ? "#ef4444" : "#8b5cf6"; }
+    var resO = await fetch(dashUrl("obras", "activo eq true"), { headers: dashHdr() });
+    var obras = resO.ok ? ((await resO.json()).value || []) : [];
+    var sel = document.getElementById("obraSelectorDash");
+    if (sel && obras.length) {
+      sel.innerHTML = obras.map(function(o) { return '<option value="' + o.RowKey + '">' + o.RowKey + '</option>'; }).join("");
+      DASH_OBRA_ACT = obras[0].RowKey;
+      sel.addEventListener("change", function() { DASH_OBRA_ACT = this.value; if (document.getElementById("dashboard").style.display !== "none") actualizarTabsAzure(); });
+    }
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("uploadScreen").style.display = "flex";
+    document.getElementById("dashboard").style.display = "none";
+  } catch(e) {
+    document.getElementById("loginScreen").style.display = "flex";
+    document.getElementById("loginError").style.display = "block";
+    document.getElementById("loginError").textContent = "Error: " + e.message;
+  }
+}
+
+async function actualizarTabsAzure() {
+  var obra = DASH_OBRA_ACT; if (!obra) return;
+  try {
+    var resA = await fetch(dashUrl("actividades", "PartitionKey eq '" + obra + "' and activo eq true"), { headers: dashHdr() });
+    var actividades = resA.ok ? ((await resA.json()).value || []) : [];
+    var resC = await fetch(dashUrl("cambios", "PartitionKey eq '" + obra + "' and tipRegistro eq 'cierre'"), { headers: dashHdr() });
+    var cierres = resC.ok ? ((await resC.json()).value || []) : [];
+    var resP = await fetch(dashUrl("cambios", "PartitionKey eq '" + obra + "' and tipRegistro eq 'plan'"), { headers: dashHdr() });
+    var planes = resP.ok ? ((await resP.json()).value || []) : [];
+    var resR = await fetch(dashUrl("cambios", "PartitionKey eq '" + obra + "' and esRestriccion eq true and resuelta ne true"), { headers: dashHdr() });
+    var restricciones = resR.ok ? ((await resR.json()).value || []) : [];
+
+    var semanas = {};
+    planes.forEach(function(p) { if (!semanas[p.semanaISO]) semanas[p.semanaISO]={planes:[],cierres:[]}; semanas[p.semanaISO].planes.push(p); });
+    cierres.forEach(function(ci) { if (!semanas[ci.semanaISO]) semanas[ci.semanaISO]={planes:[],cierres:[]}; semanas[ci.semanaISO].cierres.push(ci); });
+
+    var ppcPorSemana = Object.keys(semanas).sort().map(function(sem) {
+      var d=semanas[sem], sumasSem={};
+      d.cierres.forEach(function(ci){sumasSem[ci.actividad]=(sumasSem[ci.actividad]||0)+(parseFloat(ci.cantidadReal)||0);});
+      var cumpl=d.planes.filter(function(p){return p.cantidadPlan>0&&(sumasSem[p.actividad]||0)>=p.cantidadPlan;}).length;
+      return {sem:sem,ppc:d.planes.length>0?Math.round(cumpl/d.planes.length*100):0,prometidas:d.planes.length,cumplidas:cumpl};
+    });
+
+    var ppcProm = ppcPorSemana.length>0?Math.round(ppcPorSemana.reduce(function(s,r){return s+r.ppc;},0)/ppcPorSemana.length):0;
+    var totalContrato = actividades.reduce(function(s,a){return s+(parseFloat(a.cantidadContrato)||0);},0);
+    var totalReal = actividades.reduce(function(s,a){return s+(parseFloat(a.avanceReal)||0);},0);
+    var avPct = totalContrato>0?Math.round(totalReal/totalContrato*100):0;
+
+    var azEl = document.getElementById("azure-kpis");
+    if (!azEl) { var kg=document.getElementById("kpi-grid"); if(kg){var d=document.createElement("div");d.id="azure-kpis";kg.parentNode.insertBefore(d,kg);} azEl=document.getElementById("azure-kpis"); }
+    if (azEl) {
+      var pc=ppcProm>=90?"green":ppcProm>=80?"amber":"red";
+      var histRows=ppcPorSemana.slice().reverse().map(function(r){
+        var col=r.ppc>=90?"var(--verde)":r.ppc>=80?"var(--amarillo)":"var(--rojo)";
+        return "<tr><td>"+r.sem+"</td><td style='text-align:center'>"+r.prometidas+"</td><td style='text-align:center'>"+r.cumplidas+"</td><td style='text-align:center;font-weight:700;color:"+col+"'>" +r.ppc+"%</td></tr>";
+      }).join("");
+      azEl.innerHTML =
+        '<div style="background:#e8f4fd;border-radius:10px;padding:10px 14px;margin-bottom:12px;border-left:4px solid #2563a8;font-size:11px;color:#1a3d7c;font-weight:600">Datos en tiempo real desde Azure &middot; ' + obra + '</div>' +
+        '<div class="kpi-grid" style="margin-bottom:12px">' +
+        '<div class="kpi blue"><div class="label">Avance real</div><div class="value">'+avPct+'%</div><div class="sub">'+actividades.length+' actividades</div></div>' +
+        '<div class="kpi '+pc+'"><div class="label">PPC promedio</div><div class="value">'+ppcProm+'%</div><div class="sub">'+ppcPorSemana.length+' semanas</div></div>' +
+        '<div class="kpi '+( restricciones.length>0?"red":"green")+'"><div class="label">Restricciones</div><div class="value">'+restricciones.length+'</div><div class="sub">Sin resolver</div></div>' +
+        '<div class="kpi blue"><div class="label">Ultima semana</div><div class="value">'+( ppcPorSemana.length>0?ppcPorSemana[ppcPorSemana.length-1].ppc+"%":"&mdash;")+'</div><div class="sub">'+( ppcPorSemana.length>0?ppcPorSemana[ppcPorSemana.length-1].sem:"Sin datos")+'</div></div>' +
+        '</div>' +
+        (histRows ? '<div class="card" style="margin-bottom:14px"><div class="card-title">PPC historico</div><table><thead><tr><th>Semana</th><th>Prometidas</th><th>Cumplidas</th><th>PPC</th></tr></thead><tbody>'+histRows+'</tbody></table></div>' : "");
+    }
+
+    var restTab=document.getElementById("tab-restricciones");
+    var raEl=document.getElementById("rest-azure");
+    if (restTab&&!raEl){var rd=document.createElement("div");rd.id="rest-azure";restTab.insertBefore(rd,restTab.firstChild);raEl=rd;}
+    if (raEl) {
+      var hoy=new Date().toISOString().slice(0,10);
+      var nV=restricciones.filter(function(r){return r.restriccionFecha&&r.restriccionFecha<hoy;}).length;
+      var nA=restricciones.filter(function(r){return r.restriccionImpacto==="alto";}).length;
+      var rRows=restricciones.length>0?restricciones.map(function(r){
+        var imp=r.restriccionImpacto||"medio",venc=r.restriccionFecha&&r.restriccionFecha<hoy;
+        var bc=imp==="alto"?"var(--rojo)":imp==="medio"?"var(--amarillo)":"var(--azul-claro)";
+        return "<tr><td style='font-size:11px'>"+(r.descripcion||r.actividad||"&mdash;")+"</td><td style='font-size:11px'>"+(r.restriccionDesc||r.notas||"&mdash;")+"</td><td>"+(r.restriccionFecha||"&mdash;")+"</td><td><span style='font-size:10px;background:"+bc+";color:#fff;padding:2px 7px;border-radius:10px;font-weight:600'>"+imp.toUpperCase()+"</span></td><td><span style='font-size:10px;background:"+(venc?"var(--rojo)":"var(--amarillo)")+";color:#fff;padding:2px 7px;border-radius:10px;font-weight:600'>"+(venc?"VENCIDA":"ACTIVA")+"</span></td></tr>";
+      }).join(""):"<tr><td colspan='5' style='text-align:center;color:var(--gris-muted);padding:20px'>Sin restricciones activas</td></tr>";
+      raEl.innerHTML='<div style="background:#e8f4fd;border-radius:10px;padding:10px 14px;margin-bottom:12px;border-left:4px solid #2563a8;font-size:11px;color:#1a3d7c;font-weight:600">Restricciones en tiempo real &middot; '+obra+' &middot; '+restricciones.length+' activas</div>'+'<div class="kpi-grid" style="margin-bottom:14px"><div class="kpi red"><div class="label">Vencidas</div><div class="value">'+nV+'</div></div><div class="kpi amber"><div class="label">Activas</div><div class="value">'+restricciones.length+'</div></div><div class="kpi blue"><div class="label">Alto impacto</div><div class="value">'+nA+'</div></div></div>'+'<div class="card"><div class="card-title">Restricciones activas (Azure)</div><div style="overflow-x:auto"><table><thead><tr><th>Actividad</th><th>Descripcion</th><th>Compromiso</th><th>Impacto</th><th>Estado</th></tr></thead><tbody>'+rRows+'</tbody></table></div></div>';
+    }
+  } catch(e) { console.warn("Error Azure dashboard:", e.message); }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  var bl = document.getElementById("btnLogoutDash");
+  if (bl) bl.addEventListener("click", function() { msalDash.logout(); });
+  iniciarDashboard();
+});
+
 </script>
 </body>
 </html>
