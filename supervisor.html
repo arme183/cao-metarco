@@ -1614,7 +1614,7 @@ async function guardarAvanceCierre() {
 async function actualizarAvanceRealAct(obra, actRowKey, cantidadNueva) {
   var pk = encodeURIComponent(obra);
   var rk = encodeURIComponent(actRowKey);
-  var url = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/actividades(PartitionKey='' + pk + '',RowKey='' + rk + '')' + AZURE_SAS_SUP;
+  var url = "https://" + AZURE_ACCOUNT_SUP + ".table.core.windows.net/actividades(PartitionKey='" + pk + "',RowKey='" + rk + "')" + AZURE_SAS_SUP;
   var resGet = await fetch(url, { headers: azureHdrSup() });
   if (!resGet.ok) return;
   var act = await resGet.json();
