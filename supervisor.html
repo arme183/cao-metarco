@@ -776,7 +776,7 @@ function setTab(tab, btn) {
   fab.style.display = (tabsConFAB.includes(tab) && puedeEditar()) ? "flex" : "none";
 
   const c = document.getElementById("mainContent");
-  if (tab === "hoy") { c.innerHTML = renderHoy(); }
+  if (tab === "hoy") { renderHoy(); }
   else if (tab === "semana") { renderSemana(); }
   else if (tab === "registrar") { c.innerHTML = renderRegistrar(); }
   else if (tab === "restricciones") { c.innerHTML = renderRestricciones(); fab.style.display = "flex"; }
@@ -786,55 +786,109 @@ else if (tab === "reportes") { c.innerHTML = renderReportes(); }
 }
 
 // ======= RENDER HOY =======
-function renderHoy() {
-  const ppc = state.actividades.length
-    ? Math.round(state.actividades.filter(a=>a.cumplido).length/state.actividades.length*100) : 0;
-  const prog = Math.round(state.semana/state.totalSemanas*100);
 
-  let acts = state.actividades.map(a => {
-    const pct = a.meta > 0 ? Math.round(a.avance/a.meta*100) : 0;
-    const color = pct>=100?"green":pct>=50?"blue":"yellow";
-    return `<div class="act-row">
-      <div class="act-dot act-dot-${color}"></div>
-      <div class="act-info">
-        <div class="act-name">${a.desc}</div>
-        <div class="act-meta">${a.partida} · Meta: ${a.meta} ${a.unidad}</div>
-        <div class="prog-bar"><div class="prog-fill prog-fill-${color}" style="width:${Math.min(pct,100)}%"></div></div>
-      </div>
-      <div class="act-pct">${pct}%</div>
-    </div>`;
-  }).join("") || '<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Sin actividades hoy. Toca + para agregar.</div></div>';
+// ======= STATS HOY + SEMANA =======
+async function cargarStatsHoy(obra) {
+  var sem = getSemanaISO();
+  var hoy = new Date().toISOString().slice(0, 10);
+  var urlC = azureUrlSup('cambios', "PartitionKey eq '" + obra + "' and tipRegistro eq 'cierre' and semanaISO eq '" + sem + "'");
+  var res = await fetch(urlC, { headers: azureHdrSup() });
+  var cierres = res.ok ? ((await res.json()).value || []) : [];
+  var cierresHoy = cierres.filter(function(c) { return c.fecha && c.fecha.slice(0,10) === hoy; });
 
-  return `
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">📍 ${fechaHoy()}</div>
-          <div class="card-sub">Semana ${state.semana} de ${state.totalSemanas} · ${prog}% avance general</div>
-        </div>
-        <span class="badge badge-info">SEM ${state.semana}</span>
-      </div>
-      <div class="prog-bar" style="height:6px;margin-bottom:4px"><div class="prog-fill" style="width:${prog}%"></div></div>
-    </div>
+  var sumasSem = {}, sumasHoy = {};
+  cierres.forEach(function(c) {
+    sumasSem[c.actividad] = (sumasSem[c.actividad] || 0) + (parseFloat(c.cantidadReal) || 0);
+  });
+  cierresHoy.forEach(function(c) {
+    sumasHoy[c.actividad] = (sumasHoy[c.actividad] || 0) + (parseFloat(c.cantidadReal) || 0);
+  });
 
-    <div class="sec-title">Actividades de hoy</div>
-    <div class="card">${acts}</div>
+  var plan = state.planSemana || [];
+  var cHoy = plan.filter(function(p) {
+    return p.cantidadPlan > 0 && (sumasHoy[p.actividad] || 0) > 0 && (sumasSem[p.actividad] || 0) >= p.cantidadPlan;
+  }).length;
+  var cSem = plan.filter(function(p) {
+    return p.cantidadPlan > 0 && (sumasSem[p.actividad] || 0) >= p.cantidadPlan;
+  }).length;
 
-    <div class="sec-title">Resumen</div>
-    <div class="stats-bar" style="border-radius:12px;border:1px solid var(--borde)">
-      <div class="stat-pill">
-        <div class="stat-val" style="color:${ppc>=80?"#10b981":ppc>=60?"#f59e0b":"#ef4444"}">${ppc}%</div>
-        <div class="stat-lbl">PPC hoy</div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-val">${state.actividades.filter(a=>a.cumplido).length}/${state.actividades.length}</div>
-        <div class="stat-lbl">Cumplidas</div>
-      </div>
-      <div class="stat-pill">
-        <div class="stat-val" style="color:#ef4444">${state.restricciones.length}</div>
-        <div class="stat-lbl">Restricc.</div>
-      </div>
-    </div>`;
+  var actHoy = plan.filter(function(p) { return (sumasHoy[p.actividad] || 0) > 0; });
+  var ppcHoy = actHoy.length > 0
+    ? Math.round(actHoy.filter(function(p) { return (sumasSem[p.actividad] || 0) >= p.cantidadPlan; }).length / actHoy.length * 100)
+    : null;
+  var ppcSem = plan.length > 0 ? Math.round(cSem / plan.length * 100) : null;
+
+  var urlR = azureUrlSup('cambios', "PartitionKey eq '" + obra + "' and esRestriccion eq true");
+  var resR = await fetch(urlR, { headers: azureHdrSup() });
+  var nRest = resR.ok ? ((await resR.json()).value || []).length : 0;
+
+  return { ppcHoy: ppcHoy, ppcSem: ppcSem, cHoy: cHoy, cSem: cSem, restricciones: nRest };
+}
+
+async function renderHoy() {
+  var obra = sessionStorage.getItem('obraActiva') || state.obra;
+  var prog = Math.round(state.semana / state.totalSemanas * 100);
+  var c = document.getElementById('mainContent');
+
+  var actHtml = state.actividades.map(function(a) {
+    var pct = a.meta > 0 ? Math.round(a.avance / a.meta * 100) : 0;
+    var color = pct >= 100 ? "green" : pct >= 50 ? "blue" : "yellow";
+    return '<div class="act-row">' +
+      '<div class="act-dot act-dot-' + color + '"></div>' +
+      '<div class="act-info">' +
+        '<div class="act-name">' + a.desc + '</div>' +
+        '<div class="act-meta">' + a.partida + ' · Meta: ' + a.meta + ' ' + a.unidad + '</div>' +
+        '<div class="prog-bar"><div class="prog-fill prog-fill-' + color + '" style="width:' + Math.min(pct,100) + '%"></div></div>' +
+      '</div>' +
+      '<div class="act-pct">' + pct + '%</div>' +
+    '</div>';
+  }).join('') || '<div class="empty-state"><div class="empty-icon">&#128203;</div><div class="empty-text">Sin actividades hoy. Toca + para agregar.</div></div>';
+
+  c.innerHTML =
+    '<div class="card">' +
+      '<div class="card-header">' +
+        '<div>' +
+          '<div class="card-title">&#128205; ' + fechaHoy() + '</div>' +
+          '<div class="card-sub">Semana ' + state.semana + ' de ' + state.totalSemanas + ' · ' + prog + '% avance general</div>' +
+        '</div>' +
+        '<span class="badge badge-info">SEM ' + state.semana + '</span>' +
+      '</div>' +
+      '<div class="prog-bar" style="height:6px;margin-bottom:4px"><div class="prog-fill" style="width:' + prog + '%"></div></div>' +
+    '</div>' +
+    '<div class="sec-title">Actividades de hoy</div>' +
+    '<div class="card">' + actHtml + '</div>' +
+    '<div class="sec-title">Resumen</div>' +
+    '<div class="stats-bar" style="border-radius:12px;border:1px solid var(--borde)">' +
+      '<div class="stat-pill"><div class="stat-val" id="statPpcHoy">&#8212;</div><div class="stat-lbl">PPC HOY</div></div>' +
+      '<div class="stat-pill"><div class="stat-val" id="statPpcSem">&#8212;</div><div class="stat-lbl">PPC SEM</div></div>' +
+      '<div class="stat-pill"><div class="stat-val" id="statCHoy">&#8212;</div><div class="stat-lbl">C. HOY</div></div>' +
+      '<div class="stat-pill"><div class="stat-val" id="statCSem">&#8212;</div><div class="stat-lbl">C. SEM</div></div>' +
+      '<div class="stat-pill"><div class="stat-val" id="statRest" style="color:#ef4444">&#8212;</div><div class="stat-lbl">RESTRICC.</div></div>' +
+    '</div>';
+
+  try {
+    var stats = await cargarStatsHoy(obra);
+    var elPH = document.getElementById('statPpcHoy');
+    var elPS = document.getElementById('statPpcSem');
+    var elCH = document.getElementById('statCHoy');
+    var elCS = document.getElementById('statCSem');
+    var elR  = document.getElementById('statRest');
+    if (elPH) {
+      var ph = stats.ppcHoy;
+      elPH.textContent = ph !== null ? ph + '%' : '—';
+      elPH.style.color = ph !== null ? (ph>=90?'#10b981':ph>=80?'#f59e0b':'#ef4444') : 'var(--gris-muted)';
+    }
+    if (elPS) {
+      var ps = stats.ppcSem;
+      elPS.textContent = ps !== null ? ps + '%' : '—';
+      elPS.style.color = ps !== null ? (ps>=90?'#10b981':ps>=80?'#f59e0b':'#ef4444') : 'var(--gris-muted)';
+    }
+    if (elCH) elCH.textContent = stats.cHoy;
+    if (elCS) elCS.textContent = stats.cSem;
+    if (elR)  elR.textContent  = stats.restricciones;
+  } catch(e) {
+    console.warn('Stats no cargados:', e.message);
+  }
 }
 
 // ======= RENDER SEMANA =======
