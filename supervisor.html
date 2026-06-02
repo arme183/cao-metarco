@@ -1998,6 +1998,20 @@ async function guardarAvanceCierre() {
     // 2. Actualizar avanceReal acumulado en tabla actividades
     await actualizarAvanceRealAct(obra, _avanceActual.actividad, cantidad);
 
+    // 3. Si hay restriccion, escribir a SharePoint para disparar Power Automate
+    if (tieneRestriccion) {
+      escribirRestriccionSP({
+        descripcion: restDesc,
+        obra: obra,
+        supervisorEmail: email,
+        responsable: restResp,
+        fechaCompromiso: restFecha,
+        impacto: restImpacto,
+        semana: sem,
+        notas: obs
+      }).catch(function(e) { console.warn('SP restriccion:', e); });
+    }
+
     cerrarModal('modalAvance');
     if (btn) { btn.disabled = false; btn.textContent = 'GUARDAR REGISTRO'; }
 
@@ -2022,6 +2036,71 @@ async function actualizarAvanceRealAct(obra, actRowKey, cantidadNueva) {
     headers: Object.assign({}, azureHdrSup(), { 'If-Match': '*' }),
     body: JSON.stringify({ avanceReal: avActual + cantidadNueva })
   });
+}
+
+
+// ======= SHAREPOINT — NOTIFICACIONES =======
+var SP_SITE = 'https://metarco2025.sharepoint.com/sites/MetarcoAsuntos';
+var SP_LIST_RESTRICCIONES = '6d813fdf-b2d0-498a-8869-59b19b39fca9';
+
+async function getSharePointToken() {
+  if (!msalInstance) return null;
+  try {
+    var accounts = msalInstance.getAllAccounts();
+    if (!accounts.length) return null;
+    var req = { scopes: ['https://metarco2025.sharepoint.com/.default'], account: accounts[0] };
+    var resp = await msalInstance.acquireTokenSilent(req);
+    return resp.accessToken;
+  } catch(e) {
+    try {
+      var resp2 = await msalInstance.acquireTokenPopup({ scopes: ['https://metarco2025.sharepoint.com/.default'] });
+      return resp2.accessToken;
+    } catch(e2) { return null; }
+  }
+}
+
+async function escribirRestriccionSP(datos) {
+  var token = await getSharePointToken();
+  if (!token) { console.warn('SP: sin token, restriccion no enviada a SharePoint'); return; }
+  var url = SP_SITE + '/_api/web/lists(guid\'' + SP_LIST_RESTRICCIONES + '\')/items';
+  var body = {
+    '__metadata': { 'type': 'SP.Data.CAO_x005f_RestriccionesListItem' },
+    'Title': datos.descripcion,
+    'Obra': datos.obra,
+    'Supervisor_Email': datos.supervisorEmail,
+    'Responsable': datos.responsable,
+    'Fecha_Compromiso': datos.fechaCompromiso || null,
+    'Impacto': datos.impacto,
+    'Status': 'Activa',
+    'Semana': datos.semana,
+    'Observacion': datos.notas || ''
+  };
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/json;odata=verbose',
+        'Content-Type': 'application/json;odata=verbose',
+        'X-RequestDigest': await getSPDigest(token)
+      },
+      body: JSON.stringify(body)
+    });
+    console.log('SP: restriccion registrada en CAO_Restricciones');
+  } catch(e) {
+    console.warn('SP: error al escribir restriccion:', e.message);
+  }
+}
+
+async function getSPDigest(token) {
+  try {
+    var res = await fetch(SP_SITE + '/_api/contextinfo', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json;odata=verbose' }
+    });
+    var data = await res.json();
+    return data.d.GetContextWebInformation.FormDigestValue;
+  } catch(e) { return ''; }
 }
 
 // ======= EVENT DELEGATION — RESTRICCIONES =======
@@ -2049,6 +2128,71 @@ document.addEventListener('click', function(e) {
     return;
   }
 });
+
+
+// ======= SHAREPOINT — NOTIFICACIONES =======
+var SP_SITE = 'https://metarco2025.sharepoint.com/sites/MetarcoAsuntos';
+var SP_LIST_RESTRICCIONES = '6d813fdf-b2d0-498a-8869-59b19b39fca9';
+
+async function getSharePointToken() {
+  if (!msalInstance) return null;
+  try {
+    var accounts = msalInstance.getAllAccounts();
+    if (!accounts.length) return null;
+    var req = { scopes: ['https://metarco2025.sharepoint.com/.default'], account: accounts[0] };
+    var resp = await msalInstance.acquireTokenSilent(req);
+    return resp.accessToken;
+  } catch(e) {
+    try {
+      var resp2 = await msalInstance.acquireTokenPopup({ scopes: ['https://metarco2025.sharepoint.com/.default'] });
+      return resp2.accessToken;
+    } catch(e2) { return null; }
+  }
+}
+
+async function escribirRestriccionSP(datos) {
+  var token = await getSharePointToken();
+  if (!token) { console.warn('SP: sin token, restriccion no enviada a SharePoint'); return; }
+  var url = SP_SITE + '/_api/web/lists(guid\'' + SP_LIST_RESTRICCIONES + '\')/items';
+  var body = {
+    '__metadata': { 'type': 'SP.Data.CAO_x005f_RestriccionesListItem' },
+    'Title': datos.descripcion,
+    'Obra': datos.obra,
+    'Supervisor_Email': datos.supervisorEmail,
+    'Responsable': datos.responsable,
+    'Fecha_Compromiso': datos.fechaCompromiso || null,
+    'Impacto': datos.impacto,
+    'Status': 'Activa',
+    'Semana': datos.semana,
+    'Observacion': datos.notas || ''
+  };
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/json;odata=verbose',
+        'Content-Type': 'application/json;odata=verbose',
+        'X-RequestDigest': await getSPDigest(token)
+      },
+      body: JSON.stringify(body)
+    });
+    console.log('SP: restriccion registrada en CAO_Restricciones');
+  } catch(e) {
+    console.warn('SP: error al escribir restriccion:', e.message);
+  }
+}
+
+async function getSPDigest(token) {
+  try {
+    var res = await fetch(SP_SITE + '/_api/contextinfo', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json;odata=verbose' }
+    });
+    var data = await res.json();
+    return data.d.GetContextWebInformation.FormDigestValue;
+  } catch(e) { return ''; }
+}
 
 // ======= EVENT DELEGATION — RESTRICCIONES =======
 document.addEventListener('click', function(e) {
