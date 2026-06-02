@@ -836,6 +836,15 @@ else if (tab === "reportes") { c.innerHTML = renderReportes(); }
 async function cargarStatsHoy(obra) {
   var sem = getSemanaISO();
   var hoy = new Date().toISOString().slice(0, 10);
+
+  // Si el plan aun no cargo, cargarlo ahora
+  if (!state.planSemana || state.planSemana.length === 0) {
+    try {
+      var planBase = await cargarPlanSemana(obra);
+      state.planSemana = await cargarAvancesSemana(obra, planBase);
+    } catch(e) { state.planSemana = []; }
+  }
+
   var urlC = azureUrlSup('cambios', "PartitionKey eq '" + obra + "' and tipRegistro eq 'cierre' and semanaISO eq '" + sem + "'");
   var res = await fetch(urlC, { headers: azureHdrSup() });
   var cierres = res.ok ? ((await res.json()).value || []) : [];
@@ -1735,13 +1744,16 @@ async function guardarAvanceCierre() {
   // Calcular si cumplió (binario: avance acumulado >= cantidadPlan)
   var nuevoAcum = _avanceActual.avanceSemana + cantidad;
   var pct = _avanceActual.cantidadPlan > 0 ? nuevoAcum / _avanceActual.cantidadPlan * 100 : 0;
-  var cumplido = pct >= 100;
+  // Usar seleccion manual del supervisor como fuente de verdad
+  var cumplido = _avanceActual.cumplido !== null ? _avanceActual.cumplido : pct >= 100;
 
   var ts = Date.now();
   var rowKey = (email + '_cierre_' + _avanceActual.actividad + '_' + ts).replace(/[^a-zA-Z0-9_\-]/g, '_');
 
   // Datos de restriccion si aplica
-  var tieneRestriccion = !cumplido && document.getElementById('restDesc') && document.getElementById('restDesc').value.trim().length > 0;
+  // Tiene restriccion si el supervisor marcó NO CUMPLIDO y llenó descripcion
+  var restDescEl = document.getElementById('restDesc');
+  var tieneRestriccion = !cumplido && restDescEl && restDescEl.value.trim().length > 0;
   var restDesc = tieneRestriccion ? document.getElementById('restDesc').value.trim() : '';
   var restFecha = tieneRestriccion ? (document.getElementById('restFecha').value || '') : '';
   var restResp = tieneRestriccion ? (document.getElementById('restResponsable').value.trim() || '') : '';
