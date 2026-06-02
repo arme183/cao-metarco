@@ -826,7 +826,7 @@ function setTab(tab, btn) {
   else if (tab === "semana") { renderSemana(); }
   else if (tab === "registrar") { c.innerHTML = renderRegistrar(); }
   else if (tab === "restricciones") { renderRestricciones(); fab.style.display = "flex"; }
-else if (tab === "reportes") { c.innerHTML = renderReportes(); }
+else if (tab === "reportes") { renderReportes(); }
   else if (tab === "admin") { c.innerHTML = '<div class="content" style="padding:16px"><p style="color:var(--gris-muted);font-size:13px">Cargando panel admin...</p></div>'; renderAdmin(); }
   state.tabActual = tab;
 }
@@ -1356,25 +1356,145 @@ async function renderRestricciones(verHistorial) {
 }
 
 // ======= RENDER REPORTES =======
-function renderReportes() {
-  const items = [
-    { fecha:"Martes 13 Mayo", ppc:75, acts:4, cumpl:3 },
-    { fecha:"Lunes 12 Mayo", ppc:100, acts:3, cumpl:3 },
-    { fecha:"Viernes 9 Mayo", ppc:67, acts:3, cumpl:2 },
-  ];
-  let hist = items.map(i => `
-    <div class="hist-card">
-      <div class="hist-header">
-        <div class="hist-fecha">${i.fecha}</div>
-        <div class="hist-ppc" style="color:${i.ppc>=80?"#10b981":i.ppc>=60?"#f59e0b":"#ef4444"}">${i.ppc}%</div>
-      </div>
-      <div style="font-size:11px;color:var(--gris-muted)">${i.cumpl} de ${i.acts} actividades cumplidas</div>
-      <div class="prog-bar" style="margin-top:6px"><div class="prog-fill ${i.ppc>=80?"prog-fill-green":i.ppc>=60?"prog-fill-yellow":"prog-fill-red"}" style="width:${i.ppc}%"></div></div>
-    </div>`).join("");
+async function renderReportes() {
+  var c = document.getElementById('mainContent');
+  var obra = sessionStorage.getItem('obraActiva') || state.obra;
+  var email = sessionStorage.getItem('usuarioEmail') || '';
+  var rol = sessionStorage.getItem('userRole') || 'supervisor';
 
-  return `
-    <div class="sec-title">Historial de reportes</div>
-    ${hist}`;
+  c.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris-muted);font-size:13px">Cargando reporte semanal...</div>';
+
+  try {
+    // Cargar todos los cierres de la obra (supervisor ve los suyos, admin ve todos)
+    var filtro = "PartitionKey eq '" + obra + "' and tipRegistro eq 'cierre'";
+    if (rol === 'supervisor') filtro += " and supervisor eq '" + email + "'";
+    var url = azureUrlSup('cambios', filtro);
+    var res = await fetch(url, { headers: azureHdrSup() });
+    var cierres = res.ok ? ((await res.json()).value || []) : [];
+
+    // Cargar planes de la obra
+    var filtroP = "PartitionKey eq '" + obra + "' and tipRegistro eq 'plan'";
+    if (rol === 'supervisor') filtroP += " and supervisor eq '" + email + "'";
+    var urlP = azureUrlSup('cambios', filtroP);
+    var resP = await fetch(urlP, { headers: azureHdrSup() });
+    var planes = resP.ok ? ((await resP.json()).value || []) : [];
+
+    // Agrupar por semanaISO
+    var semanas = {};
+    planes.forEach(function(p) {
+      var s = p.semanaISO || 'Sin semana';
+      if (!semanas[s]) semanas[s] = { planes: [], cierres: [] };
+      semanas[s].planes.push(p);
+    });
+    cierres.forEach(function(ci) {
+      var s = ci.semanaISO || 'Sin semana';
+      if (!semanas[s]) semanas[s] = { planes: [], cierres: [] };
+      semanas[s].cierres.push(ci);
+    });
+
+    var semanasOrdenadas = Object.keys(semanas).sort().reverse();
+
+    if (!semanasOrdenadas.length) {
+      c.innerHTML = '<div class="sec-title">Reporte semanal</div>' +
+        '<div class="empty-state"><div class="empty-icon">&#128202;</div>' +
+        '<div class="empty-text">Sin registros aun. Completa tu primer plan semanal.</div></div>';
+      return;
+    }
+
+    // Calcular PPC por semana
+    var cards = semanasOrdenadas.map(function(sem) {
+      var data = semanas[sem];
+      var nPlanes = data.planes.length;
+
+      // Sumar avance por actividad en cierres de esta semana
+      var sumasSem = {};
+      data.cierres.forEach(function(ci) {
+        sumasSem[ci.actividad] = (sumasSem[ci.actividad] || 0) + (parseFloat(ci.cantidadReal) || 0);
+      });
+
+      // Calcular cumplidas
+      var cumplidas = data.planes.filter(function(p) {
+        return p.cantidadPlan > 0 && (sumasSem[p.actividad] || 0) >= p.cantidadPlan;
+      }).length;
+
+      var ppc = nPlanes > 0 ? Math.round(cumplidas / nPlanes * 100) : 0;
+      var ppcColor = ppc >= 90 ? '#10b981' : ppc >= 80 ? '#f59e0b' : '#ef4444';
+      var fillClass = ppc >= 90 ? 'prog-fill-green' : ppc >= 80 ? 'prog-fill-yellow' : 'prog-fill-red';
+
+      // Restricciones de esta semana
+      var nRest = data.cierres.filter(function(ci) { return ci.esRestriccion; }).length;
+
+      // Causas de NC
+      var causas = {};
+      data.cierres.filter(function(ci) { return !ci.ppc && ci.causa; }).forEach(function(ci) {
+        causas[ci.causa] = (causas[ci.causa] || 0) + 1;
+      });
+      var causasList = Object.keys(causas).map(function(k) {
+        return '<span style="font-size:10px;background:#f1f5f9;border-radius:10px;padding:2px 7px;margin:2px;display:inline-block">' + k + ': ' + causas[k] + '</span>';
+      }).join('');
+
+      return '<div class="hist-card">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+          '<div>' +
+            '<div style="font-size:13px;font-weight:700;color:var(--azul-oscuro)">' + sem + '</div>' +
+            '<div style="font-size:11px;color:var(--gris-muted)">' + nPlanes + ' actividades comprometidas</div>' +
+          '</div>' +
+          '<div style="text-align:right">' +
+            '<div style="font-size:24px;font-weight:700;color:' + ppcColor + '">' + ppc + '%</div>' +
+            '<div style="font-size:10px;color:var(--gris-muted)">PPC</div>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">' +
+          '<div style="text-align:center;background:#f8fafc;border-radius:8px;padding:6px">' +
+            '<div style="font-size:16px;font-weight:700;color:var(--azul-oscuro)">' + nPlanes + '</div>' +
+            '<div style="font-size:9px;color:var(--gris-muted);text-transform:uppercase">Prometidas</div>' +
+          '</div>' +
+          '<div style="text-align:center;background:#f0fdf4;border-radius:8px;padding:6px">' +
+            '<div style="font-size:16px;font-weight:700;color:#10b981">' + cumplidas + '</div>' +
+            '<div style="font-size:9px;color:var(--gris-muted);text-transform:uppercase">Cumplidas</div>' +
+          '</div>' +
+          '<div style="text-align:center;background:' + (nRest > 0 ? '#fff7ed' : '#f8fafc') + ';border-radius:8px;padding:6px">' +
+            '<div style="font-size:16px;font-weight:700;color:' + (nRest > 0 ? '#f59e0b' : 'var(--gris-muted)') + '">' + nRest + '</div>' +
+            '<div style="font-size:9px;color:var(--gris-muted);text-transform:uppercase">Restricciones</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="prog-bar" style="margin-bottom:6px"><div class="prog-fill ' + fillClass + '" style="width:' + ppc + '%"></div></div>' +
+        (causasList ? '<div style="margin-top:6px"><div style="font-size:10px;color:var(--gris-muted);margin-bottom:4px">Causas de NC:</div>' + causasList + '</div>' : '') +
+      '</div>';
+    }).join('');
+
+    // PPC promedio global
+    var ppcTotal = semanasOrdenadas.reduce(function(sum, sem) {
+      var d = semanas[sem];
+      var sumasSem = {};
+      d.cierres.forEach(function(ci) {
+        sumasSem[ci.actividad] = (sumasSem[ci.actividad] || 0) + (parseFloat(ci.cantidadReal) || 0);
+      });
+      var cumpl = d.planes.filter(function(p) {
+        return p.cantidadPlan > 0 && (sumasSem[p.actividad] || 0) >= p.cantidadPlan;
+      }).length;
+      return sum + (d.planes.length > 0 ? cumpl / d.planes.length * 100 : 0);
+    }, 0);
+    var ppcProm = semanasOrdenadas.length > 0 ? Math.round(ppcTotal / semanasOrdenadas.length) : 0;
+    var ppcPromColor = ppcProm >= 90 ? '#10b981' : ppcProm >= 80 ? '#f59e0b' : '#ef4444';
+
+    c.innerHTML =
+      '<div class="card" style="background:linear-gradient(135deg,var(--azul-oscuro),var(--azul-medio));border:none;margin-bottom:10px">' +
+        '<div style="color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:4px">' + obra + ' \xb7 ' + semanasOrdenadas.length + ' semanas</div>' +
+        '<div style="display:flex;align-items:center;justify-content:space-between">' +
+          '<div style="color:#fff;font-size:18px;font-weight:700">Reporte PPC</div>' +
+          '<div style="background:rgba(0,0,0,0.25);border-radius:20px;padding:6px 14px;text-align:center">' +
+            '<div style="color:#fff;font-size:20px;font-weight:700;color:' + ppcPromColor + '">' + ppcProm + '%</div>' +
+            '<div style="color:rgba(255,255,255,0.7);font-size:10px">PPC promedio</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="sec-title">Historial por semana</div>' +
+      cards;
+
+  } catch(e) {
+    c.innerHTML = '<div style="padding:16px;color:var(--rojo);font-size:13px">Error: ' + e.message + '</div>';
+  }
 }
 
 // ======= FAB =======
