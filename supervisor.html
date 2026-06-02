@@ -943,6 +943,13 @@ function renderSemanaConPlan(plan, sem, obra) {
   btnMod.style.cssText = 'margin-bottom:16px;margin-top:10px';
   btnMod.textContent = '✏️ Modificar plan semanal';
 
+  // Sincronizar PPC del header
+  var ppcEl = document.getElementById('ppcLabel');
+  if (ppcEl) {
+    ppcEl.textContent = 'PPC: ' + ppcSem + '%';
+    ppcEl.style.color = ppcSem >= 90 ? '#4ade80' : ppcSem >= 80 ? '#fbbf24' : '#f87171';
+  }
+
   c.innerHTML = '';
   c.appendChild(header);
   c.appendChild(titulo);
