@@ -725,7 +725,9 @@ async function iniciarDashboard() {
 
 async function cargarDashConCuenta(account) {
   try {
-    var resU = await fetch(dashUrl("usuarios", "email eq '" + account.username + "'"), { headers: dashHdr() });
+    // Convertir email a formato RowKey: a.medina@metarco.com.mx -> a_medina_AT_metarco_com_mx
+    var emailKey = account.username.replace(/@/g, "_AT_").replace(/\./g, "_");
+    var resU = await fetch(dashUrl("usuarios", "PartitionKey eq 'usuarios' and RowKey eq '" + emailKey + "'"), { headers: dashHdr() });
     var usuarios = resU.ok ? ((await resU.json()).value || []) : [];
     var usuario = usuarios[0];
     if (!usuario || (usuario.rol !== "admin" && usuario.rol !== "coordinador")) {
