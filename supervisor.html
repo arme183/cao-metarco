@@ -774,7 +774,20 @@ function mostrarApp() {
   }
 
   calcPPC();
-  setTab("hoy", document.querySelector(".tab-btn"));
+  // Precargar plan y restricciones de Azure al arrancar
+  var obraInicial = sessionStorage.getItem('obraActiva') || state.obra;
+  Promise.all([
+    cargarPlanSemana(obraInicial).then(function(plan) {
+      return cargarAvancesSemana(obraInicial, plan).then(function(planConAvance) {
+        state.planSemana = planConAvance;
+      });
+    }).catch(function() {}),
+    cargarRestriccionesAzure(obraInicial).then(function(rests) {
+      state.restriccionesAzure = rests;
+    }).catch(function() {})
+  ]).then(function() {
+    setTab("hoy", document.querySelector(".tab-btn"));
+  });
 }
 
 function puedeEditar(actividadId = null) {
@@ -811,7 +824,7 @@ function setTab(tab, btn) {
   if (tab === "hoy") { renderHoy(); }
   else if (tab === "semana") { renderSemana(); }
   else if (tab === "registrar") { c.innerHTML = renderRegistrar(); }
-  else if (tab === "restricciones") { c.innerHTML = renderRestricciones(); fab.style.display = "flex"; }
+  else if (tab === "restricciones") { renderRestricciones(); fab.style.display = "flex"; }
 else if (tab === "reportes") { c.innerHTML = renderReportes(); }
   else if (tab === "admin") { c.innerHTML = '<div class="content" style="padding:16px"><p style="color:var(--gris-muted);font-size:13px">Cargando panel admin...</p></div>'; renderAdmin(); }
   state.tabActual = tab;
@@ -1218,20 +1231,48 @@ function renderRegistrar() {
 }
 
 // ======= RENDER RESTRICCIONES =======
-function renderRestricciones() {
-  let cards = state.restricciones.map(r => `
-    <div class="restric-card ${r.impacto}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div class="restric-title">${r.desc}</div>
-        <span class="badge ${r.impacto==="alto"?"badge-warn":r.impacto==="medio"?"badge-pending":"badge-info"}">${r.impacto.toUpperCase()}</span>
-      </div>
-      <div class="restric-meta">👤 ${r.responsable} · 📅 ${r.fecha}</div>
-    </div>`).join("") || '<div class="empty-state"><div class="empty-icon">🔒</div><div class="empty-text">Sin restricciones activas.</div></div>';
+async function renderRestricciones() {
+  var c = document.getElementById('mainContent');
+  var obra = sessionStorage.getItem('obraActiva') || state.obra;
 
-  return `
-    <div class="sec-title">Restricciones activas — ${state.restricciones.length}</div>
-    ${cards}
-    ${puedeEditar() ? '<button class="btn-add" onclick="abrirModal(\'modalRestriccion\')">+ Nueva restricción</button>' : ''}`;
+  c.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris-muted);font-size:13px">Cargando restricciones...</div>';
+
+  try {
+    var rests = await cargarRestriccionesAzure(obra);
+    state.restriccionesAzure = rests;
+
+    if (!rests.length) {
+      c.innerHTML = '<div class="sec-title">Restricciones activas</div>' +
+        '<div class="empty-state"><div class="empty-icon">&#128274;</div><div class="empty-text">Sin restricciones activas.</div></div>' +
+        (puedeEditar() ? '<button class="btn-add" id="btnNuevaRestriccion">+ Nueva restriccion</button>' : '');
+      return;
+    }
+
+    var cards = rests.map(function(r) {
+      var impacto = r.restriccionImpacto || 'medio';
+      var badgeClass = impacto === 'alto' ? 'badge-warn' : impacto === 'medio' ? 'badge-pending' : 'badge-info';
+      var desc = r.restriccionDesc || r.notas || 'Sin descripcion';
+      var fecha = r.restriccionFecha ? r.restriccionFecha : (r.fecha ? r.fecha.slice(0,10) : '—');
+      var resp = r.restriccionResponsable || r.supervisorNombre || '—';
+      var actDesc = r.descripcion || r.actividad || '—';
+      return '<div class="restric-card ' + impacto + '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start">' +
+          '<div class="restric-title">' + desc + '</div>' +
+          '<span class="badge ' + badgeClass + '">' + impacto.toUpperCase() + '</span>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--azul-oscuro);margin:4px 0">&#128736; ' + actDesc + '</div>' +
+        '<div class="restric-meta">&#128100; ' + resp + ' &middot; &#128197; ' + fecha + '</div>' +
+      '</div>';
+    }).join('');
+
+    c.innerHTML =
+      '<div class="sec-title">Restricciones activas &mdash; ' + rests.length + '</div>' +
+      cards +
+      (puedeEditar() ? '<button class="btn-add" id="btnNuevaRestriccion" style="margin-top:8px">+ Nueva restriccion</button>' : '');
+
+  } catch(e) {
+    c.innerHTML = '<div style="padding:16px;color:var(--rojo);font-size:13px">Error: ' + e.message + '</div>';
+  }
 }
 
 // ======= RENDER REPORTES =======
@@ -1610,6 +1651,15 @@ async function agregarObra() {
 }
 
 
+
+// ======= RESTRICCIONES AZURE =======
+async function cargarRestriccionesAzure(obra) {
+  var url = azureUrlSup('cambios', "PartitionKey eq '" + obra + "' and esRestriccion eq true");
+  var res = await fetch(url, { headers: azureHdrSup() });
+  if (!res.ok) return [];
+  return (await res.json()).value || [];
+}
+
 // ======= CIERRE DIARIO — FASE B =======
 
 // Estado temporal del modal de avance
@@ -1756,6 +1806,13 @@ async function actualizarAvanceRealAct(obra, actRowKey, cantidadNueva) {
     body: JSON.stringify({ avanceReal: avActual + cantidadNueva })
   });
 }
+
+// ======= EVENT DELEGATION — RESTRICCIONES =======
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.id === 'btnNuevaRestriccion') {
+    abrirModal('modalRestriccion');
+  }
+});
 
 // ======= EVENT DELEGATION — TAB SEMANA =======
 document.addEventListener('click', function(e) {
