@@ -2064,29 +2064,35 @@ async function escribirRestriccionSP(datos) {
   if (!token) { console.warn('SP: sin token, restriccion no enviada a SharePoint'); return; }
   var url = SP_SITE + '/_api/web/lists(guid\'' + SP_LIST_RESTRICCIONES + '\')/items';
   var body = {
-    '__metadata': { 'type': 'SP.Data.CAO_x005f_RestriccionesListItem' },
-    'Title': datos.descripcion,
-    'Obra': datos.obra,
-    'Supervisor_Email': datos.supervisorEmail,
-    'Responsable': datos.responsable,
-    'Fecha_Compromiso': datos.fechaCompromiso || null,
-    'Impacto': datos.impacto,
+    'Title': datos.descripcion || 'Sin descripcion',
+    'Obra': datos.obra || '',
+    'Supervisor_Email': datos.supervisorEmail || '',
+    'Responsable': datos.responsable || '',
+    'Impacto': datos.impacto || 'medio',
     'Status': 'Activa',
-    'Semana': datos.semana,
+    'Semana': datos.semana || '',
     'Observacion': datos.notas || ''
   };
+  // Fecha_Compromiso solo si tiene valor (campo de fecha no acepta string vacio)
+  if (datos.fechaCompromiso) body['Fecha_Compromiso'] = datos.fechaCompromiso;
   try {
-    await fetch(url, {
+    var digest = await getSPDigest(token);
+    var postRes = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + token,
-        'Accept': 'application/json;odata=verbose',
-        'Content-Type': 'application/json;odata=verbose',
-        'X-RequestDigest': await getSPDigest(token)
+        'Accept': 'application/json;odata=nometadata',
+        'Content-Type': 'application/json',
+        'X-RequestDigest': digest
       },
       body: JSON.stringify(body)
     });
-    console.log('SP: restriccion registrada en CAO_Restricciones');
+    if (!postRes.ok) {
+      var errText = await postRes.text();
+      console.warn('SP error ' + postRes.status + ':', errText.substring(0, 200));
+      return;
+    }
+    console.log('SP: restriccion registrada en CAO_Restricciones OK');
   } catch(e) {
     console.warn('SP: error al escribir restriccion:', e.message);
   }
@@ -2155,29 +2161,35 @@ async function escribirRestriccionSP(datos) {
   if (!token) { console.warn('SP: sin token, restriccion no enviada a SharePoint'); return; }
   var url = SP_SITE + '/_api/web/lists(guid\'' + SP_LIST_RESTRICCIONES + '\')/items';
   var body = {
-    '__metadata': { 'type': 'SP.Data.CAO_x005f_RestriccionesListItem' },
-    'Title': datos.descripcion,
-    'Obra': datos.obra,
-    'Supervisor_Email': datos.supervisorEmail,
-    'Responsable': datos.responsable,
-    'Fecha_Compromiso': datos.fechaCompromiso || null,
-    'Impacto': datos.impacto,
+    'Title': datos.descripcion || 'Sin descripcion',
+    'Obra': datos.obra || '',
+    'Supervisor_Email': datos.supervisorEmail || '',
+    'Responsable': datos.responsable || '',
+    'Impacto': datos.impacto || 'medio',
     'Status': 'Activa',
-    'Semana': datos.semana,
+    'Semana': datos.semana || '',
     'Observacion': datos.notas || ''
   };
+  // Fecha_Compromiso solo si tiene valor (campo de fecha no acepta string vacio)
+  if (datos.fechaCompromiso) body['Fecha_Compromiso'] = datos.fechaCompromiso;
   try {
-    await fetch(url, {
+    var digest = await getSPDigest(token);
+    var postRes = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer ' + token,
-        'Accept': 'application/json;odata=verbose',
-        'Content-Type': 'application/json;odata=verbose',
-        'X-RequestDigest': await getSPDigest(token)
+        'Accept': 'application/json;odata=nometadata',
+        'Content-Type': 'application/json',
+        'X-RequestDigest': digest
       },
       body: JSON.stringify(body)
     });
-    console.log('SP: restriccion registrada en CAO_Restricciones');
+    if (!postRes.ok) {
+      var errText = await postRes.text();
+      console.warn('SP error ' + postRes.status + ':', errText.substring(0, 200));
+      return;
+    }
+    console.log('SP: restriccion registrada en CAO_Restricciones OK');
   } catch(e) {
     console.warn('SP: error al escribir restriccion:', e.message);
   }
