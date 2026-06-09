@@ -632,6 +632,14 @@ input[type=file] { display:none; }
           </label>
         </div>
       </div>
+      <div class="form-group">
+        <label class="form-label">Avance real acumulado</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input class="form-input" id="ccAvanceReal" type="number" min="0" placeholder="0" style="flex:1">
+          <span id="ccUnidadLabel" style="color:var(--gris-muted);font-size:12px;min-width:40px"></span>
+        </div>
+        <div style="font-size:11px;color:var(--gris-muted);margin-top:3px">Cantidad ejecutada acumulada. Se actualiza con los cierres de supervisores.</div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" data-close="modalConcepto">Cancelar</button>
@@ -835,12 +843,21 @@ function rolBadge(rol) {
   return '<span class="badge ' + (m[rol]||'badge-pending') + '">' + rol + '</span>';
 }
 
+
+function rowKeyToEmail(rk) {
+  if (!rk) return '';
+  // Si ya tiene @ es un email plano
+  if (rk.indexOf('@') >= 0) return rk;
+  // Decodificar formato a_medina_AT_metarco_com_mx
+  return rk.replace(/_AT_/g, '@').replace(/_com_/g, '.com.').replace(/_mx$/g, 'mx').replace(/_/g, '.');
+}
+
 function renderUsuarios() {
   var lista = allUsuarios.filter(function(u) {
     var matchFiltro = filtroUsuario === 'todos' || u.rol === filtroUsuario;
     var matchBusq   = !busquedaUsuario ||
       (u.nombre||'').toLowerCase().includes(busquedaUsuario) ||
-      (u.email||'').toLowerCase().includes(busquedaUsuario);
+      (u.email || rowKeyToEmail(u.RowKey) || '').toLowerCase().includes(busquedaUsuario);
     return matchFiltro && matchBusq;
   });
   var html = lista.map(function(u) {
@@ -848,7 +865,7 @@ function renderUsuarios() {
     var rk = u.RowKey || u.email || '';
     return '<tr>' +
       '<td><strong>' + (u.nombre||'—') + '</strong></td>' +
-      '<td style="color:var(--gris-muted);">' + (u.email||'—') + '</td>' +
+      '<td style="color:var(--gris-muted);font-size:12px;">' + (u.email || rowKeyToEmail(u.RowKey) || '—') + '</td>' +
       '<td>' + rolBadge(u.rol||'residente') + '</td>' +
       '<td style="font-size:11px;color:var(--gris-muted);">' + (u.obras||'—') + '</td>' +
       '<td style="white-space:nowrap;">' +
@@ -885,7 +902,7 @@ function editarUsuario(encoded) {
   document.getElementById('uPartitionKey').value = u.PartitionKey || 'metarco';
   document.getElementById('uRowKey').value       = u.RowKey || u.email || '';
   document.getElementById('uNombre').value = u.nombre || '';
-  document.getElementById('uEmail').value  = u.email  || '';
+  document.getElementById('uEmail').value  = u.email || rowKeyToEmail(u.RowKey) || '';
   document.getElementById('uRol').value    = u.rol    || 'residente';
   renderObrasTagsUsuario(u.obras || '');
   abrirModal('modalUsuario');
@@ -922,7 +939,9 @@ document.getElementById('btnGuardarUsuario').addEventListener('click', async fun
   var tags = document.querySelectorAll('#uObrasTag .obra-tag.selected');
   var obras = Array.from(tags).map(function(t){ return t.dataset.obra; }).join(' ');
   var pk = document.getElementById('uPartitionKey').value || 'metarco';
-  var rk = document.getElementById('uRowKey').value || email;
+  var rkExistente = document.getElementById('uRowKey').value;
+  // Si es usuario nuevo o el RowKey es un email plano, convertir al formato codificado
+  var rk = rkExistente && rkExistente.indexOf('@') === -1 ? rkExistente : email.replace(/@/g, '_AT_').replace(/\./g, '_');
   var entity = { PartitionKey:pk, RowKey:rk, nombre:nombre, email:email, rol:rol, obras:obras };
   try {
     await azureUpsert('usuarios', entity);
@@ -1195,6 +1214,8 @@ function editarConcepto(encoded) {
   document.getElementById('ccDesc').value     = c.descripcion || '';
   document.getElementById('ccUnidad').value   = c.unidad || 'pza';
   document.getElementById('ccCantidad').value = c.cantidadContrato || '';
+  document.getElementById('ccAvanceReal').value = c.avanceReal || 0;
+  document.getElementById('ccUnidadLabel').textContent = c.unidad || '';
   document.getElementById('ccPU').value       = c.precioUnitario || '';
   var sfs = (c.subfases || '').split(',');
   document.getElementById('sfSuministro').checked = sfs.includes('Suministro');
@@ -1221,7 +1242,7 @@ document.getElementById('btnGuardarConcepto').addEventListener('click', async fu
     PartitionKey: obra, RowKey: rk, clave: clave, descripcion: desc,
     unidad: unidad, cantidadContrato: cantidad||0, precioUnitario: pu||0,
     importeContrato: Math.round((cantidad||0)*(pu||0)*100)/100,
-    subfases: subfases, tipoTrabajo:'estructura', activo:true, avanceReal:0, avanceProg:0
+    subfases: subfases, tipoTrabajo:'estructura', activo:true, avanceReal: parseFloat(document.getElementById('ccAvanceReal') ? document.getElementById('ccAvanceReal').value : 0) || 0, avanceProg:0
   };
   try {
     await azureUpsert('actividades', entity);
