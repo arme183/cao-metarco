@@ -2012,6 +2012,25 @@ async function guardarAvanceCierre() {
       }).catch(function(e) { console.warn('SP restriccion:', e); });
     }
 
+    // 4. Escribir Daily Report a SharePoint
+    try {
+      var statsHoyDaily = await cargarStatsHoy(obra);
+      escribirDailyReportSP({
+        obra: obra,
+        fecha: new Date().toISOString().slice(0,10),
+        supervisorEmail: email,
+        supervisorNombre: nombre,
+        semana: sem,
+        actividadesHoy: statsHoyDaily.cHoy || 0,
+        ppcDia: statsHoyDaily.ppcHoy || 0,
+        ppcSemana: statsHoyDaily.ppcSem || 0,
+        cumplidasDia: statsHoyDaily.cHoy || 0,
+        cumplidasSemana: statsHoyDaily.cSem || 0,
+        restriccionesActivas: statsHoyDaily.restricciones || 0,
+        notas: obs
+      }).catch(function(e) { console.warn('Daily report SP:', e); });
+    } catch(e) { console.warn('Daily report stats:', e); }
+
     cerrarModal('modalAvance');
     if (btn) { btn.disabled = false; btn.textContent = 'GUARDAR REGISTRO'; }
 
@@ -2106,6 +2125,46 @@ async function getSPDigest(token) {
   } catch(e) { return ''; }
 }
 
+
+// ======= DAILY REPORT — SHAREPOINT =======
+var SP_LIST_DAILY_REPORT = 'fdc04487-3b33-49f7-94a6-0213fd653557';
+
+async function escribirDailyReportSP(datos) {
+  var token = await getSharePointToken();
+  if (!token) { console.warn('SP Daily: sin token'); return; }
+  var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com,173d71cd-18eb-456a-93af-7b6b3d086f9b,c094e1d2-4329-4131-9d6b-0e248d1d26f1/lists/' + SP_LIST_DAILY_REPORT + '/items';
+  var fields = {
+    'Title': datos.obra + ' - ' + datos.fecha,
+    'Obra': datos.obra,
+    'Supervisor_Email': datos.supervisorEmail,
+    'Supervisor_Nombre': datos.supervisorNombre,
+    'Tipo': 'diario',
+    'Semana': datos.semana,
+    'Actividades_Hoy': datos.actividadesHoy,
+    'PPC_Dia': datos.ppcDia || 0,
+    'PPC_Semana': datos.ppcSemana || 0,
+    'Cumplidas_Dia': datos.cumplidasDia || 0,
+    'Cumplidas_Semana': datos.cumplidasSemana || 0,
+    'Restricciones_Activas': datos.restriccionesActivas || 0,
+    'Observaciones': datos.notas || ''
+  };
+  try {
+    var r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: fields })
+    });
+    if (r.ok) {
+      console.log('SP Daily Report registrado OK');
+    } else {
+      var err = await r.text();
+      console.warn('SP Daily error:', err.substring(0,200));
+    }
+  } catch(e) {
+    console.warn('SP Daily exception:', e.message);
+  }
+}
+
 // ======= EVENT DELEGATION — RESTRICCIONES =======
 document.addEventListener('click', function(e) {
   // Resolver restriccion
@@ -2198,6 +2257,46 @@ async function getSPDigest(token) {
     var data = await res.json();
     return data.d.GetContextWebInformation.FormDigestValue;
   } catch(e) { return ''; }
+}
+
+
+// ======= DAILY REPORT — SHAREPOINT =======
+var SP_LIST_DAILY_REPORT = 'fdc04487-3b33-49f7-94a6-0213fd653557';
+
+async function escribirDailyReportSP(datos) {
+  var token = await getSharePointToken();
+  if (!token) { console.warn('SP Daily: sin token'); return; }
+  var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com,173d71cd-18eb-456a-93af-7b6b3d086f9b,c094e1d2-4329-4131-9d6b-0e248d1d26f1/lists/' + SP_LIST_DAILY_REPORT + '/items';
+  var fields = {
+    'Title': datos.obra + ' - ' + datos.fecha,
+    'Obra': datos.obra,
+    'Supervisor_Email': datos.supervisorEmail,
+    'Supervisor_Nombre': datos.supervisorNombre,
+    'Tipo': 'diario',
+    'Semana': datos.semana,
+    'Actividades_Hoy': datos.actividadesHoy,
+    'PPC_Dia': datos.ppcDia || 0,
+    'PPC_Semana': datos.ppcSemana || 0,
+    'Cumplidas_Dia': datos.cumplidasDia || 0,
+    'Cumplidas_Semana': datos.cumplidasSemana || 0,
+    'Restricciones_Activas': datos.restriccionesActivas || 0,
+    'Observaciones': datos.notas || ''
+  };
+  try {
+    var r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: fields })
+    });
+    if (r.ok) {
+      console.log('SP Daily Report registrado OK');
+    } else {
+      var err = await r.text();
+      console.warn('SP Daily error:', err.substring(0,200));
+    }
+  } catch(e) {
+    console.warn('SP Daily exception:', e.message);
+  }
 }
 
 // ======= EVENT DELEGATION — RESTRICCIONES =======
