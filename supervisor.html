@@ -2144,7 +2144,6 @@ async function escribirDailyReportSP(datos) {
     'Cumplidas_Dia': parseInt(datos.cumplidasDia) || 0,
     'Cumplidas_Semana': parseInt(datos.cumplidasSemana) || 0,
     'Restricciones_Activas': parseInt(datos.restriccionesActivas) || 0,
-    'Observaciones': datos.notas || ''
   };
   try {
     var r = await fetch(url, {
@@ -2277,7 +2276,6 @@ async function escribirDailyReportSP(datos) {
     'Cumplidas_Dia': parseInt(datos.cumplidasDia) || 0,
     'Cumplidas_Semana': parseInt(datos.cumplidasSemana) || 0,
     'Restricciones_Activas': parseInt(datos.restriccionesActivas) || 0,
-    'Observaciones': datos.notas || ''
   };
   try {
     var r = await fetch(url, {
