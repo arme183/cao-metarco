@@ -2020,14 +2020,13 @@ async function guardarAvanceCierre() {
         fecha: new Date().toISOString().slice(0,10),
         supervisorEmail: email,
         supervisorNombre: nombre,
-        semana: sem,
-        actividadesHoy: statsHoyDaily.cHoy || 0,
-        ppcDia: statsHoyDaily.ppcHoy || 0,
-        ppcSemana: statsHoyDaily.ppcSem || 0,
-        cumplidasDia: statsHoyDaily.cHoy || 0,
-        cumplidasSemana: statsHoyDaily.cSem || 0,
-        restriccionesActivas: statsHoyDaily.restricciones || 0,
-        notas: obs
+        actividadesHoy: parseInt(statsHoyDaily.cHoy) || 0,
+        ppcDia: parseInt(statsHoyDaily.ppcHoy) || 0,
+        ppcSemana: parseInt(statsHoyDaily.ppcSem) || 0,
+        cumplidasDia: parseInt(statsHoyDaily.cHoy) || 0,
+        cumplidasSemana: parseInt(statsHoyDaily.cSem) || 0,
+        restriccionesActivas: parseInt(statsHoyDaily.restricciones) || 0,
+        notas: obs || ''
       }).catch(function(e) { console.warn('Daily report SP:', e); });
     } catch(e) { console.warn('Daily report stats:', e); }
 
@@ -2139,12 +2138,12 @@ async function escribirDailyReportSP(datos) {
     'Supervisor_Email': datos.supervisorEmail,
     'Supervisor_Nombre': datos.supervisorNombre,
     'Tipo': 'diario',
-    'Actividades_Hoy': datos.actividadesHoy,
-    'PPC_Dia': datos.ppcDia || 0,
-    'PPC_Semana': datos.ppcSemana || 0,
-    'Cumplidas_Dia': datos.cumplidasDia || 0,
-    'Cumplidas_Semana': datos.cumplidasSemana || 0,
-    'Restricciones_Activas': datos.restriccionesActivas || 0,
+    'Actividades_Hoy': parseInt(datos.actividadesHoy) || 0,
+    'PPC_Dia': parseInt(datos.ppcDia) || 0,
+    'PPC_Semana': parseInt(datos.ppcSemana) || 0,
+    'Cumplidas_Dia': parseInt(datos.cumplidasDia) || 0,
+    'Cumplidas_Semana': parseInt(datos.cumplidasSemana) || 0,
+    'Restricciones_Activas': parseInt(datos.restriccionesActivas) || 0,
     'Observaciones': datos.notas || ''
   };
   try {
@@ -2272,12 +2271,12 @@ async function escribirDailyReportSP(datos) {
     'Supervisor_Email': datos.supervisorEmail,
     'Supervisor_Nombre': datos.supervisorNombre,
     'Tipo': 'diario',
-    'Actividades_Hoy': datos.actividadesHoy,
-    'PPC_Dia': datos.ppcDia || 0,
-    'PPC_Semana': datos.ppcSemana || 0,
-    'Cumplidas_Dia': datos.cumplidasDia || 0,
-    'Cumplidas_Semana': datos.cumplidasSemana || 0,
-    'Restricciones_Activas': datos.restriccionesActivas || 0,
+    'Actividades_Hoy': parseInt(datos.actividadesHoy) || 0,
+    'PPC_Dia': parseInt(datos.ppcDia) || 0,
+    'PPC_Semana': parseInt(datos.ppcSemana) || 0,
+    'Cumplidas_Dia': parseInt(datos.cumplidasDia) || 0,
+    'Cumplidas_Semana': parseInt(datos.cumplidasSemana) || 0,
+    'Restricciones_Activas': parseInt(datos.restriccionesActivas) || 0,
     'Observaciones': datos.notas || ''
   };
   try {
