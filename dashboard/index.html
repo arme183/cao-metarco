@@ -297,6 +297,7 @@ input[type=file] { display:none; }
     <button data-tab="financiero">💰 Financiero</button>
     <button data-tab="restricciones">🔒 Restricciones</button>
     <button data-tab="lookahead">🔭 Look Ahead</button>
+    <button data-tab="hoy" id="btnTabHoy">📋 HOY</button>
   </div>
 
   <!-- Resumen -->
@@ -383,6 +384,12 @@ input[type=file] { display:none; }
     </div>
   </div>
 
+  <div id="tab-hoy" class="tab">
+    <div id="hoy-content">
+      <div style="padding:40px;text-align:center;color:var(--gris-muted)">Selecciona una obra y carga el archivo Excel para ver el resumen del dia.</div>
+    </div>
+  </div>
+
 </div><!-- /dashboard -->
 
 <script>
@@ -410,6 +417,7 @@ document.querySelectorAll('.nav button').forEach(function(btn){
     document.querySelectorAll('.nav button').forEach(function(b){ b.classList.remove('active'); });
     document.getElementById('tab-' + id).classList.add('active');
     this.classList.add('active');
+    if (id === 'hoy') { renderTabHoy(); }
   });
 });
 
@@ -744,7 +752,7 @@ async function cargarDashConCuenta(account) {
     if (sel && obras.length) {
       sel.innerHTML = obras.map(function(o) { return '<option value="' + o.RowKey + '">' + o.RowKey + '</option>'; }).join("");
       DASH_OBRA_ACT = obras[0].RowKey;
-      sel.addEventListener("change", function() { DASH_OBRA_ACT = this.value; if (document.getElementById("dashboard").style.display !== "none") actualizarTabsAzure(); });
+      sel.addEventListener("change", function() { DASH_OBRA_ACT = this.value; if (document.getElementById("dashboard").style.display !== "none") { actualizarTabsAzure(); var tabHoy = document.getElementById('tab-hoy'); if (tabHoy && tabHoy.classList.contains('active')) renderTabHoy(); } });
     }
     document.getElementById("loginScreen").style.display = "none";
     document.getElementById("uploadScreen").style.display = "flex";
@@ -818,6 +826,177 @@ async function actualizarTabsAzure() {
       raEl.innerHTML='<div style="background:#e8f4fd;border-radius:10px;padding:10px 14px;margin-bottom:12px;border-left:4px solid #2563a8;font-size:11px;color:#1a3d7c;font-weight:600">Restricciones en tiempo real &middot; '+obra+' &middot; '+restricciones.length+' activas</div>'+'<div class="kpi-grid" style="margin-bottom:14px"><div class="kpi red"><div class="label">Vencidas</div><div class="value">'+nV+'</div></div><div class="kpi amber"><div class="label">Activas</div><div class="value">'+restricciones.length+'</div></div><div class="kpi blue"><div class="label">Alto impacto</div><div class="value">'+nA+'</div></div></div>'+'<div class="card"><div class="card-title">Restricciones activas (Azure)</div><div style="overflow-x:auto"><table><thead><tr><th>Actividad</th><th>Descripcion</th><th>Compromiso</th><th>Impacto</th><th>Estado</th></tr></thead><tbody>'+rRows+'</tbody></table></div></div>';
     }
   } catch(e) { console.warn("Error Azure dashboard:", e.message); }
+}
+
+
+// ======= TAB HOY — DASHBOARD =======
+async function renderTabHoy() {
+  var obra = DASH_OBRA_ACT;
+  var c = document.getElementById('hoy-content');
+  if (!obra) {
+    c.innerHTML = '<div style="padding:40px;text-align:center;color:var(--gris-muted)">Selecciona una obra para ver el resumen del día.</div>';
+    return;
+  }
+
+  c.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris-muted)">Cargando resumen del día...</div>';
+
+  var hoy = new Date().toISOString().slice(0, 10);
+  var sem = (function() {
+    var d = new Date();
+    var jan4 = new Date(d.getFullYear(), 0, 4);
+    var start = new Date(jan4);
+    start.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
+    var wn = Math.ceil(((d - start) / 86400000 + 1) / 7);
+    return d.getFullYear() + '-W' + String(wn).padStart(2, '0');
+  })();
+
+  try {
+    // Cierres de hoy
+    var resC = await fetch(dashUrl('cambios', "PartitionKey eq '" + obra + "' and tipRegistro eq 'cierre' and semanaISO eq '" + sem + "'"), { headers: dashHdr() });
+    var todosLosCierres = resC.ok ? ((await resC.json()).value || []) : [];
+    var cierresHoy = todosLosCierres.filter(function(c) { return c.fecha && c.fecha.slice(0,10) === hoy; });
+
+    // Planes de esta semana
+    var resP = await fetch(dashUrl('cambios', "PartitionKey eq '" + obra + "' and tipRegistro eq 'plan' and semanaISO eq '" + sem + "'"), { headers: dashHdr() });
+    var planes = resP.ok ? ((await resP.json()).value || []) : [];
+
+    // Restricciones activas
+    var resR = await fetch(dashUrl('cambios', "PartitionKey eq '" + obra + "' and esRestriccion eq true and resuelta ne true"), { headers: dashHdr() });
+    var restricciones = resR.ok ? ((await resR.json()).value || []) : [];
+
+    // Calcular stats
+    var sumasSem = {}, sumasHoy = {};
+    todosLosCierres.forEach(function(ci) { sumasSem[ci.actividad] = (sumasSem[ci.actividad]||0) + (parseFloat(ci.cantidadReal)||0); });
+    cierresHoy.forEach(function(ci) { sumasHoy[ci.actividad] = (sumasHoy[ci.actividad]||0) + (parseFloat(ci.cantidadReal)||0); });
+
+    var planMap = {};
+    planes.forEach(function(p) { planMap[p.actividad] = p; });
+
+    var cumplidasHoy = planes.filter(function(p) {
+      return p.cantidadPlan > 0 && (sumasHoy[p.actividad]||0) > 0 && (sumasSem[p.actividad]||0) >= p.cantidadPlan;
+    }).length;
+    var cumplidasSem = planes.filter(function(p) {
+      return p.cantidadPlan > 0 && (sumasSem[p.actividad]||0) >= p.cantidadPlan;
+    }).length;
+
+    var actHoy = planes.filter(function(p) { return (sumasHoy[p.actividad]||0) > 0; });
+    var ppcHoy = actHoy.length > 0 ? Math.round(actHoy.filter(function(p) { return (sumasSem[p.actividad]||0) >= p.cantidadPlan; }).length / actHoy.length * 100) : null;
+    var ppcSem = planes.length > 0 ? Math.round(cumplidasSem / planes.length * 100) : null;
+
+    var ppcHoyColor = ppcHoy !== null ? (ppcHoy>=90?'var(--verde)':ppcHoy>=80?'var(--amarillo)':'var(--rojo)') : 'var(--gris-muted)';
+    var ppcSemColor = ppcSem !== null ? (ppcSem>=90?'var(--verde)':ppcSem>=80?'var(--amarillo)':'var(--rojo)') : 'var(--gris-muted)';
+
+    // Agrupar avances de hoy por supervisor
+    var porSupervisor = {};
+    cierresHoy.forEach(function(ci) {
+      var sup = ci.supervisorNombre || ci.supervisor || 'Sin nombre';
+      if (!porSupervisor[sup]) porSupervisor[sup] = [];
+      porSupervisor[sup].push(ci);
+    });
+
+    // Fecha formateada
+    var fechaHoyStr = new Date().toLocaleDateString('es-MX', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    var html = '<div style="margin-bottom:16px">' +
+      '<div style="font-size:11px;color:var(--gris-muted);margin-bottom:2px">' + fechaHoyStr.charAt(0).toUpperCase() + fechaHoyStr.slice(1) + '</div>' +
+      '<div style="font-size:22px;font-weight:700;color:var(--azul-oscuro)">' + obra + ' — Resumen del día</div>' +
+    '</div>';
+
+    // KPIs
+    html += '<div class="kpi-grid" style="margin-bottom:16px">' +
+      '<div class="kpi ' + (ppcHoy!==null?(ppcHoy>=90?'green':ppcHoy>=80?'amber':'red'):'blue') + '">' +
+        '<div class="label">PPC HOY</div>' +
+        '<div class="value">' + (ppcHoy !== null ? ppcHoy + '%' : '—') + '</div>' +
+        '<div class="sub">' + actHoy.length + ' actividades con avance hoy</div>' +
+      '</div>' +
+      '<div class="kpi ' + (ppcSem!==null?(ppcSem>=90?'green':ppcSem>=80?'amber':'red'):'blue') + '">' +
+        '<div class="label">PPC SEMANA</div>' +
+        '<div class="value">' + (ppcSem !== null ? ppcSem + '%' : '—') + '</div>' +
+        '<div class="sub">' + sem + ' · ' + planes.length + ' comprometidas</div>' +
+      '</div>' +
+      '<div class="kpi blue">' +
+        '<div class="label">C. HOY / SEM</div>' +
+        '<div class="value">' + cumplidasHoy + ' / ' + cumplidasSem + '</div>' +
+        '<div class="sub">Actividades cumplidas</div>' +
+      '</div>' +
+      '<div class="kpi ' + (restricciones.length > 0 ? 'red' : 'green') + '">' +
+        '<div class="label">RESTRICCIONES</div>' +
+        '<div class="value">' + restricciones.length + '</div>' +
+        '<div class="sub">Activas sin resolver</div>' +
+      '</div>' +
+    '</div>';
+
+    // Avances por supervisor
+    if (!cierresHoy.length) {
+      html += '<div class="card" style="text-align:center;padding:30px;color:var(--gris-muted)">' +
+        '<div style="font-size:32px;margin-bottom:8px">📋</div>' +
+        '<div>Sin avances registrados hoy.</div>' +
+        '<div style="font-size:12px;margin-top:4px">Los supervisores registran avance desde la app móvil.</div>' +
+      '</div>';
+    } else {
+      html += '<div style="font-size:13px;font-weight:700;color:var(--azul-oscuro);margin-bottom:8px">AVANCES REGISTRADOS HOY</div>';
+
+      Object.keys(porSupervisor).forEach(function(sup) {
+        var cierresSup = porSupervisor[sup];
+        var actIds = {};
+        cierresSup.forEach(function(ci) { actIds[ci.actividad] = ci; });
+
+        html += '<div class="card" style="margin-bottom:12px">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
+            '<div style="font-weight:700;color:var(--azul-oscuro);font-size:13px">👤 ' + sup + '</div>' +
+            '<div style="font-size:11px;color:var(--gris-muted)">' + cierresSup.length + ' registros</div>' +
+          '</div>' +
+          '<table>' +
+            '<thead><tr>' +
+              '<th>Actividad</th><th>Subfase</th><th style="text-align:center">Cant. hoy</th><th style="text-align:center">Estado</th>' +
+            '</tr></thead><tbody>';
+
+        cierresSup.forEach(function(ci) {
+          var cumplido = ci.ppc === true || ci.ppc === 'true';
+          var badge = cumplido
+            ? '<span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">✓ CUMPLIDO</span>'
+            : '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600">✗ NO CUMPLIDO</span>';
+          var restTag = (ci.esRestriccion === true || ci.esRestriccion === 'true')
+            ? '<div style="font-size:10px;color:var(--amarillo);margin-top:2px">⚠ Restricción</div>' : '';
+          html += '<tr>' +
+            '<td style="font-size:12px">' + (ci.descripcion || ci.actividad) + '</td>' +
+            '<td style="font-size:11px;color:var(--gris-muted)">' + (ci.subfase||'') + '</td>' +
+            '<td style="text-align:center;font-size:12px;font-weight:600">' + ci.cantidadReal + ' ' + (ci.unidad||'') + '</td>' +
+            '<td style="text-align:center">' + badge + restTag + '</td>' +
+          '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+      });
+    }
+
+    // Restricciones activas
+    if (restricciones.length > 0) {
+      html += '<div style="font-size:13px;font-weight:700;color:var(--azul-oscuro);margin-bottom:8px;margin-top:4px">RESTRICCIONES ACTIVAS</div>';
+      html += '<div class="card"><table><thead><tr>' +
+        '<th>Descripción</th><th>Actividad</th><th>Impacto</th><th>Responsable</th><th>Compromiso</th>' +
+      '</tr></thead><tbody>';
+      var hoyStr = new Date().toISOString().slice(0,10);
+      restricciones.forEach(function(r) {
+        var venc = r.restriccionFecha && r.restriccionFecha < hoyStr;
+        var imp = r.restriccionImpacto || 'medio';
+        var impColor = imp==='alto'?'var(--rojo)':imp==='medio'?'var(--amarillo)':'var(--azul-claro)';
+        html += '<tr>' +
+          '<td style="font-size:12px">' + (r.restriccionDesc||r.notas||'—') + '</td>' +
+          '<td style="font-size:11px;color:var(--gris-muted)">' + (r.descripcion||r.actividad||'—') + '</td>' +
+          '<td><span style="background:' + impColor + ';color:#fff;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600">' + imp.toUpperCase() + '</span></td>' +
+          '<td style="font-size:11px">' + (r.restriccionResponsable||'—') + '</td>' +
+          '<td style="font-size:11px' + (venc?';color:var(--rojo);font-weight:600':'') + '">' + (r.restriccionFecha||'—') + (venc?' ⚠':'') + '</td>' +
+        '</tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+
+    c.innerHTML = html;
+
+  } catch(e) {
+    c.innerHTML = '<div style="padding:16px;color:var(--rojo)">Error cargando datos: ' + e.message + '</div>';
+  }
 }
 
 document.addEventListener("DOMContentLoaded", function() {
