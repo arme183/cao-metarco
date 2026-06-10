@@ -2135,10 +2135,12 @@ async function escribirDailyReportSP(datos) {
   var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com,173d71cd-18eb-456a-93af-7b6b3d086f9b,c094e1d2-4329-4131-9d6b-0e248d1d26f1/lists/' + SP_LIST_DAILY_REPORT + '/items';
   // Convertir semanaISO a numero (2026-W24 -> 24)
   var semNum = 0;
-  if (datos.semana) {
-    var partes = datos.semana.split('-W');
+  var semStr = datos.semana || getSemanaISO();
+  if (semStr) {
+    var partes = semStr.split('-W');
     semNum = partes.length > 1 ? parseInt(partes[1]) || 0 : 0;
   }
+  console.log('Daily Report semana:', semStr, '->', semNum);
   // Semaforo de cumplimiento segun PPC semana
   var ppcVal = parseInt(datos.ppcSemana) || 0;
   var cumplimientoVal = ppcVal >= 90 ? 'Verde' : ppcVal >= 80 ? 'Amarillo' : 'Rojo';
