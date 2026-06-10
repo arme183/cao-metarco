@@ -2155,7 +2155,8 @@ async function escribirDailyReportSP(datos) {
     'Cumplidas_Dia': parseInt(datos.cumplidasDia) || 0,
     'Cumplidas_Semana': parseInt(datos.cumplidasSemana) || 0,
     'Restricciones_Activas': parseInt(datos.restriccionesActivas) || 0,
-    'Cumplimiento': cumplimientoVal
+    'Cumplimiento': cumplimientoVal,
+    'Observaciones': (datos.notas || '').substring(0, 255)
   };
   try {
     var r = await fetch(url, {
