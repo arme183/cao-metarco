@@ -2018,6 +2018,7 @@ async function guardarAvanceCierre() {
       escribirDailyReportSP({
         obra: obra,
         fecha: new Date().toISOString().slice(0,10),
+        semana: sem,
         supervisorEmail: email,
         supervisorNombre: nombre,
         actividadesHoy: parseInt(statsHoyDaily.cHoy) || 0,
@@ -2144,7 +2145,7 @@ async function escribirDailyReportSP(datos) {
 
   var fields = {
     'Title': datos.obra + ' - ' + datos.fecha,
-    'Fecha': datos.fecha + 'T00:00:00Z',
+    'Fecha': new Date(datos.fecha + 'T12:00:00').toISOString(),
     'Obra': datos.obra,
     'Supervisor_Email': datos.supervisorEmail,
     'Supervisor_Nombre': datos.supervisorNombre,
