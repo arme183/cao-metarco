@@ -2144,6 +2144,7 @@ async function escribirDailyReportSP(datos) {
 
   var fields = {
     'Title': datos.obra + ' - ' + datos.fecha,
+    'Fecha': datos.fecha + 'T00:00:00Z',
     'Obra': datos.obra,
     'Supervisor_Email': datos.supervisorEmail,
     'Supervisor_Nombre': datos.supervisorNombre,
