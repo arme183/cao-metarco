@@ -573,9 +573,11 @@ var obraActiva   = '';
 var msalToken    = '';
 var excelData    = null;
 var charts       = {};
+var SP_SITE_ID            = 'metarco2025.sharepoint.com,173d71cd-18eb-456a-93af-7b6b3d086f9b,c094e1d2-4329-4131-9d6b-0e248d1d26f1';
+var SP_RESTRICCIONES_LIST = '6d813fdf-b2d0-498a-8869-59b19b39fca9';
+var msalToken    = '';
 var INICIO       = new Date('2026-03-30');
 var HOY          = new Date();
-
 // ══════════════════════════════════════════════
 // HELPERS AZURE
 // ══════════════════════════════════════════════
@@ -742,14 +744,14 @@ function mostrarDashboard() {
 // ══════════════════════════════════════════════
 // NAVEGACION
 // ══════════════════════════════════════════════
-document.querySelectorAll('.nav button').forEach(function(btn) {
-  btn.addEventListener('click', function() {
+document.querySelectorAll('.nav button').forEach(function(btn){
+  btn.addEventListener('click', function(){
     var id = this.dataset.tab;
     document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
     document.querySelectorAll('.nav button').forEach(function(b){ b.classList.remove('active'); });
     document.getElementById('tab-' + id).classList.add('active');
     this.classList.add('active');
-    if (id === 'hoy') cargarTabHoy();
+    if (id === 'restricciones') cargarRestriccionesSP();
   });
 });
 
@@ -1085,7 +1087,65 @@ function mkLine(id, labels, datasets, yFmt) {
               y:{ticks:{callback:yFmt,font:{size:10,family:'Inter'}},grid:{color:'rgba(0,0,0,.04)'}}}}
   });
 }
+async function getGraphToken() {
+  if (msalToken) return msalToken;
+  var accounts = msalInstance.getAllAccounts();
+  if (!accounts.length) return null;
+  try {
+    var result = await msalInstance.acquireTokenSilent({
+      scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All'],
+      account: accounts[0]
+    });
+    msalToken = result.accessToken;
+    return msalToken;
+  } catch(e) { return null; }
+}
 
+async function cargarRestriccionesSP() {
+  var kpis = document.getElementById('rest-kpis');
+  var body = document.getElementById('restBody');
+  kpis.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:1rem;color:var(--gris-muted);font-size:13px;">Cargando restricciones...</div>';
+  body.innerHTML = '';
+  try {
+    var token = await getGraphToken();
+    if (!token) { kpis.innerHTML = '<div style="grid-column:1/-1;color:var(--rojo);padding:1rem;">Sin token de acceso.</div>'; return; }
+    var url = 'https://graph.microsoft.com/v1.0/sites/' + SP_SITE_ID + '/lists/' + SP_RESTRICCIONES_LIST + '/items?expand=fields&$top=500';
+    var r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    var d = await r.json();
+    var items = (d.value || []).map(function(i){ return i.fields || {}; });
+    var obraItems = items.filter(function(i){ return (i.Obra || '') === obraActiva; });
+    var cnt = { Pendiente:0, 'En gestión':0, Liberada:0, Vencida:0 };
+    obraItems.forEach(function(i) {
+      var st = i.Estado || i.Status || 'Pendiente';
+      if (cnt[st] !== undefined) cnt[st]++;
+      else cnt['Pendiente']++;
+    });
+    kpis.innerHTML =
+      '<div class="kpi red"><div class="label">Vencidas</div><div class="value">' + cnt['Vencida'] + '</div></div>' +
+      '<div class="kpi amber"><div class="label">En gestión</div><div class="value">' + cnt['En gestión'] + '</div></div>' +
+      '<div class="kpi green"><div class="label">Liberadas</div><div class="value">' + cnt['Liberada'] + '</div></div>' +
+      '<div class="kpi blue"><div class="label">Pendientes</div><div class="value">' + cnt['Pendiente'] + '</div></div>';
+    if (!obraItems.length) {
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--gris-muted);">Sin restricciones registradas para ' + obraActiva + '</td></tr>';
+      return;
+    }
+    body.innerHTML = obraItems.map(function(i) {
+      var st  = i.Estado || i.Status || 'Pendiente';
+      var imp = i.Impacto || '—';
+      var badgeSt  = st === 'Liberada' ? 'badge-ok' : st === 'Vencida' ? 'badge-warn' : st === 'En gestión' ? 'badge-pending' : 'badge-info';
+      var badgeImp = imp === 'Alto' ? 'badge-warn' : imp === 'Medio' ? 'badge-pending' : 'badge-info';
+      return '<tr>' +
+        '<td style="font-size:12px;">' + (i.Actividad || '—') + '</td>' +
+        '<td style="font-size:12px;">' + (i.Descripcion || i.Title || '—') + '</td>' +
+        '<td>' + (i.FechaCompromiso || i.Fecha_Compromiso || '—') + '</td>' +
+        '<td><span class="badge ' + badgeImp + '">' + imp + '</span></td>' +
+        '<td><span class="badge ' + badgeSt  + '">' + st  + '</span></td>' +
+        '</tr>';
+    }).join('');
+  } catch(e) {
+    kpis.innerHTML = '<div style="grid-column:1/-1;color:var(--rojo);padding:1rem;">Error: ' + e.message + '</div>';
+  }
+}
 function mkBar(id, labels, data, yFmt) {
   if (charts[id]) charts[id].destroy();
   charts[id] = new Chart(document.getElementById(id).getContext('2d'), {
