@@ -1578,7 +1578,7 @@ async function cargarResponsablesModal() {
   var sel = document.getElementById('restricResponsable');
   if (sel.options.length > 1) return;
   try {
-    var rows = await azureGet('usuarios', "PartitionKey eq 'metarco'");
+    var rows = await azureGet('usuarios', "PartitionKey eq 'usuarios'");
     rows.forEach(function(u) {
       var opt = document.createElement('option');
       opt.value = u.email || '';
