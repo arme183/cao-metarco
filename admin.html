@@ -993,7 +993,7 @@ async function escribirUsuarioSP(nombre, email, rol, obra) {
 body: JSON.stringify({ fields: {
         Title: email,
         Nombre_Completo: nombre,
-        Rol: rol,
+       Rol: rol.charAt(0).toUpperCase() + rol.slice(1),
         Obra_Asignada: obra,
         Activo: true
       }})
