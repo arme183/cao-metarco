@@ -666,6 +666,9 @@ var msalConfig = {
 };
 
 var AZURE_ACCOUNT = 'metarcostorage';
+var SP_SITE_ID       = 'metarco2025.sharepoint.com,173d71cd-18eb-456a-93af-7b6b3d086f9b,c094e1d2-4329-4131-9d6b-0e248d1d26f1';
+var SP_USUARIOS_LIST = 'CAO_Usuarios';
+var spToken          = '';
 var AZURE_SAS = '?sv=2026-02-06&ss=bfqt&srt=o&sp=rwdlacupiytfx&se=2028-01-01T09:03:16Z&st=2026-06-02T00:48:16Z&spr=https&sig=jopE8S7LFpN79M86LWlZ5B%2Bws5%2BYbZvECNdVUAtHiGI%3D';
 var AZURE_BASE = 'https://' + AZURE_ACCOUNT + '.table.core.windows.net/';
 var AZURE_HEADERS = { 'Accept': 'application/json;odata=nometadata', 'Content-Type': 'application/json', 'x-ms-version': '2020-12-06' };
@@ -954,7 +957,9 @@ document.getElementById('btnGuardarUsuario').addEventListener('click', async fun
   var rk = rkExistente && rkExistente.indexOf('@') === -1 ? rkExistente : email.replace(/@/g, '_AT_').replace(/\./g, '_');
   var entity = { PartitionKey:pk, RowKey:rk, nombre:nombre, email:email, rol:rol, obras:obras };
   try {
+ var esNuevo = !rkExistente;
     await azureUpsert('usuarios', entity);
+    if (esNuevo) await escribirUsuarioSP(nombre, email, rol, obras);
     cerrarModal('modalUsuario');
     await cargarDatos();
     showToast('Usuario guardado', 'ok');
@@ -963,6 +968,41 @@ document.getElementById('btnGuardarUsuario').addEventListener('click', async fun
   }
 });
 
+async function getSpToken() {
+  if (spToken) return spToken;
+  var accounts = msalInstance.getAllAccounts();
+  if (!accounts.length) return null;
+  try {
+    var r = await msalInstance.acquireTokenSilent({
+      scopes: ['https://graph.microsoft.com/Sites.ReadWrite.All'],
+      account: accounts[0]
+    });
+    spToken = r.accessToken;
+    return spToken;
+  } catch(e) { return null; }
+}
+
+async function escribirUsuarioSP(nombre, email, rol, obra) {
+  try {
+    var token = await getSpToken();
+    if (!token) return;
+    var url = 'https://graph.microsoft.com/v1.0/sites/' + SP_SITE_ID + '/lists/' + SP_USUARIOS_LIST + '/items';
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields: {
+        Title: nombre,
+        Nombre_Completo: nombre,
+        Email: email,
+        Rol: rol,
+        Obra_Asignada: obra,
+        Activo: true
+      }})
+    });
+  } catch(e) {
+    console.warn('SP usuario no escrito:', e.message);
+  }
+}
 async function eliminarUsuario(pk, rk) {
   if (!confirm('¿Eliminar este usuario?')) return;
   try {
