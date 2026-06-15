@@ -1578,10 +1578,10 @@ async function cargarResponsablesModal() {
   var sel = document.getElementById('restricResponsable');
   if (sel.options.length > 1) return;
   try {
-    var rows = await azureGet('usuarios', "PartitionKey eq 'usuarios'");var url = azureUrlSup + 'usuarios' + AZURE_SAS_SUP + '&$filter=' + encodeURIComponent("PartitionKey eq 'usuarios'");
-var r = await fetch(url, { headers: azureHdrSup });
-var d = await r.json();
-var rows = d.value || [];
+    var url = azureUrlSup + 'usuarios' + AZURE_SAS_SUP + '&$filter=' + encodeURIComponent("PartitionKey eq 'usuarios'");
+    var r = await fetch(url, { headers: azureHdrSup });
+    var d = await r.json();
+    var rows = d.value || [];
     rows.forEach(function(u) {
       var opt = document.createElement('option');
       opt.value = u.email || '';
