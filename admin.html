@@ -302,7 +302,7 @@ input[type=file] { display:none; }
       <div class="login-brand-sub">Panel de Administración · CAO</div>
     </div>
     <p class="login-title">Acceso restringido</p>
-    <p class="login-desc">Solo disponible para administradores del sistema.</p>
+    <p class="login-desc">Acceso para administradores y coordinadores de proyectos.</p>
     <button class="btn-ms" id="btnLogin">
       <svg class="ms-sq" viewBox="0 0 21 21" fill="none">
         <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -676,6 +676,7 @@ var AZURE_HEADERS = { 'Accept': 'application/json;odata=nometadata', 'Content-Ty
 var msalInstance = new msal.PublicClientApplication(msalConfig);
 var userEmail = '';
 var userName  = '';
+var userRole  = '';
 var allUsuarios = [];
 var allObras    = [];
 var allCatalogo = [];
@@ -739,8 +740,12 @@ document.getElementById('btnLogin').addEventListener('click', async function() {
     var acc = result.account;
     userEmail = (acc.username || '').toLowerCase();
     userName  = acc.name || acc.username;
-    if (!userEmail.startsWith('a.medina')) {
-      showError('Acceso denegado. Solo administradores.');
+   if (userEmail.startsWith('a.medina')) {
+      userRole = 'admin';
+    } else if (userEmail.startsWith('juancarlos.lopez')) {
+      userRole = 'coordinador';
+    } else {
+      showError('Acceso denegado. Solo personal autorizado.');
       return;
     }
     iniciarApp();
@@ -767,6 +772,11 @@ async function iniciarApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('appScreen').style.display   = 'flex';
   document.getElementById('sidebarNombre').textContent  = userName;
+  document.querySelector('.sidebar-user-role').textContent = userRole === 'admin' ? 'Administrador' : 'Coordinador';
+  if (userRole === 'coordinador') {
+    document.querySelector('[data-page="usuarios"]').style.display = 'none';
+    document.querySelector('[data-page="obras"]').style.display    = 'none';
+  }
   await cargarDatos();
 }
 
@@ -1332,6 +1342,10 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
     userEmail = (acc.username || '').toLowerCase();
     userName  = acc.name || acc.username;
     if (userEmail.startsWith('a.medina')) {
+      userRole = 'admin';
+      iniciarApp();
+    } else if (userEmail.startsWith('juancarlos.lopez')) {
+      userRole = 'coordinador';
       iniciarApp();
     }
   }
