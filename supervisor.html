@@ -470,8 +470,10 @@ input[type=file] { display:none; }
           <button type="button" class="btn-impacto" id="impMedio" onclick="setImpacto('medio')">Medio</button>
           <button type="button" class="btn-impacto" id="impBajo" onclick="setImpacto('bajo')">Bajo</button>
         </div>
-        <label class="form-label">Responsable de resolver</label>
-        <input type="text" class="form-input" id="restResponsable" placeholder="Nombre o area responsable">
+<label class="form-label">Responsable de resolver</label>
+        <select class="form-select" id="restResponsable">
+          <option value="">Seleccionar responsable...</option>
+        </select>
       </div>
       <div class="form-group">
         <label class="form-label">Observación</label>
@@ -1543,7 +1545,7 @@ function setCumplimiento(val) {
   document.getElementById("btnSi").className = "btn-cumpl" + (val?" active-si":"");
   document.getElementById("btnNo").className = "btn-cumpl" + (!val?" active-no":"");
   document.getElementById("causaGroup").style.display = val ? "none" : "block";
-  var rg = document.getElementById("restriccionGroup");
+  var rg = document.getElementById("restriccionGroup"); if (!val) cargarResponsablesModal2();
   if (rg) rg.style.display = val ? "none" : "block";
   _avanceActual.cumplido = val;
 }
@@ -1590,6 +1592,25 @@ async function cargarResponsablesModal() {
     });
   } catch(e) {
     console.warn('No se cargaron responsables:', e.message);
+  }
+}
+  async function cargarResponsablesModal2() {
+  var sel = document.getElementById('restResponsable');
+  if (!sel || sel.tagName !== 'SELECT') return;
+  if (sel.options.length > 1) return;
+  try {
+    var url = azureUrlSup('usuarios', "PartitionKey eq 'usuarios'");
+    var r = await fetch(url, { headers: azureHdrSup() });
+    var d = await r.json();
+    var rows = d.value || [];
+    rows.forEach(function(u) {
+      var opt = document.createElement('option');
+      opt.value = u.email || '';
+      opt.textContent = u.nombre || u.email || '';
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    console.warn('No se cargaron responsables cierre:', e.message);
   }
 }
 function guardarRestriccion() {
