@@ -1016,6 +1016,7 @@ async function eliminarUsuario(pk, rk, email) {
 
 async function eliminarUsuarioSP(email) {
   try {
+    spToken = '';
     var token = await getSpToken();
     if (!token) return;
 var url = 'https://graph.microsoft.com/v1.0/sites/' + SP_SITE_ID + '/lists/' + SP_USUARIOS_LIST + '/items?expand=fields&$filter=fields/Title eq %27' + encodeURIComponent(email) + '%27';    var r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
