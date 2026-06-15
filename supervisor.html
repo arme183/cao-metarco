@@ -746,6 +746,7 @@ function mostrarApp() {
   document.getElementById("appScreen").style.display = "flex";
  if (state.userRole === 'admin') document.getElementById("tabAdmin").style.display = "flex";
   if (state.userRole === 'admin') document.getElementById("btnDemoAdmin").style.display = "inline-block";
+  if (state.userRole === 'residente') document.querySelector('[onclick="setTab(\'semana\',this)"]').style.display = "none";
 
   const obraMap = { reforma:"Torre Reforma 400", tizayuca:"Planta Tizayuca", norte:"Centro Logístico Norte" };
   const obraKey = sessionStorage.getItem("obraActiva") || "reforma";
