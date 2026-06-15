@@ -1114,17 +1114,17 @@ async function cargarRestriccionesSP() {
     var d = await r.json();
     var items = (d.value || []).map(function(i){ return i.fields || {}; });
     var obraItems = items.filter(function(i){ return (i.Obra || '') === obraActiva; });
-    var cnt = { Pendiente:0, 'En gestión':0, Liberada:0, Vencida:0 };
+var cnt = { Activa:0, 'En gestión':0, Liberada:0, Vencida:0 };
     obraItems.forEach(function(i) {
-      var st = i.Estado || i.Status || 'Pendiente';
+      var st = i.Status || i.Estado || 'Activa';
       if (cnt[st] !== undefined) cnt[st]++;
-      else cnt['Pendiente']++;
+      else cnt['Activa']++;
     });
     kpis.innerHTML =
       '<div class="kpi red"><div class="label">Vencidas</div><div class="value">' + cnt['Vencida'] + '</div></div>' +
       '<div class="kpi amber"><div class="label">En gestión</div><div class="value">' + cnt['En gestión'] + '</div></div>' +
       '<div class="kpi green"><div class="label">Liberadas</div><div class="value">' + cnt['Liberada'] + '</div></div>' +
-      '<div class="kpi blue"><div class="label">Pendientes</div><div class="value">' + cnt['Pendiente'] + '</div></div>';
+      '<div class="kpi blue"><div class="label">Activas</div><div class="value">' + cnt['Activa'] + '</div></div>';
     if (!obraItems.length) {
       body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--gris-muted);">Sin restricciones registradas para ' + obraActiva + '</td></tr>';
       return;
@@ -1133,7 +1133,7 @@ async function cargarRestriccionesSP() {
       var st  = i.Estado || i.Status || 'Pendiente';
       var imp = i.Impacto || '—';
       var badgeSt  = st === 'Liberada' ? 'badge-ok' : st === 'Vencida' ? 'badge-warn' : st === 'En gestión' ? 'badge-pending' : 'badge-info';
-      var badgeImp = imp === 'Alto' ? 'badge-warn' : imp === 'Medio' ? 'badge-pending' : 'badge-info';
+      var badgeImp = imp.toLowerCase() === 'alto' ? 'badge-warn' : imp.toLowerCase() === 'medio' ? 'badge-pending' : 'badge-info';
       return '<tr>' +
         '<td style="font-size:12px;">' + (i.Actividad || '—') + '</td>' +
         '<td style="font-size:12px;">' + (i.Descripcion || i.Title || '—') + '</td>' +
