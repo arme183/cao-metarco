@@ -1348,8 +1348,7 @@ async function renderRestricciones(verHistorial) {
       btnToggle +
       '<div class="sec-title">' + titulo + ' &mdash; ' + rests.length + '</div>' +
       cards +
-      (!verHistorial && puedeEditar() ? '<button class="btn-add" id="btnNuevaRestriccion" style="margin-top:8px">+ Nueva restriccion</button>' : '');
-
+'';
   } catch(e) {
     c.innerHTML = '<div style="padding:16px;color:var(--rojo);font-size:13px">Error: ' + e.message + '</div>';
   }
