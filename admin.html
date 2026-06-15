@@ -883,7 +883,7 @@ function renderUsuarios() {
       '<td style="font-size:11px;color:var(--gris-muted);">' + (u.obras||'—') + '</td>' +
       '<td style="white-space:nowrap;">' +
         '<button class="btn btn-outline btn-sm" onclick="editarUsuario(\'' + encodeURIComponent(JSON.stringify(u)) + '\')">Editar</button> ' +
-        '<button class="btn btn-danger btn-sm" onclick="eliminarUsuario(\'' + pk + '\',\'' + rk + '\')">Eliminar</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="eliminarUsuario(\'' + pk + '\',\'' + rk + '\',\'' + (u.email||'') + '\')">Eliminar</button>' +
       '</td></tr>';
   }).join('');
   document.getElementById('usuariosBody').innerHTML = html || '<tr><td colspan="5" class="loading">Sin resultados</td></tr>';
@@ -1002,14 +1002,34 @@ body: JSON.stringify({ fields: {
     console.warn('SP usuario no escrito:', e.message);
   }
 }
-async function eliminarUsuario(pk, rk) {
+async function eliminarUsuario(pk, rk, email) {
   if (!confirm('¿Eliminar este usuario?')) return;
   try {
     await azureDelete('usuarios', pk, rk);
+    await eliminarUsuarioSP(email);
     await cargarDatos();
     showToast('Usuario eliminado', 'ok');
   } catch(e) {
     showToast('Error: ' + e.message, 'err');
+  }
+}
+
+async function eliminarUsuarioSP(email) {
+  try {
+    var token = await getSpToken();
+    if (!token) return;
+    var url = 'https://graph.microsoft.com/v1.0/sites/' + SP_SITE_ID + '/lists/' + SP_USUARIOS_LIST + '/items?expand=fields&$filter=fields/Title eq \'' + email + '\'';
+    var r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+    var d = await r.json();
+    var items = d.value || [];
+    for (var i = 0; i < items.length; i++) {
+      await fetch('https://graph.microsoft.com/v1.0/sites/' + SP_SITE_ID + '/lists/' + SP_USUARIOS_LIST + '/items/' + items[i].id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+    }
+  } catch(e) {
+    console.warn('SP usuario no eliminado:', e.message);
   }
 }
 
