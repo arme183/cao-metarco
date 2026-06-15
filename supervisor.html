@@ -1578,7 +1578,7 @@ async function cargarResponsablesModal() {
   var sel = document.getElementById('restricResponsable');
   if (sel.options.length > 1) return;
   try {
-    var url = azureUrlSup + 'usuarios' + AZURE_SAS_SUP + '&$filter=' + encodeURIComponent("PartitionKey eq 'usuarios'");
+    var url = azureUrlSup('usuarios', "PartitionKey eq 'usuarios'");
     var r = await fetch(url, { headers: azureHdrSup });
     var d = await r.json();
     var rows = d.value || [];
