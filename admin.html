@@ -990,10 +990,9 @@ async function escribirUsuarioSP(nombre, email, rol, obra) {
     await fetch(url, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields: {
-        Title: nombre,
+body: JSON.stringify({ fields: {
+        Title: email,
         Nombre_Completo: nombre,
-        Email: email,
         Rol: rol,
         Obra_Asignada: obra,
         Activo: true
