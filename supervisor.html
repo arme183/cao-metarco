@@ -573,8 +573,10 @@ input[type=file] { display:none; }
         <textarea class="form-textarea" id="restricDesc" placeholder="Describe el problema..."></textarea>
       </div>
       <div class="form-group">
-        <label class="form-label">¿Quién debe resolverlo?</label>
-        <input type="text" class="form-input" id="restricResponsable" placeholder="Ej: Ing. García, Almacén...">
+<label class="form-label">¿Quién debe resolverlo?</label>
+        <select class="form-select" id="restricResponsable">
+          <option value="">Seleccionar responsable...</option>
+        </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="form-group">
@@ -1572,7 +1574,21 @@ function agregarActividad() {
   cerrarModal("modalActividad");
   setTab(state.tabActual, null);
 }
-
+async function cargarResponsablesModal() {
+  var sel = document.getElementById('restricResponsable');
+  if (sel.options.length > 1) return;
+  try {
+    var rows = await azureGet('usuarios', "PartitionKey eq 'metarco'");
+    rows.forEach(function(u) {
+      var opt = document.createElement('option');
+      opt.value = u.email || '';
+      opt.textContent = u.nombre || u.email || '';
+      sel.appendChild(opt);
+    });
+  } catch(e) {
+    console.warn('No se cargaron responsables:', e.message);
+  }
+}
 function guardarRestriccion() {
   const desc = document.getElementById("restricDesc").value.trim();
   if (!desc) { alert("Describe el problema."); return; }
@@ -2278,6 +2294,7 @@ async function getSPDigest(token) {
 // ======= EVENT DELEGATION — RESTRICCIONES =======
 document.addEventListener('click', function(e) {
   if (e.target && e.target.id === 'btnNuevaRestriccion') {
+    cargarResponsablesModal();
     abrirModal('modalRestriccion');
   }
 });
