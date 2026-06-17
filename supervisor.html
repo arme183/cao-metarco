@@ -1966,7 +1966,7 @@ function abrirModalCierre(btn) {
   var restResp = document.getElementById('restResponsable');
   if (restDesc) restDesc.value = '';
   if (restFecha) restFecha.value = '';
-  if (restResp) restResp.value = '';
+  if (restResp) restResp.selectedIndex = 0;
   ['Alto','Medio','Bajo'].forEach(function(n) {
     var el = document.getElementById('imp' + n);
     if (el) el.className = 'btn-impacto';
