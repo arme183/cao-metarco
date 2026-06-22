@@ -400,11 +400,6 @@ input[type=file] { display:none; }
     <button class="tab-btn" onclick="setTab('reportes',this)">
       <span class="tab-icon">📊</span>
       <span class="tab-label">REPORTES</span>
-    </button>
-    <button class="tab-btn" id="tabAdmin" style="display:none" onclick="setTab('admin',this)">
-      <span class="tab-icon">⚙️</span>
-      <span class="tab-label">ADMIN</span>
-    </button>
   </nav>
 </div>
 
@@ -748,7 +743,6 @@ function cargarDemoData() {
 function mostrarApp() {
   document.getElementById("loginScreen").style.display = "none";
   document.getElementById("appScreen").style.display = "flex";
- if (state.userRole === 'admin') document.getElementById("tabAdmin").style.display = "flex";
   if (state.userRole === 'admin') document.getElementById("btnDemoAdmin").style.display = "inline-block";
   if (state.userRole === 'residente') document.querySelector('[onclick="setTab(\'semana\',this)"]').style.display = "none";
 
@@ -832,7 +826,6 @@ function setTab(tab, btn) {
   else if (tab === "registrar") { c.innerHTML = renderRegistrar(); }
   else if (tab === "restricciones") { renderRestricciones(); fab.style.display = "flex"; }
 else if (tab === "reportes") { renderReportes(); }
-  else if (tab === "admin") { c.innerHTML = '<div class="content" style="padding:16px"><p style="color:var(--gris-muted);font-size:13px">Cargando panel admin...</p></div>'; renderAdmin(); }
   state.tabActual = tab;
 }
 
