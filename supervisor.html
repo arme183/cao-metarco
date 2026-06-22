@@ -1585,9 +1585,10 @@ async function cargarResponsablesModal() {
     var d = await r.json();
     var rows = d.value || [];
     rows.forEach(function(u) {
-      var opt = document.createElement('option');
-      opt.value = u.email || '';
-      opt.textContent = u.nombre || u.email || '';
+var opt = document.createElement('option');
+      var emailFromRk = (u.RowKey || '').replace(/_AT_/g, '@').replace(/_/g, '.');
+      opt.value = u.email || emailFromRk || '';
+      opt.textContent = u.nombre || opt.value || '';
       sel.appendChild(opt);
     });
   } catch(e) {
@@ -1604,9 +1605,10 @@ async function cargarResponsablesModal() {
     var d = await r.json();
     var rows = d.value || [];
     rows.forEach(function(u) {
-      var opt = document.createElement('option');
-      opt.value = u.email || '';
-      opt.textContent = u.nombre || u.email || '';
+var opt = document.createElement('option');
+      var emailFromRk = (u.RowKey || '').replace(/_AT_/g, '@').replace(/_/g, '.');
+      opt.value = u.email || emailFromRk || '';
+      opt.textContent = u.nombre || opt.value || '';
       sel.appendChild(opt);
     });
   } catch(e) {
