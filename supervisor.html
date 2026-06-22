@@ -1906,11 +1906,30 @@ async function resolverRestriccion(pk, rk) {
   var pkE = encodeURIComponent(pk);
   var rkE = encodeURIComponent(rk);
   var url = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/cambios(PartitionKey=\'' + pkE + '\',RowKey=\'' + rkE + '\')' + AZURE_SAS_SUP;
+  // 1. Leer el registro para obtener spId
+  var getRes = await fetch(url, { headers: azureHdrSup() });
+  var registro = getRes.ok ? await getRes.json() : {};
+  // 2. Marcar como resuelta en Azure
   await fetch(url, {
     method: 'MERGE',
     headers: Object.assign({}, azureHdrSup(), { 'If-Match': '*' }),
     body: JSON.stringify({ resuelta: true, fechaResolucion: new Date().toISOString() })
   });
+  // 3. Si tiene spId, actualizar Status en SharePoint
+  if (registro.spId) {
+    var token = await getSharePointToken();
+    if (token) {
+      var spUrl = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com,173d71cd-18eb-456a-93af-7b6b3d086f9b,c094e1d2-4329-4131-9d6b-0e248d1d26f1/lists/6d813fdf-b2d0-498a-8869-59b19b39fca9/items/' + registro.spId + '/fields';
+      fetch(spUrl, {
+        method: 'PATCH',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ Status: 'Liberada' })
+      }).then(function(r) {
+        if (r.ok) console.log('SP: restriccion marcada Liberada OK');
+        else r.text().then(function(t) { console.warn('SP update error:', t); });
+      }).catch(function(e) { console.warn('SP update:', e); });
+    }
+  }
   await renderRestricciones();
 }
 
@@ -2039,7 +2058,7 @@ async function guardarAvanceCierre() {
     await actualizarAvanceRealAct(obra, _avanceActual.actividad, cantidad);
 
     // 3. Si hay restriccion, escribir a SharePoint para disparar Power Automate
-    if (tieneRestriccion) {
+if (tieneRestriccion) {
       escribirRestriccionSP({
         descripcion: restDesc,
         obra: obra,
@@ -2049,6 +2068,16 @@ async function guardarAvanceCierre() {
         impacto: restImpacto,
         semana: sem,
         notas: obs
+      }).then(function(spId) {
+        if (!spId) return;
+        var pkE = encodeURIComponent(obra);
+        var rkE = encodeURIComponent(rowKey);
+        var urlMerge = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/cambios(PartitionKey=\'' + pkE + '\',RowKey=\'' + rkE + '\')' + AZURE_SAS_SUP;
+        fetch(urlMerge, {
+          method: 'MERGE',
+          headers: Object.assign({}, azureHdrSup(), { 'If-Match': '*' }),
+          body: JSON.stringify({ spId: spId })
+        }).catch(function(e) { console.warn('Azure spId update:', e); });
       }).catch(function(e) { console.warn('SP restriccion:', e); });
     }
 
@@ -2148,9 +2177,12 @@ async function escribirRestriccionSP(datos) {
       console.warn('SP error ' + postRes.status + ':', errText.substring(0, 200));
       return;
     }
+    var spData = await postRes.json();
     console.log('SP: restriccion registrada en CAO_Restricciones OK');
+    return spData.id || null;
   } catch(e) {
     console.warn('SP: error al escribir restriccion:', e.message);
+    return null;
   }
 }
 
