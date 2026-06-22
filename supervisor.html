@@ -2059,27 +2059,30 @@ async function guardarAvanceCierre() {
 
     // 3. Si hay restriccion, escribir a SharePoint para disparar Power Automate
 if (tieneRestriccion) {
-      escribirRestriccionSP({
-        descripcion: restDesc,
-        obra: obra,
-        supervisorEmail: email,
-        responsable: restResp,
-        fechaCompromiso: restFecha,
-        impacto: restImpacto,
-        semana: sem,
-        notas: obs
-}).then(function(spId) {
+      try {
+        var spId = await escribirRestriccionSP({
+          descripcion: restDesc,
+          obra: obra,
+          supervisorEmail: email,
+          responsable: restResp,
+          fechaCompromiso: restFecha,
+          impacto: restImpacto,
+          semana: sem,
+          notas: obs
+        });
         console.log('spId recibido:', spId);
-        if (!spId) return;
-        var pkE = encodeURIComponent(obra);
-        var rkE = encodeURIComponent(rowKey);
-        var urlMerge = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/cambios(PartitionKey=\'' + pkE + '\',RowKey=\'' + rkE + '\')' + AZURE_SAS_SUP;
-        fetch(urlMerge, {
-          method: 'MERGE',
-          headers: Object.assign({}, azureHdrSup(), { 'If-Match': '*' }),
-          body: JSON.stringify({ spId: spId })
-        }).catch(function(e) { console.warn('Azure spId update:', e); });
-      }).catch(function(e) { console.warn('SP restriccion:', e); });
+        if (spId) {
+          var pkE = encodeURIComponent(obra);
+          var rkE = encodeURIComponent(rowKey);
+          var urlMerge = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/cambios(PartitionKey=\'' + pkE + '\',RowKey=\'' + rkE + '\')' + AZURE_SAS_SUP;
+          await fetch(urlMerge, {
+            method: 'MERGE',
+            headers: Object.assign({}, azureHdrSup(), { 'If-Match': '*' }),
+            body: JSON.stringify({ spId: spId })
+          });
+          console.log('Azure: spId guardado OK');
+        }
+      } catch(e) { console.warn('SP restriccion:', e); }
     }
 
     // 4. Escribir Daily Report a SharePoint
