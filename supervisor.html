@@ -2068,7 +2068,8 @@ if (tieneRestriccion) {
         impacto: restImpacto,
         semana: sem,
         notas: obs
-      }).then(function(spId) {
+}).then(function(spId) {
+        console.log('spId recibido:', spId);
         if (!spId) return;
         var pkE = encodeURIComponent(obra);
         var rkE = encodeURIComponent(rowKey);
