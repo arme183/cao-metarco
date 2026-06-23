@@ -885,7 +885,7 @@ function renderUsuarios() {
     return matchFiltro && matchBusq;
   });
   var html = lista.map(function(u) {
-    var pk = u.PartitionKey || 'metarco';
+    var pk = u.PartitionKey || 'usuarios';
     var rk = u.RowKey || u.email || '';
     return '<tr>' +
       '<td><strong>' + (u.nombre||'—') + '</strong></td>' +
@@ -923,7 +923,7 @@ document.getElementById('btnNuevoUsuario').addEventListener('click', function() 
 function editarUsuario(encoded) {
   var u = JSON.parse(decodeURIComponent(encoded));
   document.getElementById('modalUsuarioTitulo').textContent = 'Editar usuario';
-  document.getElementById('uPartitionKey').value = u.PartitionKey || 'metarco';
+document.getElementById('uPartitionKey').value = u.PartitionKey || 'usuarios';
   document.getElementById('uRowKey').value       = u.RowKey || u.email || '';
   document.getElementById('uNombre').value = u.nombre || '';
   document.getElementById('uEmail').value  = u.email || rowKeyToEmail(u.RowKey) || '';
@@ -933,7 +933,7 @@ function editarUsuario(encoded) {
 }
 
 function limpiarModalUsuario() {
-  document.getElementById('uPartitionKey').value = 'metarco';
+  document.getElementById('uPartitionKey').value = 'usuarios';
   document.getElementById('uRowKey').value = '';
   document.getElementById('uNombre').value = '';
   document.getElementById('uEmail').value  = '';
@@ -962,7 +962,7 @@ document.getElementById('btnGuardarUsuario').addEventListener('click', async fun
   if (!nombre || !email) { showToast('Nombre y email son requeridos', 'err'); return; }
   var tags = document.querySelectorAll('#uObrasTag .obra-tag.selected');
   var obras = Array.from(tags).map(function(t){ return t.dataset.obra; }).join(' ');
-  var pk = document.getElementById('uPartitionKey').value || 'metarco';
+ var pk = document.getElementById('uPartitionKey').value || 'usuarios';
   var rkExistente = document.getElementById('uRowKey').value;
   // Si es usuario nuevo o el RowKey es un email plano, convertir al formato codificado
   var rk = rkExistente && rkExistente.indexOf('@') === -1 ? rkExistente : email.replace(/@/g, '_AT_').replace(/\./g, '_');
