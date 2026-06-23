@@ -918,8 +918,8 @@ function renderExcel(data) {
         '<td style="text-align:center;font-weight:700;color:'+(r>=100?'var(--verde)':late?'var(--rojo)':'var(--amarillo)')+'">' +r+'%</td>' +
         '<td style="text-align:center;color:var(--gris-muted);">'+pr+'%</td>' +
         '<td>'+statusBadge(st)+'</td></tr>';
+'<td>'+statusBadge(st)+'</td></tr>';
     }).join('');
-}).join('');
 
   buildGanttConAzure(programa.length>0?programa:null);
   buildCurvaS(curvaS, semActual);
