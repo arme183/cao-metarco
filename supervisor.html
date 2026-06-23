@@ -763,8 +763,11 @@ function mostrarApp() {
   const rolLabels = { admin:"👑 ADMIN", supervisor:"🔧 SUPERVISOR", residente:"👁 RESIDENTE" };
   const rolColor = rolColors[state.userRole] || "#8898b8";
   const rolLabel = rolLabels[state.userRole] || state.userRole.toUpperCase();
-  const rolBadgeExisting = document.getElementById("rolBadge");
-  if (!rolBadgeExisting) {
+var rolBadgeExisting = document.getElementById("rolBadge");
+  if (rolBadgeExisting) {
+    rolBadgeExisting.style.background = rolColor;
+    rolBadgeExisting.textContent = rolLabel;
+  } else {
     const semDiv = document.querySelector(".header-semana");
     const badge = document.createElement("span");
     badge.id = "rolBadge";
