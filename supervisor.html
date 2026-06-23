@@ -2050,10 +2050,11 @@ async function guardarAvanceCierre() {
     // 3. Si hay restriccion, escribir a SharePoint para disparar Power Automate
 if (tieneRestriccion) {
       try {
-        var spId = await escribirRestriccionSP({
+ var spId = await escribirRestriccionSP({
           descripcion: restDesc,
           obra: obra,
           supervisorEmail: email,
+          supervisorNombre: nombre,
           responsable: restResp,
           fechaCompromiso: restFecha,
           impacto: restImpacto,
@@ -2145,10 +2146,11 @@ async function escribirRestriccionSP(datos) {
   var token = await getSharePointToken();
   if (!token) { console.warn('SP: sin token, restriccion no enviada a SharePoint'); return; }
   var url = 'https://graph.microsoft.com/v1.0/sites/metarco2025.sharepoint.com,173d71cd-18eb-456a-93af-7b6b3d086f9b,c094e1d2-4329-4131-9d6b-0e248d1d26f1/lists/6d813fdf-b2d0-498a-8869-59b19b39fca9/items';
-  var fields = {
+var fields = {
     'Title': datos.descripcion || 'Sin descripcion',
     'Obra': datos.obra || '',
     'Supervisor_Email': datos.supervisorEmail || '',
+    'Supervisor_Nombre': datos.supervisorNombre || '',
     'Responsable': datos.responsable || '',
     'Impacto': datos.impacto || 'medio',
     'Status': 'Activa',
