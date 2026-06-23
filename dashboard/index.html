@@ -919,6 +919,12 @@ function renderExcel(data) {
         '<td style="text-align:center;color:var(--gris-muted);">'+pr+'%</td>' +
         '<td>'+statusBadge(st)+'</td></tr>';
     }).join('');
+}).join('');
+
+  buildGanttConAzure(programa.length>0?programa:null);
+  buildCurvaS(curvaS, semActual);
+}
+
 async function buildGanttConAzure(programaExcel) {
   try {
     var actividades = await azureGet('actividades', "PartitionKey eq '" + obraActiva + "'");
@@ -942,8 +948,6 @@ async function buildGanttConAzure(programaExcel) {
     buildGantt(programaExcel);
   }
 }
-  buildGanttConAzure(programa.length>0?programa:null);
-  buildCurvaS(curvaS, semActual);
 
   /* Financiero */
   document.getElementById('fin-kpis').innerHTML =
