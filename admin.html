@@ -955,7 +955,7 @@ document.getElementById('btnGuardarUsuario').addEventListener('click', async fun
   var rkExistente = document.getElementById('uRowKey').value;
   // Si es usuario nuevo o el RowKey es un email plano, convertir al formato codificado
   var rk = rkExistente && rkExistente.indexOf('@') === -1 ? rkExistente : email.replace(/@/g, '_AT_').replace(/\./g, '_');
-  var entity = { PartitionKey:pk, RowKey:rk, nombre:nombre, email:email, rol:rol, obras:obras };
+var entity = { PartitionKey:pk, RowKey:rk, nombre:nombre, email:email, rol:rol, obras:obras, activo: true };  
   try {
  var esNuevo = !rkExistente;
     await azureUpsert('usuarios', entity);
