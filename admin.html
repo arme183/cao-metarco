@@ -487,6 +487,7 @@ input[type=file] { display:none; }
       <input type="hidden" id="uPartitionKey">
       <input type="hidden" id="uRowKey">
       <div class="form-row">
+        
         <div class="form-group">
           <label class="form-label">Nombre</label>
           <input class="form-input" id="uNombre" placeholder="Nombre completo">
@@ -630,6 +631,16 @@ input[type=file] { display:none; }
           <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
             <input type="checkbox" id="sfInstalacion" value="Instalación"> Instalación
           </label>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha inicio</label>
+          <input class="form-input" id="ccFechaInicio" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha fin</label>
+          <input class="form-input" id="ccFechaFin" type="date">
         </div>
       </div>
       <div class="form-group">
@@ -1286,6 +1297,8 @@ function editarConcepto(encoded) {
   document.getElementById('ccAvanceReal').value = c.avanceReal || 0;
   document.getElementById('ccUnidadLabel').textContent = c.unidad || '';
   document.getElementById('ccPU').value       = c.precioUnitario || '';
+  document.getElementById('ccFechaInicio').value = c.fechaInicio || '';
+  document.getElementById('ccFechaFin').value    = c.fechaFin    || '';
   var sfs = (c.subfases || '').split(',');
   document.getElementById('sfSuministro').checked = sfs.includes('Suministro');
   document.getElementById('sfFabricacion').checked = sfs.includes('Fabricación');
@@ -1307,11 +1320,15 @@ document.getElementById('btnGuardarConcepto').addEventListener('click', async fu
   if (!subfases) { showToast('Selecciona al menos una subfase', 'err'); return; }
   var rk       = document.getElementById('ccRowKey').value || clave.replace(/\./g,'-');
   if (!obra || !clave || !desc) { showToast('Obra, clave y descripción son requeridos', 'err'); return; }
-  var entity = {
+var entity = {
     PartitionKey: obra, RowKey: rk, clave: clave, descripcion: desc,
     unidad: unidad, cantidadContrato: cantidad||0, precioUnitario: pu||0,
     importeContrato: Math.round((cantidad||0)*(pu||0)*100)/100,
-    subfases: subfases, tipoTrabajo:'estructura', activo:true, avanceReal: parseFloat(document.getElementById('ccAvanceReal') ? document.getElementById('ccAvanceReal').value : 0) || 0, avanceProg:0
+    subfases: subfases, tipoTrabajo:'estructura', activo:true,
+    avanceReal: parseFloat(document.getElementById('ccAvanceReal').value) || 0,
+    avanceProg: 0,
+    fechaInicio: document.getElementById('ccFechaInicio').value || '',
+    fechaFin:    document.getElementById('ccFechaFin').value    || ''
   };
   try {
     await azureUpsert('actividades', entity);
