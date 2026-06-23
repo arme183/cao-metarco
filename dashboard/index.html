@@ -919,8 +919,30 @@ function renderExcel(data) {
         '<td style="text-align:center;color:var(--gris-muted);">'+pr+'%</td>' +
         '<td>'+statusBadge(st)+'</td></tr>';
     }).join('');
-
-  buildGantt(programa.length>0?programa:null);
+async function buildGanttConAzure(programaExcel) {
+  try {
+    var actividades = await azureGet('actividades', "PartitionKey eq '" + obraActiva + "'");
+    var conFechas = actividades.filter(function(a){ return a.fechaInicio && a.fechaFin; });
+    if (conFechas.length > 0) {
+      var programa = conFechas.map(function(a) {
+        return {
+          Clave: a.clave || '',
+          Fase: a.descripcion || a.clave || '',
+          Inicio: a.fechaInicio,
+          Fin: a.fechaFin,
+          'Avance_Prog': parseFloat(a.avanceProg) || 0,
+          'Avance_Real': parseFloat(a.avanceReal) || 0
+        };
+      });
+      buildGantt(programa);
+    } else {
+      buildGantt(programaExcel);
+    }
+  } catch(e) {
+    buildGantt(programaExcel);
+  }
+}
+  buildGanttConAzure(programa.length>0?programa:null);
   buildCurvaS(curvaS, semActual);
 
   /* Financiero */
