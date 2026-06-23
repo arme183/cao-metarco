@@ -446,7 +446,7 @@ input[type=file] { display:none; }
       <div class="card">
         <div class="tbl-wrap">
           <table>
-            <thead><tr><th>Clave</th><th>Descripción</th><th>Unidad</th><th>Cantidad</th><th>P.U.</th><th>Subfases</th><th>Avance</th><th>Estado</th><th></th></tr></thead>
+            <thead><tr><th>Clave</th><th>Descripción</th><th>Unidad</th><th>Cantidad</th><th>P.U.</th><th>Subfases</th><th>Inicio</th><th>Fin</th><th>Avance</th><th>Estado</th><th></th></tr></thead>
             <tbody id="catalogoBody"><tr><td colspan="9" class="loading">Selecciona una obra para ver el catálogo</td></tr></tbody>
           </table>
         </div>
@@ -1175,6 +1175,8 @@ function renderCatalogo() {
       '<td style="text-align:right;">' + (c.cantidadContrato||0) + '</td>' +
       '<td style="text-align:right;">$' + ((c.precioUnitario||0)).toLocaleString('es-MX') + '</td>' +
       '<td style="font-size:11px;color:var(--gris-muted);">' + (c.subfases||'—').replace(/,/g,' · ') + '</td>' +
+      '<td style="font-size:11px;text-align:center;">' + (c.fechaInicio||'—') + '</td>' +
+      '<td style="font-size:11px;text-align:center;">' + (c.fechaFin||'—') + '</td>' +
       '<td style="min-width:90px;">' +
         '<div class="avance-wrap"><div class="avance-num">' + avance + '%</div>' +
         '<div class="prog-bar" style="flex:1;"><div class="prog-fill" style="width:' + Math.min(100,avance) + '%;background:' + color + ';"></div></div></div>' +
@@ -1183,7 +1185,7 @@ function renderCatalogo() {
       '<td><button class="btn btn-outline btn-sm" onclick="editarConcepto(\'' + encodeURIComponent(JSON.stringify(c)) + '\')">Editar</button></td>' +
       '</tr>';
   }).join('');
-  document.getElementById('catalogoBody').innerHTML = html || '<tr><td colspan="9" class="loading">Sin conceptos</td></tr>';
+  document.getElementById('catalogoBody').innerHTML = html || '<tr><td colspan="11" class="loading">Sin conceptos</td></tr>';
   document.getElementById('kpiCatalogo').textContent = allCatalogo.length;
 }
 
