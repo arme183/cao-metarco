@@ -1212,7 +1212,7 @@ function procesarExcelOpus(file) {
         var cantidad = parseFloat(row[3]);
         var pu       = parseFloat(row[4]);
         if (!clave || !unidad || isNaN(cantidad) || isNaN(pu)) return;
-        if (!/\d/.test(clave) || !clave.includes('.')) return;
+        if (!clave || clave.length < 2) return;
         var d = desc.toLowerCase();
         var sf = (d.includes('lamina') || d.includes('lámina') || d.includes('roofing')) ?
           'Suministro,Instalación' : 'Suministro,Fabricación,Montaje';
