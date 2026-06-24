@@ -431,7 +431,8 @@ input[type=file] { display:none; }
         </div>
         <span class="header-corte" id="hFecha"></span>
         <span class="header-user" id="hUser"></span>
-        <button class="btn-header" id="btnCambiarObra">⇄ Cambiar obra</button>
+        <button class="btn-header" id="btnCambiarObra" style="display:none">⇄ Obra</button>
+        <select id="headerObraSelect" style="display:none;padding:5px 10px;border:1px solid rgba(255,255,255,0.25);border-radius:8px;background:rgba(255,255,255,0.1);color:#fff;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;outline:none;"></select>
         <button class="btn-header" id="btnReload">↺ Cambiar Excel</button>
         <button class="btn-header" id="btnSalir">Salir</button>
       </div>
@@ -570,6 +571,7 @@ var userEmail    = '';
 var userName     = '';
 var userRole     = '';
 var obraActiva   = '';
+var obrasDisponibles = [];
 var msalToken    = '';
 var excelData    = null;
 var charts       = {};
@@ -641,11 +643,26 @@ document.getElementById('btnLogin').addEventListener('click', async function() {
       showLoginError('Acceso denegado. Solo personal autorizado.');
       return;
     }
-    await mostrarSelectorObra();
+    // Cargar obras activas y entrar directo a la primera
+    await entrarDirecto();
   } catch(e) {
     showLoginError('Error al iniciar sesión: ' + e.message);
   }
 });
+
+async function entrarDirecto() {
+  try {
+    var rows = await azureGet('obras', "activo eq true");
+    var obras = rows.map(function(o){ return o.RowKey || o.nombre || ''; }).filter(Boolean);
+    obraActiva = obras[0] || '';
+    obrasDisponibles = obras;
+  } catch(e) {
+    obraActiva = 'WEG';
+    obrasDisponibles = ['WEG', 'ZAMORA', 'QR03 ODATA', 'NACOBRE'];
+  }
+  excelData = null;
+  mostrarDashboard();
+}
 
 function showLoginError(msg) {
   var el = document.getElementById('loginError');
@@ -731,12 +748,30 @@ function loadFile(file) {
 // DASHBOARD PRINCIPAL
 // ══════════════════════════════════════════════
 function mostrarDashboard() {
+  document.getElementById('loginScreen').style.display  = 'none';
+  document.getElementById('obraScreen').style.display   = 'none';
   document.getElementById('uploadScreen').style.display = 'none';
   document.getElementById('dashboard').style.display    = 'flex';
   document.getElementById('dashboard').style.flexDirection = 'column';
   document.getElementById('hNombre').textContent = obraActiva;
   document.getElementById('hUser').textContent   = userName + ' · ' + userRole;
   document.getElementById('hFecha').textContent  = 'Hoy: ' + HOY.toISOString().slice(0,10);
+  // Poblar selector de obra en header si hay más de una
+  var sel = document.getElementById('headerObraSelect');
+  if (sel && obrasDisponibles.length > 1) {
+    sel.innerHTML = obrasDisponibles.map(function(o) {
+      return '<option value="' + o + '"' + (o === obraActiva ? ' selected' : '') + '>' + o + '</option>';
+    }).join('');
+    sel.style.display = 'inline-block';
+    sel.onchange = function() {
+      obraActiva = this.value;
+      document.getElementById('hNombre').textContent = obraActiva;
+      Object.values(charts).forEach(function(c){ if(c) c.destroy(); });
+      charts = {};
+      if (excelData) renderExcel(excelData);
+      cargarTabHoy();
+    };
+  }
   if (excelData) renderExcel(excelData);
   cargarTabHoy();
 }
@@ -756,12 +791,10 @@ document.querySelectorAll('.nav button').forEach(function(btn){
 });
 
 document.getElementById('btnCambiarObra').addEventListener('click', function() {
-  obraActiva = '';
-  excelData  = null;
-  Object.values(charts).forEach(function(c){ if(c) c.destroy(); });
-  charts = {};
-  document.getElementById('dashboard').style.display = 'none';
-  mostrarSelectorObra();
+  var sel = document.getElementById('headerObraSelect');
+  if (sel && obrasDisponibles.length > 1) {
+    sel.focus();
+  }
 });
 
 document.getElementById('btnReload').addEventListener('click', function() {
