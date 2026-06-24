@@ -162,7 +162,11 @@ th {
   text-transform:uppercase; letter-spacing:.8px;
   border-bottom:1px solid var(--borde);
 }
-td { padding:10px 12px; border-bottom:1px solid #f0f4fa; vertical-align:middle; }
+td { padding:10px 12px; border-bottom:1px solid #f0f4fa; vertical-align:top; }
+#catalogoBody td:nth-child(2) { min-width:340px; line-height:1.45; }
+#catalogoBody td:nth-child(3),
+#catalogoBody td:nth-child(4),
+#catalogoBody td:nth-child(5) { white-space:nowrap; }
 tr:last-child td { border-bottom:none; }
 tr:hover td { background:#f7faff; }
 
@@ -440,6 +444,7 @@ input[type=file] { display:none; }
           <option value="">Todas las obras</option>
         </select>
         <div style="flex:1"></div>
+        <button class="btn btn-danger" id="btnVaciarCatalogo">🗑 Vaciar catálogo</button>
         <button class="btn btn-outline" id="btnCargarCatalogo">📂 Cargar catálogo Opus</button>
         <button class="btn btn-primary" id="btnNuevoConcepto">+ Concepto manual</button>
       </div>
@@ -1170,7 +1175,7 @@ function renderCatalogo() {
     var color  = avance >= 100 ? 'var(--verde)' : avance > 0 ? 'var(--azul-claro)' : '#e2e8f0';
     return '<tr>' +
       '<td style="font-size:11px;font-weight:700;">' + (c.clave||'—') + '</td>' +
-      '<td style="font-size:11px;max-width:280px;">' + (c.descripcion||'—') + '</td>' +
+      '<td style="font-size:12px;">' + (c.descripcion||'—') + '</td>' +
       '<td style="text-align:center;">' + (c.unidad||'—') + '</td>' +
       '<td style="text-align:right;">' + (c.cantidadContrato||0) + '</td>' +
       '<td style="text-align:right;">$' + ((c.precioUnitario||0)).toLocaleString('es-MX') + '</td>' +
@@ -1193,7 +1198,33 @@ document.getElementById('buscarConcepto').addEventListener('input', function() {
   busquedaConcepto = this.value.toLowerCase();
   renderCatalogo();
 });
+// Vaciar catálogo de la obra seleccionada
+document.getElementById('btnVaciarCatalogo').addEventListener('click', async function() {
+  var obra = obraFiltCatalogo;
+  if (!obra) { showToast('Selecciona primero una obra en el filtro de arriba', 'info'); return; }
+  if (!confirm('¿Vaciar TODO el catálogo de la obra "' + obra + '"?\n\nEsto borra todos los conceptos de esta obra. No se puede deshacer.')) return;
+  if (!confirm('Confirma una vez más: se eliminarán los conceptos de "' + obra + '" de forma permanente.')) return;
 
+  this.disabled = true;
+  this.textContent = 'Vaciando...';
+  try {
+    var conceptos = await azureGet('actividades', "PartitionKey eq '" + obra + "'");
+    var ok = 0, err = 0;
+    for (var i = 0; i < conceptos.length; i++) {
+      try {
+        await azureDelete('actividades', conceptos[i].PartitionKey, conceptos[i].RowKey);
+        ok++;
+      } catch(e) { err++; }
+      await new Promise(function(r){ setTimeout(r, 60); });
+    }
+    showToast(ok + ' conceptos eliminados' + (err ? ', ' + err + ' errores' : ''), err ? 'info' : 'ok');
+    cargarCatalogo(obra);
+  } catch(e) {
+    showToast('Error al vaciar: ' + e.message, 'err');
+  }
+  this.disabled = false;
+  this.textContent = '🗑 Vaciar catálogo';
+});
 // Cargar catálogo desde Excel Opus
 document.getElementById('btnCargarCatalogo').addEventListener('click', function() {
   document.getElementById('previewCatalogo').style.display = 'none';
@@ -1224,8 +1255,7 @@ function procesarExcelOpus(file) {
         var unidad  = row[2] ? String(row[2]).trim().toLowerCase() : '';
         var cantidad = parseFloat(row[3]);
         var pu       = parseFloat(row[4]);
-        if (!clave || !unidad || isNaN(cantidad) || isNaN(pu)) return;
-        if (!clave || clave.length < 2) return;
+if (!clave || !unidad || isNaN(cantidad) || isNaN(pu)) return;
         var d = desc.toLowerCase();
         var sf = (d.includes('lamina') || d.includes('lámina') || d.includes('roofing')) ?
           'Suministro,Instalación' : 'Suministro,Fabricación,Montaje';
