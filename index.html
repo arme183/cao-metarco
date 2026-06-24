@@ -6,7 +6,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Metarco · CAO — Acceso</title>
+<title>Metarco · CAO — Accesf</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2/lib/msal-browser.min.js"></script>
 <style>
@@ -329,8 +329,8 @@ sessionStorage.setItem("userRole", usuario.rol);
       const obraActiva = sessionStorage.getItem("obraActiva");
       const obras = (usuario.obras || "todas").toLowerCase();
       if (obras !== "todas" && obraActiva) {
-        const lista = obras.split(",").map(o => o.trim().toLowerCase());
-        if (!lista.includes(obraActiva.toLowerCase())) {
+const lista = obras.split(/[\s,]+/).map(o => o.trim().toLowerCase()).filter(Boolean);
+       if (!lista.includes(obraActiva.toLowerCase())) {
           mostrarAlerta("No tienes acceso a esa obra. Tus obras asignadas: " + usuario.obras);
           sessionStorage.removeItem("obraActiva");
           return;
