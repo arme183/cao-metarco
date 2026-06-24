@@ -363,7 +363,9 @@ input[type=file] { display:none; }
       <button class="btn-salir" id="btnDemoAdmin" style="display:none" onclick="activarDemo()">🎭 Demo</button>
     </div>
     <div class="header-info">
-      <div class="header-obra">Obra: <span id="obraLabel">—</span></div>
+      <div class="header-obra">Obra: <span id="obraLabel">—</span>
+        <button id="btnCambiarObra" onclick="abrirSelectorObra()" style="display:none;margin-left:6px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-family:'Inter',sans-serif;cursor:pointer;font-weight:600;">↕ Cambiar</button>
+      </div>
       <div class="header-semana">
         <span class="badge-sem" id="semLabel">SEM —</span>
         <span class="badge-ppc" id="ppcLabel" style="display:none">PPC: —</span>
@@ -594,8 +596,20 @@ input[type=file] { display:none; }
   </div>
 </div>
 
+<!-- MODAL: Selector de obra -->
+<div class="modal-overlay" id="modalSelectorObra">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">🏗 Cambiar obra</div>
+      <button class="btn-close" onclick="cerrarModal('modalSelectorObra')">✕</button>
+    </div>
+    <div class="modal-body" id="selectorObraLista" style="display:flex;flex-direction:column;gap:0;">
+    </div>
+  </div>
+</div>
+
 <script>
-// ======= CONFIG =======
 const SHAREPOINT_SITE_ID = "173d71cd-18eb-456a-93af-7b6b3d086f9b";
 
 // ======= AZURE — FLUJO LEAN PPC =======
@@ -746,24 +760,28 @@ function mostrarApp() {
   if (state.userRole === 'admin') document.getElementById("btnDemoAdmin").style.display = "inline-block";
   if (state.userRole === 'residente') document.querySelector('[onclick="setTab(\'semana\',this)"]').style.display = "none";
 
-  const obraMap = { reforma:"Torre Reforma 400", tizayuca:"Planta Tizayuca", norte:"Centro Logístico Norte" };
-  const obraKey = sessionStorage.getItem("obraActiva") || "reforma";
-  state.obra = obraMap[obraKey] || obraKey;
-  state.catalogoActividades = []; // limpiar al iniciar — evita datos de obra anterior
+  // Obra: usar sessionStorage (ya resuelta desde Azure)
+  var obraInicial = sessionStorage.getItem('obraActiva') || '';
+  state.obra = obraInicial;
+  state.catalogoActividades = [];
   state.planSemana = [];
-
-  // Leer rol desde sessionStorage
   state.userRole = sessionStorage.getItem("userRole") || "supervisor";
 
-  document.getElementById("obraLabel").textContent = state.obra;
+  document.getElementById("obraLabel").textContent = obraInicial || '—';
   document.getElementById("semLabel").textContent = "SEM " + state.semana + " · " + semanaLabel();
+
+  // Mostrar botón "Cambiar" solo si tiene más de una obra asignada
+  var obrasArr = JSON.parse(sessionStorage.getItem('obrasAsignadas') || '[]');
+  if (obrasArr.length > 1) {
+    document.getElementById('btnCambiarObra').style.display = 'inline-block';
+  }
 
   // Badge de rol en header
   const rolColors = { admin:"#ef4444", supervisor:"#10b981", residente:"#8898b8" };
   const rolLabels = { admin:"👑 ADMIN", supervisor:"🔧 SUPERVISOR", residente:"👁 RESIDENTE" };
   const rolColor = rolColors[state.userRole] || "#8898b8";
   const rolLabel = rolLabels[state.userRole] || state.userRole.toUpperCase();
-var rolBadgeExisting = document.getElementById("rolBadge");
+  var rolBadgeExisting = document.getElementById("rolBadge");
   if (rolBadgeExisting) {
     rolBadgeExisting.style.background = rolColor;
     rolBadgeExisting.textContent = rolLabel;
@@ -777,8 +795,6 @@ var rolBadgeExisting = document.getElementById("rolBadge");
   }
 
   calcPPC();
-  // Precargar plan y restricciones de Azure al arrancar
-  var obraInicial = sessionStorage.getItem('obraActiva') || state.obra;
   Promise.all([
     cargarPlanSemana(obraInicial).then(function(plan) {
       return cargarAvancesSemana(obraInicial, plan).then(function(planConAvance) {
@@ -1634,23 +1650,33 @@ function previewFoto(input, containerId) {
 
 // ======= INIT =======
 window.addEventListener("load", async () => {
-  // Verificar si viene de redirect MS
   if (msalInstance) {
     try {
       const resp = await msalInstance.handleRedirectPromise();
       if (resp && resp.account) {
         state.usuario = resp.account.name || resp.account.username;
-        sessionStorage.setItem("usuarioNombre", state.usuario);
         const email = (resp.account.username || "").toLowerCase();
-state.userRole = sessionStorage.getItem("userRole") || "supervisor";
-        mostrarApp(); return;
+        sessionStorage.setItem("usuarioNombre", state.usuario);
+        sessionStorage.setItem("usuarioEmail", email);
+        // Resolver obras desde Azure y entrar directo
+        await resolverObrasYEntrar(email);
+        return;
       }
     } catch(e) { console.error(e); }
-    // Verificar cuenta activa
     const accounts = msalInstance.getAllAccounts();
-   if (accounts.length > 0) { state.usuario = accounts[0].name; state.userRole = sessionStorage.getItem("userRole") || "supervisor"; mostrarApp(); return; } 
+    if (accounts.length > 0) {
+      state.usuario = accounts[0].name;
+      const email = (accounts[0].username || "").toLowerCase();
+      sessionStorage.setItem("usuarioEmail", email);
+      // Si ya tenemos obras en session, entrar directo
+      if (sessionStorage.getItem("obraActiva")) {
+        state.userRole = sessionStorage.getItem("userRole") || "supervisor";
+        mostrarApp(); return;
+      }
+      await resolverObrasYEntrar(email);
+      return;
+    }
   }
-  // Verificar sesión existente
   if (sessionStorage.getItem("usuarioNombre")) {
     state.usuario = sessionStorage.getItem("usuarioNombre");
     state.modoDemo = sessionStorage.getItem("modoDemo") === "true";
@@ -1658,10 +1684,43 @@ state.userRole = sessionStorage.getItem("userRole") || "supervisor";
     if (state.modoDemo) cargarDemoData();
     mostrarApp(); return;
   }
-  // Mostrar login
   document.getElementById("loginScreen").style.display = "flex";
   document.getElementById("appScreen").style.display = "none";
 });
+
+// Busca el usuario en Azure, guarda sus obras y entra directo a la primera
+async function resolverObrasYEntrar(email) {
+  try {
+    var rk = email.replace(/@/g, '_AT_').replace(/\./g, '_');
+    var url = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/usuarios(PartitionKey=\'usuarios\',RowKey=\'' + rk + '\')' + AZURE_SAS_SUP;
+    var res = await fetch(url, { headers: azureHdrSup() });
+    if (res.ok) {
+      var u = await res.json();
+      var rol = (u.rol || 'supervisor').toLowerCase();
+      var obrasStr = u.obras || '';
+      var obrasArr = obrasStr.split(' ').filter(Boolean);
+      sessionStorage.setItem("userRole", rol);
+      sessionStorage.setItem("obrasAsignadas", JSON.stringify(obrasArr));
+      // Primera obra por default
+      var primeraObra = obrasArr[0] || '';
+      sessionStorage.setItem("obraActiva", primeraObra);
+      state.userRole = rol;
+    } else {
+      // Usuario no encontrado: usar role supervisor sin obras
+      sessionStorage.setItem("userRole", "supervisor");
+      sessionStorage.setItem("obrasAsignadas", "[]");
+      sessionStorage.setItem("obraActiva", "");
+      state.userRole = "supervisor";
+    }
+  } catch(e) {
+    console.warn("No se pudo resolver usuario Azure:", e.message);
+    sessionStorage.setItem("userRole", "supervisor");
+    sessionStorage.setItem("obrasAsignadas", "[]");
+    sessionStorage.setItem("obraActiva", "");
+    state.userRole = "supervisor";
+  }
+  mostrarApp();
+}
 
 // ======= PANEL ADMIN =======
 const AZURE_ACCOUNT_ADMIN = 'metarcostorage';
@@ -2251,9 +2310,49 @@ async function escribirDailyReportSP(datos) {
   }
 }
 
-// ======= EVENT DELEGATION — RESTRICCIONES =======
-document.addEventListener('click', function(e) {
-  // Resolver restriccion
+// ======= SELECTOR DE OBRA =======
+function abrirSelectorObra() {
+  var obrasArr = JSON.parse(sessionStorage.getItem('obrasAsignadas') || '[]');
+  if (obrasArr.length <= 1) return; // Sin opciones, no abrir
+  var obraActual = sessionStorage.getItem('obraActiva') || '';
+  var html = obrasArr.map(function(o) {
+    var activa = o === obraActual;
+    return '<button onclick="cambiarObra(\'' + o + '\')" style="' +
+      'width:100%;padding:13px 16px;border:none;border-radius:10px;text-align:left;cursor:pointer;' +
+      'font-size:14px;font-weight:' + (activa ? '700' : '500') + ';font-family:Inter,sans-serif;' +
+      'background:' + (activa ? 'var(--azul-oscuro)' : '#f4f7fc') + ';' +
+      'color:' + (activa ? '#fff' : 'var(--azul-oscuro)') + ';' +
+      'margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">' +
+      o + (activa ? ' <span style="font-size:11px;opacity:.7">✓ actual</span>' : '') +
+      '</button>';
+  }).join('');
+  document.getElementById('selectorObraLista').innerHTML = html;
+  abrirModal('modalSelectorObra');
+}
+
+function cambiarObra(obraNueva) {
+  sessionStorage.setItem('obraActiva', obraNueva);
+  state.obra = obraNueva;
+  state.catalogoActividades = [];
+  state.planSemana = [];
+  document.getElementById('obraLabel').textContent = obraNueva;
+  cerrarModal('modalSelectorObra');
+  // Recargar plan y restricciones para la nueva obra
+  Promise.all([
+    cargarPlanSemana(obraNueva).then(function(plan) {
+      return cargarAvancesSemana(obraNueva, plan).then(function(planConAvance) {
+        state.planSemana = planConAvance;
+      });
+    }).catch(function() {}),
+    cargarRestriccionesAzure(obraNueva).then(function(rests) {
+      state.restriccionesAzure = rests;
+    }).catch(function() {})
+  ]).then(function() {
+    setTab(state.tabActual || 'hoy', document.querySelector('.tab-btn.active'));
+  });
+}
+
+
   var btnRes = e.target.closest('.btn-resolver');
   if (btnRes) {
     var pk = btnRes.dataset.pk;
