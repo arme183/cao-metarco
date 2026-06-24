@@ -429,7 +429,7 @@ input[type=file] { display:none; }
       <div class="card">
         <div class="tbl-wrap">
           <table>
-            <thead><tr><th>Nombre</th><th>Estado</th><th>Usuarios asignados</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Código</th><th>Cliente</th><th>Tipo</th><th>Fechas</th><th>Residente</th><th>Monto</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody id="obrasBody"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
           </table>
         </div>
@@ -524,16 +524,67 @@ input[type=file] { display:none; }
 
 <!-- ══ MODAL OBRA ══ -->
 <div class="modal-overlay" id="modalObra">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:580px;">
     <div class="modal-header">
       <div class="modal-title" id="modalObraTitulo">Nueva obra</div>
       <button class="btn-close" data-close="modalObra">×</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="oRowKey">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Código de obra <span style="color:var(--rojo)">*</span></label>
+          <input class="form-input" id="oNombre" placeholder="ej. WEG, NACOBRE, ZAMORA" style="text-transform:uppercase;">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de obra</label>
+          <select class="form-select" id="oTipo">
+            <option value="Estructura">Estructura metálica</option>
+            <option value="Cubierta">Cubierta metálica</option>
+            <option value="Herrería">Herrería</option>
+            <option value="Mixta">Mixta</option>
+          </select>
+        </div>
+      </div>
       <div class="form-group">
-        <label class="form-label">Nombre de la obra</label>
-        <input class="form-input" id="oNombre" placeholder="ej. WEG, NACOBRE, ZAMORA">
+        <label class="form-label">Nombre completo del proyecto</label>
+        <input class="form-input" id="oNombreCompleto" placeholder="ej. Nave industrial Planta WEG Querétaro">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Cliente <span style="color:var(--rojo)">*</span></label>
+          <input class="form-input" id="oCliente" placeholder="Nombre del cliente">
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. de contrato</label>
+          <input class="form-input" id="oContrato" placeholder="ej. C-2025-041">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ubicación / Ciudad</label>
+        <input class="form-input" id="oUbicacion" placeholder="ej. Querétaro, Qro.">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Monto de contrato (MXN)</label>
+          <input class="form-input" id="oMonto" type="number" placeholder="0.00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Residente asignado</label>
+          <select class="form-select" id="oResidente">
+            <option value="">— Sin asignar —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Fecha inicio</label>
+          <input class="form-input" id="oFechaInicio" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha fin estimada</label>
+          <input class="form-input" id="oFechaFin" type="date">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Estado</label>
@@ -545,7 +596,7 @@ input[type=file] { display:none; }
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" data-close="modalObra">Cancelar</button>
-      <button class="btn btn-primary" id="btnGuardarObra">Guardar</button>
+      <button class="btn btn-primary" id="btnGuardarObra">Guardar obra</button>
     </div>
   </div>
 </div>
@@ -1064,17 +1115,24 @@ function renderObras() {
   var html = lista.map(function(o) {
     var nombre  = o.RowKey || o.nombre || '';
     var activo  = (o.activo === true || o.activo === 'true');
-    var usuarios = allUsuarios.filter(function(u){ return (u.obras||'').includes(nombre); }).length;
+    var monto   = o.monto ? '$' + parseFloat(o.monto).toLocaleString('es-MX', {minimumFractionDigits:0, maximumFractionDigits:0}) : '—';
+    var fechas  = (o.fechaInicio && o.fechaFin)
+      ? o.fechaInicio.slice(0,10) + ' → ' + o.fechaFin.slice(0,10)
+      : (o.fechaInicio ? 'Desde ' + o.fechaInicio.slice(0,10) : '—');
     return '<tr>' +
-      '<td><strong>' + nombre + '</strong></td>' +
+      '<td><strong>' + nombre + '</strong>' + (o.nombreCompleto ? '<br><span style="font-size:10px;color:var(--gris-muted);">' + o.nombreCompleto + '</span>' : '') + '</td>' +
+      '<td style="font-size:12px;">' + (o.cliente || '—') + '</td>' +
+      '<td><span class="badge badge-info" style="font-size:10px;">' + (o.tipo || '—') + '</span></td>' +
+      '<td style="font-size:11px;color:var(--gris-muted);white-space:nowrap;">' + fechas + '</td>' +
+      '<td style="font-size:12px;">' + (o.residente || '—') + '</td>' +
+      '<td style="font-size:12px;text-align:right;">' + monto + '</td>' +
       '<td><span class="badge ' + (activo?'badge-ok':'badge-warn') + '">' + (activo?'Activa':'Inactiva') + '</span></td>' +
-      '<td>' + usuarios + ' usuarios</td>' +
       '<td style="white-space:nowrap;">' +
         '<button class="btn btn-outline btn-sm" onclick="editarObra(\'' + encodeURIComponent(JSON.stringify(o)) + '\')">Editar</button> ' +
         '<button class="btn ' + (activo?'btn-danger':'btn-success') + ' btn-sm" onclick="toggleObra(\'' + encodeURIComponent(JSON.stringify(o)) + '\')">' + (activo?'Desactivar':'Activar') + '</button>' +
       '</td></tr>';
   }).join('');
-  document.getElementById('obrasBody').innerHTML = html || '<tr><td colspan="4" class="loading">Sin resultados</td></tr>';
+  document.getElementById('obrasBody').innerHTML = html || '<tr><td colspan="8" class="loading">Sin resultados</td></tr>';
 }
 
 document.querySelectorAll('[data-filtro-obra]').forEach(function(btn) {
@@ -1088,18 +1146,36 @@ document.querySelectorAll('[data-filtro-obra]').forEach(function(btn) {
 
 document.getElementById('btnNuevaObra').addEventListener('click', function() {
   document.getElementById('modalObraTitulo').textContent = 'Nueva obra';
-  document.getElementById('oRowKey').value  = '';
-  document.getElementById('oNombre').value  = '';
-  document.getElementById('oActivo').value  = 'true';
+  document.getElementById('oRowKey').value        = '';
+  document.getElementById('oNombre').value        = '';
+  document.getElementById('oNombreCompleto').value= '';
+  document.getElementById('oCliente').value       = '';
+  document.getElementById('oTipo').value          = 'Estructura';
+  document.getElementById('oContrato').value      = '';
+  document.getElementById('oUbicacion').value     = '';
+  document.getElementById('oMonto').value         = '';
+  document.getElementById('oFechaInicio').value   = '';
+  document.getElementById('oFechaFin').value      = '';
+  document.getElementById('oActivo').value        = 'true';
+  poblarSelectResidente('');
   abrirModal('modalObra');
 });
 
 function editarObra(encoded) {
   var o = JSON.parse(decodeURIComponent(encoded));
   document.getElementById('modalObraTitulo').textContent = 'Editar obra';
-  document.getElementById('oRowKey').value  = o.RowKey || '';
-  document.getElementById('oNombre').value  = o.RowKey || o.nombre || '';
-  document.getElementById('oActivo').value  = String(o.activo);
+  document.getElementById('oRowKey').value        = o.RowKey || '';
+  document.getElementById('oNombre').value        = o.RowKey || o.nombre || '';
+  document.getElementById('oNombreCompleto').value= o.nombreCompleto || '';
+  document.getElementById('oCliente').value       = o.cliente || '';
+  document.getElementById('oTipo').value          = o.tipo || 'Estructura';
+  document.getElementById('oContrato').value      = o.contrato || '';
+  document.getElementById('oUbicacion').value     = o.ubicacion || '';
+  document.getElementById('oMonto').value         = o.monto || '';
+  document.getElementById('oFechaInicio').value   = o.fechaInicio || '';
+  document.getElementById('oFechaFin').value      = o.fechaFin || '';
+  document.getElementById('oActivo').value        = String(o.activo);
+  poblarSelectResidente(o.residente || '');
   abrirModal('modalObra');
 }
 
@@ -1124,8 +1200,21 @@ document.getElementById('btnGuardarObra').addEventListener('click', async functi
   var nombre = document.getElementById('oNombre').value.trim().toUpperCase();
   var activo = document.getElementById('oActivo').value === 'true';
   var rk     = document.getElementById('oRowKey').value || nombre;
-  if (!nombre) { showToast('El nombre es requerido', 'err'); return; }
-  var entity = { PartitionKey:'obras', RowKey: rk || nombre, activo: activo };
+  if (!nombre) { showToast('El código de obra es requerido', 'err'); return; }
+  var entity = {
+    PartitionKey:    'obras',
+    RowKey:          rk || nombre,
+    activo:          activo,
+    nombreCompleto:  document.getElementById('oNombreCompleto').value.trim(),
+    cliente:         document.getElementById('oCliente').value.trim(),
+    tipo:            document.getElementById('oTipo').value,
+    contrato:        document.getElementById('oContrato').value.trim(),
+    ubicacion:       document.getElementById('oUbicacion').value.trim(),
+    monto:           parseFloat(document.getElementById('oMonto').value) || 0,
+    residente:       document.getElementById('oResidente').value,
+    fechaInicio:     document.getElementById('oFechaInicio').value,
+    fechaFin:        document.getElementById('oFechaFin').value
+  };
   try {
     await azureUpsert('obras', entity);
     cerrarModal('modalObra');
@@ -1148,6 +1237,18 @@ function poblarSelectObras() {
     el.innerHTML = (hasEmpty ? '<option value="">Todas las obras</option>' : '') +
       allObras.map(function(o){ var n = o.RowKey||''; return '<option value="' + n + '">' + n + '</option>'; }).join('');
   });
+}
+
+function poblarSelectResidente(seleccionado) {
+  var el = document.getElementById('oResidente');
+  if (!el) return;
+  var residentes = allUsuarios.filter(function(u){ return u.rol === 'residente'; });
+  el.innerHTML = '<option value="">— Sin asignar —</option>' +
+    residentes.map(function(u){
+      var nombre = u.nombre || u.email || u.RowKey || '';
+      var sel = nombre === seleccionado || u.email === seleccionado ? ' selected' : '';
+      return '<option value="' + nombre + '"' + sel + '>' + nombre + '</option>';
+    }).join('');
 }
 
 document.getElementById('filtroObraCatalogo').addEventListener('change', function() {
