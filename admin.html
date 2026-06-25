@@ -1291,7 +1291,7 @@ function renderCatalogo() {
         '<div class="prog-bar" style="flex:1;"><div class="prog-fill" style="width:' + Math.min(100,avance) + '%;background:' + color + ';"></div></div></div>' +
       '</td>' +
       '<td><span class="badge ' + (activo?'badge-ok':'badge-warn') + '">' + (activo?'Activo':'Inactivo') + '</span></td>' +
-      '<td><button class="btn btn-outline btn-sm" onclick="editarConcepto(\'' + encodeURIComponent(JSON.stringify(c)) + '\')">Editar</button></td>' +
+      '<td><button class="btn btn-outline btn-sm btn-editar-concepto" data-concepto="' + encodeURIComponent(JSON.stringify(c)) + '">Editar</button></td>' +
       '</tr>';
   }).join('');
   document.getElementById('catalogoBody').innerHTML = html || '<tr><td colspan="11" class="loading">Sin conceptos</td></tr>';
@@ -1301,6 +1301,13 @@ function renderCatalogo() {
 document.getElementById('buscarConcepto').addEventListener('input', function() {
   busquedaConcepto = this.value.toLowerCase();
   renderCatalogo();
+});
+
+document.getElementById('catalogoBody').addEventListener('click', function(e) {
+  var btn = e.target.closest('.btn-editar-concepto');
+  if (btn && btn.dataset.concepto) {
+    editarConcepto(btn.dataset.concepto);
+  }
 });
 // Vaciar catálogo de la obra seleccionada
 document.getElementById('btnVaciarCatalogo').addEventListener('click', async function() {
