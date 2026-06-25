@@ -700,12 +700,27 @@ input[type=file] { display:none; }
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Avance real acumulado</label>
-        <div style="display:flex;align-items:center;gap:8px">
-          <input class="form-input" id="ccAvanceReal" type="number" min="0" placeholder="0" style="flex:1">
-          <span id="ccUnidadLabel" style="color:var(--gris-muted);font-size:12px;min-width:40px"></span>
+        <label class="form-label">Avance de ejecución</label>
+        <div style="font-size:11px;color:var(--gris-muted);margin-bottom:6px;">
+          Escribe el porcentaje completado de este concepto (0 a 100). No importa la unidad — siempre en %.
         </div>
-        <div style="font-size:11px;color:var(--gris-muted);margin-top:3px">Cantidad ejecutada acumulada. Se actualiza con los cierres de supervisores.</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input class="form-input" id="ccAvanceReal" type="number" min="0" max="100" step="0.5" placeholder="0" style="width:90px;flex-shrink:0;font-size:18px;font-weight:700;text-align:center;" oninput="actualizarBarraAvance(this.value)">
+          <span style="font-size:18px;font-weight:700;color:var(--gris-muted);">%</span>
+          <div style="flex:1;">
+            <div style="height:10px;background:#e2e8f0;border-radius:10px;overflow:hidden;">
+              <div id="ccAvanceBarra" style="height:100%;width:0%;border-radius:10px;background:var(--azul-claro);transition:width .25s;"></div>
+            </div>
+            <div id="ccAvanceTexto" style="font-size:11px;color:var(--gris-muted);margin-top:3px;text-align:right;">Sin avance</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button type="button" onclick="setAvance(0)"   style="flex:1;padding:5px;border:1px solid var(--borde);border-radius:6px;background:#f4f7fc;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;">0%</button>
+          <button type="button" onclick="setAvance(25)"  style="flex:1;padding:5px;border:1px solid var(--borde);border-radius:6px;background:#f4f7fc;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;">25%</button>
+          <button type="button" onclick="setAvance(50)"  style="flex:1;padding:5px;border:1px solid var(--borde);border-radius:6px;background:#f4f7fc;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;">50%</button>
+          <button type="button" onclick="setAvance(75)"  style="flex:1;padding:5px;border:1px solid var(--borde);border-radius:6px;background:#f4f7fc;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;">75%</button>
+          <button type="button" onclick="setAvance(100)" style="flex:1;padding:5px;border:1px solid var(--borde);border-radius:6px;background:#f4f7fc;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;">100%</button>
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1425,8 +1440,24 @@ document.getElementById('btnNuevoConcepto').addEventListener('click', function()
   document.getElementById('ccDesc').value     = '';
   document.getElementById('ccCantidad').value = '';
   document.getElementById('ccPU').value       = '';
+  document.getElementById('ccAvanceReal').value = 0;
+  actualizarBarraAvance(0);
   abrirModal('modalConcepto');
 });
+
+function actualizarBarraAvance(val) {
+  var v = Math.min(100, Math.max(0, parseFloat(val) || 0));
+  document.getElementById('ccAvanceBarra').style.width = v + '%';
+  var color = v >= 100 ? 'var(--verde)' : v > 0 ? 'var(--azul-claro)' : '#e2e8f0';
+  document.getElementById('ccAvanceBarra').style.background = color;
+  var texto = v === 0 ? 'Sin avance' : v === 100 ? '✓ Completado' : v + '% ejecutado';
+  document.getElementById('ccAvanceTexto').textContent = texto;
+}
+
+function setAvance(val) {
+  document.getElementById('ccAvanceReal').value = val;
+  actualizarBarraAvance(val);
+}
 
 function editarConcepto(encoded) {
   var c = JSON.parse(decodeURIComponent(encoded));
@@ -1438,6 +1469,7 @@ function editarConcepto(encoded) {
   document.getElementById('ccUnidad').value   = c.unidad || 'pza';
   document.getElementById('ccCantidad').value = c.cantidadContrato || '';
   document.getElementById('ccAvanceReal').value = c.avanceReal || 0;
+  actualizarBarraAvance(c.avanceReal || 0);
   document.getElementById('ccUnidadLabel').textContent = c.unidad || '';
   document.getElementById('ccPU').value       = c.precioUnitario || '';
   document.getElementById('ccFechaInicio').value = c.fechaInicio || '';
