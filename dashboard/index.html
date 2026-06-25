@@ -329,6 +329,41 @@ tr:hover td { background:#f7faff; }
 .loading-hoy { text-align:center; padding:2rem; color:var(--gris-muted); font-size:13px; }
 
 input[type=file] { display:none; }
+
+/* ── OBRA DROPDOWN CUSTOM ── */
+.obra-dropdown { position:relative; display:none; }
+.obra-dropdown-btn {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25);
+  color:#fff; padding:6px 12px; border-radius:20px;
+  font-size:12px; font-weight:600; font-family:"Inter",sans-serif;
+  cursor:pointer; transition:background .15s; white-space:nowrap;
+}
+.obra-dropdown-btn:hover { background:rgba(255,255,255,0.2); }
+.obra-dropdown-btn .obra-badge-dot {
+  width:8px; height:8px; border-radius:50%; flex-shrink:0;
+}
+.obra-dropdown-arrow { font-size:10px; opacity:.7; margin-left:2px; }
+.obra-dropdown-menu {
+  display:none; position:absolute; top:calc(100% + 6px); right:0;
+  background:#fff; border-radius:12px; min-width:180px;
+  box-shadow:0 8px 32px rgba(11,30,61,0.18);
+  border:1px solid var(--borde); overflow:hidden; z-index:999;
+}
+.obra-dropdown-menu.open { display:block; }
+.obra-dropdown-item {
+  display:flex; align-items:center; gap:10px;
+  padding:11px 14px; cursor:pointer; font-size:13px;
+  font-weight:500; color:var(--azul-oscuro);
+  border-bottom:1px solid #f0f4fa; transition:background .12s;
+}
+.obra-dropdown-item:last-child { border-bottom:none; }
+.obra-dropdown-item:hover { background:var(--azul-bg); }
+.obra-dropdown-item.activa { font-weight:700; background:#f0f4fa; }
+.obra-dropdown-item .item-badge {
+  font-size:10px; font-weight:700; padding:2px 7px; border-radius:10px; flex-shrink:0;
+}
+.obra-dropdown-item .item-check { margin-left:auto; color:var(--azul-claro); font-size:13px; }
 </style>
 </head>
 <body>
@@ -432,7 +467,14 @@ input[type=file] { display:none; }
         <span class="header-corte" id="hFecha"></span>
         <span class="header-user" id="hUser"></span>
         <button class="btn-header" id="btnCambiarObra" style="display:none">⇄ Obra</button>
-        <select id="headerObraSelect" style="display:none;padding:5px 10px;border:1px solid rgba(255,255,255,0.25);border-radius:8px;background:rgba(255,255,255,0.1);color:#fff;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;outline:none;"></select>
+        <div class="obra-dropdown" id="obraDropdown">
+          <button class="obra-dropdown-btn" id="obraDropdownBtn" onclick="toggleObraDropdown()">
+            <span class="obra-badge-dot" id="obraDropdownDot"></span>
+            <span id="obraDropdownLabel">—</span>
+            <span class="obra-dropdown-arrow">▾</span>
+          </button>
+          <div class="obra-dropdown-menu" id="obraDropdownMenu"></div>
+        </div>
         <button class="btn-header" id="btnReload">↺ Cambiar Excel</button>
         <button class="btn-header" id="btnSalir">Salir</button>
       </div>
@@ -747,6 +789,83 @@ function loadFile(file) {
 // ══════════════════════════════════════════════
 // DASHBOARD PRINCIPAL
 // ══════════════════════════════════════════════
+
+// Paleta de colores por obra (se asigna por índice)
+var OBRA_COLORS = [
+  { dot:'#2563a8', bg:'#dbeafe', text:'#1e40af' },
+  { dot:'#10b981', bg:'#d1fae5', text:'#065f46' },
+  { dot:'#f59e0b', bg:'#fef9c3', text:'#92400e' },
+  { dot:'#ef4444', bg:'#fee2e2', text:'#991b1b' },
+  { dot:'#8b5cf6', bg:'#ede9fe', text:'#5b21b6' },
+  { dot:'#0891b2', bg:'#cffafe', text:'#155e75' },
+];
+
+function getObraColor(idx) {
+  return OBRA_COLORS[idx % OBRA_COLORS.length];
+}
+
+function toggleObraDropdown() {
+  document.getElementById('obraDropdownMenu').classList.toggle('open');
+}
+
+function poblarObraDropdown(obras, obraActual) {
+  var dot = document.getElementById('obraDropdownDot');
+  var label = document.getElementById('obraDropdownLabel');
+  var menu = document.getElementById('obraDropdownMenu');
+  var dropdown = document.getElementById('obraDropdown');
+
+  if (obras.length <= 1) {
+    // Solo una obra: mostrar badge estático sin dropdown
+    var col = getObraColor(0);
+    dot.style.background = col.dot;
+    label.textContent = obraActual;
+    dropdown.style.display = 'flex';
+    document.getElementById('obraDropdownBtn').style.cursor = 'default';
+    document.getElementById('obraDropdownBtn').onclick = null;
+    return;
+  }
+
+  dropdown.style.display = 'flex';
+  var idxActual = obras.indexOf(obraActual);
+  var colActual = getObraColor(idxActual >= 0 ? idxActual : 0);
+  dot.style.background = colActual.dot;
+  label.textContent = obraActual;
+
+  menu.innerHTML = obras.map(function(o, i) {
+    var col = getObraColor(i);
+    var activa = o === obraActual;
+    return '<div class="obra-dropdown-item' + (activa ? ' activa' : '') + '" onclick="seleccionarObra(\'' + o + '\')">' +
+      '<span class="item-badge" style="background:' + col.bg + ';color:' + col.text + ';">' + o + '</span>' +
+      (activa ? '<span class="item-check">✓</span>' : '') +
+      '</div>';
+  }).join('');
+
+  // Cerrar al hacer click fuera
+  document.addEventListener('click', function cerrarDropdown(e) {
+    if (!document.getElementById('obraDropdown').contains(e.target)) {
+      menu.classList.remove('open');
+      document.removeEventListener('click', cerrarDropdown);
+    }
+  });
+}
+
+function seleccionarObra(obraNueva) {
+  obraActiva = obraNueva;
+  document.getElementById('obraDropdownMenu').classList.remove('open');
+  document.getElementById('hNombre').textContent = obraActiva;
+  var idx = obrasDisponibles.indexOf(obraNueva);
+  var col = getObraColor(idx >= 0 ? idx : 0);
+  document.getElementById('obraDropdownDot').style.background = col.dot;
+  document.getElementById('obraDropdownLabel').textContent = obraNueva;
+  // Repoblar menu con nueva selección activa
+  poblarObraDropdown(obrasDisponibles, obraNueva);
+  document.getElementById('obraDropdownMenu').classList.remove('open');
+  Object.values(charts).forEach(function(c){ if(c) c.destroy(); });
+  charts = {};
+  if (excelData) renderExcel(excelData);
+  cargarTabHoy();
+}
+
 function mostrarDashboard() {
   document.getElementById('loginScreen').style.display  = 'none';
   document.getElementById('obraScreen').style.display   = 'none';
@@ -756,22 +875,7 @@ function mostrarDashboard() {
   document.getElementById('hNombre').textContent = obraActiva;
   document.getElementById('hUser').textContent   = userName + ' · ' + userRole;
   document.getElementById('hFecha').textContent  = 'Hoy: ' + HOY.toISOString().slice(0,10);
-  // Poblar selector de obra en header si hay más de una
-  var sel = document.getElementById('headerObraSelect');
-  if (sel && obrasDisponibles.length > 1) {
-    sel.innerHTML = obrasDisponibles.map(function(o) {
-      return '<option value="' + o + '"' + (o === obraActiva ? ' selected' : '') + '>' + o + '</option>';
-    }).join('');
-    sel.style.display = 'inline-block';
-    sel.onchange = function() {
-      obraActiva = this.value;
-      document.getElementById('hNombre').textContent = obraActiva;
-      Object.values(charts).forEach(function(c){ if(c) c.destroy(); });
-      charts = {};
-      if (excelData) renderExcel(excelData);
-      cargarTabHoy();
-    };
-  }
+  poblarObraDropdown(obrasDisponibles, obraActiva);
   if (excelData) renderExcel(excelData);
   cargarTabHoy();
 }
