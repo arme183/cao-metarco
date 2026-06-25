@@ -2353,6 +2353,8 @@ function cambiarObra(obraNueva) {
 }
 
 
+// ======= EVENT DELEGATION — RESTRICCIONES =======
+document.addEventListener('click', function(e) {
   var btnRes = e.target.closest('.btn-resolver');
   if (btnRes) {
     var pk = btnRes.dataset.pk;
