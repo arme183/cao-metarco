@@ -214,8 +214,8 @@ async function azGet(table, filter=''){
 }
 
 // ─── LOGO BASE64 ──────────────────────────────────────────────
-const LOGO_HTML = 'https://arme183.github.io/cao-metarco/LOGO_METARCO1.png';
-const LOGO_PDF  = 'https://arme183.github.io/cao-metarco/LOGO_METARCO1.png';
+const LOGO_HTML = 'https://arme183.github.io/cao-metarco/LOGO_BLANCO.png';
+const LOGO_PDF  = 'https://arme183.github.io/cao-metarco/LOGO_BLANCO.png';
 
 // ─── ESTADO ───────────────────────────────────────────────────
 const PASOS = ['Datos generales','Elementos','Condiciones planta','Condiciones comerciales','Fotografías','Envío'];
@@ -332,9 +332,9 @@ function renderNav(){
       <div><div class="nl">${nm}</div></div>
     </div>`).join('');
   document.getElementById('kpi-tipo').textContent = S.data.tipo || '—';
-  document.getElementById('kpi-fotos').textContent = S.fotos.length;
-  const nCond = Object.keys(S.condicion).length;
-  document.getElementById('kpi-cond').textContent = nCond ? nCond+' evaluados' : '—';
+  document.getElementById('kpi-fotos').textContent = S.fotos.length + Object.values(S.elementos||{}).reduce((a,e)=>a+(e.fotos?e.fotos.length:0),0);
+  const nEl = Object.keys(S.elementos||{}).length;
+  document.getElementById('kpi-cond').textContent = nEl ? nEl+' elemento'+(nEl!==1?'s':'') : '—';
 }
 
 // ─── STEPS ────────────────────────────────────────────────────
