@@ -475,6 +475,7 @@ input[type=file] { display:none; }
           </button>
           <div class="obra-dropdown-menu" id="obraDropdownMenu"></div>
         </div>
+        <button class="btn-header" id="btnIrAdmin" onclick="window.location.href='../admin.html'" style="display:none;">⚙ Admin</button>
         <button class="btn-header" id="btnReload">↺ Cambiar Excel</button>
         <button class="btn-header" id="btnSalir">Salir</button>
       </div>
@@ -875,6 +876,9 @@ function mostrarDashboard() {
   document.getElementById('hNombre').textContent = obraActiva;
   document.getElementById('hUser').textContent   = userName + ' · ' + userRole;
   document.getElementById('hFecha').textContent  = 'Hoy: ' + HOY.toISOString().slice(0,10);
+  if (userRole === 'admin' || userRole === 'coordinador') {
+    document.getElementById('btnIrAdmin').style.display = 'inline-block';
+  }
   poblarObraDropdown(obrasDisponibles, obraActiva);
   if (excelData) renderExcel(excelData);
   cargarTabHoy();
