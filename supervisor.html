@@ -737,7 +737,14 @@ function activarDemo() {
 }
 function cerrarSesion() {
   sessionStorage.clear();
-  window.location.href = "index.html";
+  if (msalInstance) {
+    var accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      msalInstance.logoutRedirect({ account: accounts[0], postLogoutRedirectUri: window.location.href });
+      return;
+    }
+  }
+  window.location.reload();
 }
 
 function showLoginAlerta(msg) {
@@ -1703,16 +1710,30 @@ async function resolverObrasYEntrar(email) {
     if (res.ok) {
       var u = await res.json();
       var rol = (u.rol || 'supervisor').toLowerCase();
-      var obrasStr = u.obras || '';
-      var obrasArr = obrasStr.split(' ').filter(Boolean);
+      var obrasStr = (u.obras || '').trim();
+      var obrasArr = [];
+      if (obrasStr === 'todas') {
+        // Cargar todas las obras activas desde Azure
+        try {
+          var obrasUrl = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/obras' + AZURE_SAS_SUP + '&$filter=activo%20eq%20true';
+          var obrasRes = await fetch(obrasUrl, { headers: azureHdrSup() });
+          if (obrasRes.ok) {
+            var obrasData = await obrasRes.json();
+            obrasArr = (obrasData.value || []).map(function(o){ return o.RowKey; }).filter(Boolean);
+          }
+        } catch(e2) {
+          obrasArr = ['WEG', 'ZAMORA', 'NACOBRE', 'QR03_ODATA'];
+        }
+        if (obrasArr.length === 0) obrasArr = ['WEG', 'ZAMORA', 'NACOBRE', 'QR03_ODATA'];
+      } else {
+        obrasArr = obrasStr.split(' ').filter(Boolean);
+      }
       sessionStorage.setItem("userRole", rol);
       sessionStorage.setItem("obrasAsignadas", JSON.stringify(obrasArr));
-      // Primera obra por default
       var primeraObra = obrasArr[0] || '';
       sessionStorage.setItem("obraActiva", primeraObra);
       state.userRole = rol;
     } else {
-      // Usuario no encontrado: usar role supervisor sin obras
       sessionStorage.setItem("userRole", "supervisor");
       sessionStorage.setItem("obrasAsignadas", "[]");
       sessionStorage.setItem("obraActiva", "");
