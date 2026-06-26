@@ -268,9 +268,11 @@ const ELEMENTOS = {
     { id:'vent',  icon:'🌬', nom:'Ventilacion',            campos:[{k:'tipo',l:'Tipo (natural/mecanica)',t:'text'},{k:'cantidad',l:'Extractores (pzas)',t:'number'},{k:'obs',l:'Observaciones',t:'area'}] },
   ]
 };
-const ESTADOS = ['✅ Bueno','⚠️ Regular','🔴 Requiere atención','🚨 Crítico'];
-const ESTADO_BG = {'✅ Bueno':'#EAF3DE','⚠️ Regular':'#FEF3D7','🔴 Requiere atención':'#FCEBEB','🚨 Crítico':'#F8D7DA'};
-const ESTADO_TC = {'✅ Bueno':'#1B6E41','⚠️ Regular':'#854F0B','🔴 Requiere atención':'#A32D2D','🚨 Crítico':'#7B1A2A'};
+const ESTADOS = ['Bueno','Regular','Requiere atencion','Critico'];
+const ESTADO_BG = {'Bueno':'#EAF3DE','Regular':'#FEF3D7','Requiere atencion':'#FCEBEB','Critico':'#F8D7DA'};
+const ESTADO_TC = {'Bueno':'#1B6E41','Regular':'#854F0B','Requiere atencion':'#A32D2D','Critico':'#7B1A2A'};
+const ESTADO_LABEL = {'Bueno':'✅ Bueno','Regular':'⚠️ Regular','Requiere atencion':'🔴 Requiere atención','Critico':'🚨 Crítico'};
+function stripEmoji(str){ return (str||'').replace(/[\u{1F000}-\u{1FFFF}]|[\u2600-\u27BF]|[\uFE00-\uFE0F]|[\u2700-\u27BF]/gu,'').trim(); }
 
 
 // ─── UTILS ────────────────────────────────────────────────────
@@ -478,7 +480,7 @@ function renderElementosForms(){
       <div style="margin-bottom:10px">
         <label class="fl">Estado / Condición</label>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          ${ESTADOS.map(e=>`<button onclick="setEstadoEl('${id}','${e}')" style="padding:5px 10px;border-radius:20px;border:1.5px solid ${el.estado===e?ESTADO_TC[e]:'var(--line)'};background:${el.estado===e?ESTADO_BG[e]:'#FAFCFA'};color:${el.estado===e?ESTADO_TC[e]:'var(--muted)'};font-size:11px;font-weight:${el.estado===e?'700':'500'};cursor:pointer;font-family:var(--font)">${e}</button>`).join('')}
+          ${ESTADOS.map(e=>`<button onclick="setEstadoEl('${id}','${e}')" style="padding:5px 10px;border-radius:20px;border:1.5px solid ${el.estado===e?ESTADO_TC[e]:'var(--line)'};background:${el.estado===e?ESTADO_BG[e]:'#FAFCFA'};color:${el.estado===e?ESTADO_TC[e]:'var(--muted)'};font-size:11px;font-weight:${el.estado===e?'700':'500'};cursor:pointer;font-family:var(--font)">${ESTADO_LABEL[e]||e}</button>`).join('')}
         </div>
       </div>
       <div class="g2 mb10">
@@ -846,7 +848,7 @@ function genPDFDoc(){
       // Header del elemento
       fill('#F5F7F5');dc('#E0E0E0');doc.setLineWidth(0.15);doc.rect(M,y,UW,10,'F');doc.rect(M,y,UW,10,'S');
       fill('#1A1A2E');doc.rect(M,y,3,10,'F');
-      tc('#1A1A1A');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text(el.icon+' '+el.nom,M+6,y+6.5);
+      tc('#1A1A1A');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text(el.nom,M+6,y+6.5);
       if(el.estado){
         const bg=ESTADO_BG[el.estado]||'#EAF3DE',tc2=ESTADO_TC[el.estado]||'#1B6E41';
         const[br,bg2,bb]=h2r(bg);doc.setFillColor(br,bg2,bb);doc.roundedRect(W-M-40,y+1.5,38,7,2,2,'F');
@@ -973,6 +975,14 @@ function descargarPDF(){
 
 // ─── AZURE SAVE ───────────────────────────────────────────────
 async function guardarEnAzure(){
+  // Crear tabla si no existe
+  try {
+    await fetch(`${AZ_BASE}/Tables${AZ_SAS}`, {
+      method: 'POST',
+      headers: {...azHdr(), 'Content-Type':'application/json'},
+      body: JSON.stringify({TableName:'levantamientos'})
+    });
+  } catch(e) {} // Si ya existe, ignora el error
   const entity = {
     PartitionKey: 'levantamientos', RowKey: S.folio,
     folio: S.folio, usuario: S.usuario, email: S.email,
