@@ -1,1 +1,929 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Levantamiento — METARCO</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2/lib/msal-browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--dark:#1A1A2E;--green:#2ECC71;--gdark:#1B6E41;--blue:#185FA5;--amber:#854F0B;--red:#A32D2D;--bg:#F0F2F0;--card:#FFFFFF;--line:#DFE6DF;--txt:#1A1A1A;--muted:#6B7A6B;--font:'DM Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--txt);min-height:100vh}
+/* SHELL */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+@media(max-width:700px){.shell{grid-template-columns:1fr}.sbar{display:none}.sbar.open{display:flex;position:fixed;top:0;left:0;z-index:99;height:100vh;width:240px}}
+.sbar{background:var(--dark);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.main{padding:22px 26px;overflow-y:auto}
+/* SIDEBAR */
+.logo-wrap{padding:16px 18px 12px;border-bottom:1px solid #ffffff12}
+.logo-tag{color:var(--green);font-size:10px;letter-spacing:.06em;margin-top:3px}
+.navwrap{padding:12px 10px;flex:1}
+.ni{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;border-radius:8px;margin-bottom:3px;cursor:pointer;transition:background .2s}
+.ni:hover{background:#ffffff08}.ni.cur{background:#ffffff14}.ni.done{opacity:.6}
+.nn{width:22px;height:22px;min-width:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;border:1.5px solid #ffffff25;color:#ffffff55;margin-top:1px}
+.ni.cur .nn{background:var(--green);border-color:var(--green);color:var(--dark)}
+.ni.done .nn{background:#ffffff20;border-color:#ffffff35;color:#fff}
+.nl{font-size:12px;font-weight:500;color:#ffffff70}.ni.cur .nl{color:#fff}.ni.done .nl{color:#ffffff55}
+.ns{font-size:10px;color:#ffffff35;margin-top:1px}
+.sb-kpis{padding:10px 14px;border-top:1px solid #ffffff10;display:flex;flex-direction:column;gap:7px}
+.kpi{background:#ffffff08;border-radius:8px;padding:9px 11px}
+.kpi-lbl{font-size:9px;font-weight:600;color:#ffffff40;letter-spacing:.05em}
+.kpi-val{font-size:21px;font-weight:600;line-height:1;color:var(--green)}
+.kpi-sub{font-size:9px;color:#ffffff35;margin-top:2px}
+.folio-tag{font-size:10px;color:var(--green);font-family:'DM Mono',monospace;padding:0 14px 10px}
+/* CARDS */
+.card{background:var(--card);border-radius:12px;padding:18px 20px;margin-bottom:12px;border:1px solid var(--line)}
+.sh{display:flex;align-items:center;gap:7px;margin-bottom:14px}
+.sb2{width:3px;height:17px;background:var(--green);border-radius:2px;flex-shrink:0}
+.st{font-size:14px;font-weight:600}
+.ph{margin-bottom:20px}.ph-t{font-size:21px;font-weight:600;margin-bottom:3px}.ph-s{font-size:13px;color:var(--muted)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.fl{font-size:11px;font-weight:500;color:var(--muted);margin-bottom:3px;display:block}
+input[type=text],input[type=number],input[type=date],input[type=email],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:var(--font);color:var(--txt);background:#FAFCFA;outline:none;transition:border .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--green);background:#fff}
+textarea{resize:none;min-height:60px;line-height:1.5}
+.mb10{margin-bottom:10px}
+/* TIPO SELECTOR */
+.tipo-opts{display:flex;gap:8px;margin-top:4px}
+.tipo-btn{flex:1;padding:10px;border:1.5px solid var(--line);border-radius:9px;background:#FAFCFA;cursor:pointer;text-align:center;font-size:12px;font-weight:600;color:var(--muted);font-family:var(--font);transition:all .15s}
+.tipo-btn.on{border-color:var(--green);background:#F0FAF5;color:var(--gdark)}
+/* MEDIDAS GRID */
+.med-section{border:1px solid var(--line);border-radius:9px;padding:13px 15px;margin-bottom:10px}
+.med-title{font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--muted);margin-bottom:10px;text-transform:uppercase}
+/* CONDICION RATING */
+.comp{border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin-bottom:7px}
+.comp.scored{border-color:#B8D8B8}
+.comp-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px}
+.comp-name{font-size:13px;font-weight:500;flex:1;margin-right:8px}
+.comp-desc{font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.45}
+.sr{display:flex;gap:4px;flex-wrap:wrap}
+.sb3{padding:4px 9px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--line);background:#FAFCFA;color:var(--muted);transition:all .15s;font-family:var(--font)}
+.sb3.s1.on{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D}
+.sb3.s2.on{background:#FAEEDA;border-color:#EF9F27;color:#633806}
+.sb3.s3.on{background:#E6F1FB;border-color:#378ADD;color:#0C447C}
+.sb3.s4.on{background:#EAF3DE;border-color:#639922;color:#27500A}
+.sb3.s5.on{background:#1A1A2E;border-color:#1A1A2E;color:#2ECC71}
+/* FOTOS */
+.dz{border:2px dashed var(--green);border-radius:10px;padding:20px;text-align:center;cursor:pointer;background:#FAFCFA;transition:background .15s}
+.dz:hover{background:#F0FAF5}.dz input{display:none}
+.dz-icon{font-size:32px;margin-bottom:8px}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:12px}
+.pcrd{border:1px solid var(--line);border-radius:9px;overflow:hidden;position:relative;background:#fff}
+.pcrd img{width:100%;height:100px;object-fit:cover;display:block}
+.pcrd-b{padding:7px 8px}
+.pcrd-b input{font-size:11px;padding:3px 5px;margin-bottom:4px}
+.pcrd-b select{font-size:11px;padding:3px 5px}
+.pdel{position:absolute;top:5px;right:5px;width:22px;height:22px;border-radius:50%;background:rgba(26,26,46,.85);border:none;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+/* DESTINATARIOS */
+.dest-check{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:#FAFCFA;cursor:pointer}
+.dest-check input{width:auto;margin:0}
+.dest-check label{font-size:13px;cursor:pointer;flex:1}
+.dest-check span{font-size:11px;color:var(--muted)}
+/* BUTTONS */
+.btn{padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;display:inline-flex;align-items:center;gap:7px}
+.btn-dark{background:var(--dark);color:#fff}.btn-dark:hover{opacity:.87}
+.btn-green{background:var(--green);color:var(--dark)}.btn-green:hover{opacity:.87}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}.btn-ghost:hover{background:var(--bg)}
+.btn-outline{background:transparent;border:1.5px solid var(--green);color:var(--gdark)}.btn-outline:hover{background:#F0FAF5}
+.brow{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.pdfbtn{width:100%;padding:13px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:9px;margin-top:8px;transition:all .15s}
+.pdfbtn:hover{opacity:.87}.pdfbtn:disabled{opacity:.5;cursor:not-allowed}
+/* STATUS CHIP */
+.chip{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px}
+.chip-green{background:#EAF3DE;color:var(--gdark)}
+.chip-blue{background:#E6F1FB;color:var(--blue)}
+.chip-amber{background:#FEF3D7;color:var(--amber)}
+/* BORRADOR LIST */
+.blist-item{border:1px solid var(--line);border-radius:9px;padding:12px 14px;margin-bottom:8px;background:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.blist-item:hover{border-color:var(--green)}
+.blist-info{flex:1}
+.blist-folio{font-size:12px;font-weight:700;color:var(--gdark);font-family:'DM Mono',monospace}
+.blist-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.blist-actions{display:flex;gap:6px}
+/* MOBILE TOP BAR */
+.mob-top{display:none;background:var(--dark);padding:10px 16px;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+@media(max-width:700px){.mob-top{display:flex}.main{padding:14px}}
+.mob-menu-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--dark);color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.ok::before{content:'✓ ';color:var(--green)}
+.toast.err::before{content:'✕ ';color:#ef4444}
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--dark)}
+.login-box{background:#fff;border-radius:16px;padding:36px 32px;max-width:380px;width:100%;text-align:center}
+.login-logo{margin-bottom:20px}
+.login-title{font-size:20px;font-weight:700;margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
+.btn-ms{width:100%;padding:12px;border:1.5px solid #E0E0E0;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
+.btn-ms:hover{border-color:#888;background:#FAFAFA}
+.ms-sq{width:18px;height:18px}
+.login-alerta{font-size:12px;color:var(--red);min-height:18px;margin-bottom:8px}
+</style>
+</head>
+<body>
 
+<!-- LOGIN -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-box">
+    <div class="login-logo" id="logo-el"></div>
+    <div class="login-title">Levantamiento METARCO</div>
+    <div class="login-sub">Inicia sesión con tu cuenta corporativa</div>
+    <div class="login-alerta" id="loginAlerta"></div>
+    <button class="btn-ms" onclick="loginMS()">
+      <svg class="ms-sq" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      ACCEDER CON MICROSOFT
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen" style="display:none">
+  <!-- Mobile top bar -->
+  <div class="mob-top">
+    <button class="mob-menu-btn" onclick="document.querySelector('.sbar').classList.toggle('open')">☰</button>
+    <span style="color:#fff;font-size:13px;font-weight:600">Levantamiento METARCO</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--green);font-family:'DM Mono',monospace" id="mobFolio"></span>
+  </div>
+
+  <div class="shell">
+    <!-- SIDEBAR -->
+    <aside class="sbar">
+      <div class="logo-wrap">
+        <div id="logo-sb"></div>
+        <div class="logo-tag">LEVANTAMIENTO · METARCO</div>
+      </div>
+      <nav class="navwrap" id="nav"></nav>
+      <div class="sb-kpis">
+        <div class="kpi">
+          <div class="kpi-lbl">TIPO DE LEVANTAMIENTO</div>
+          <div class="kpi-val" id="kpi-tipo" style="font-size:13px;margin-top:4px">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-lbl">FOTOS CAPTURADAS</div>
+          <div class="kpi-val" id="kpi-fotos">0</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-lbl">CONDICIÓN EVALUADA</div>
+          <div class="kpi-val" id="kpi-cond" style="font-size:13px;margin-top:4px">—</div>
+        </div>
+      </div>
+      <div class="folio-tag" id="folio-tag-sb"></div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG MSAL ──────────────────────────────────────────────
+const msalConfig = {
+  auth: {
+    clientId: "9f85ee63-a011-4636-857e-b72128ed61e9",
+    authority: "https://login.microsoftonline.com/3fce0139-013b-4c64-a04d-8605a9eb8088",
+    redirectUri: window.location.origin + window.location.pathname
+  },
+  cache: { cacheLocation: "sessionStorage" }
+};
+const msalInstance = typeof msal !== 'undefined' ? new msal.PublicClientApplication(msalConfig) : null;
+
+// ─── AZURE CONFIG ─────────────────────────────────────────────
+const AZ_ACCOUNT = 'metarcostorage';
+const AZ_SAS = '?sv=2026-02-06&ss=bfqt&srt=o&sp=rwdlacupiytfx&se=2028-01-01T09:03:16Z&st=2026-06-02T00:48:16Z&spr=https&sig=jopE8S7LFpN79M86LWlZ5B%2Bws5%2BYbZvECNdVUAtHiGI%3D';
+const AZ_BASE = `https://${AZ_ACCOUNT}.table.core.windows.net`;
+
+function azHdr(){ return {'Accept':'application/json;odata=nometadata','Content-Type':'application/json','x-ms-date':new Date().toUTCString()}; }
+async function azUpsert(table, entity){
+  const url = `${AZ_BASE}/${table}(PartitionKey='${entity.PartitionKey}',RowKey='${encodeURIComponent(entity.RowKey)}')${AZ_SAS}`;
+  const r = await fetch(url,{method:'PUT',headers:{...azHdr(),'If-Match':'*'},body:JSON.stringify(entity)});
+  if(!r.ok && r.status!==204) throw new Error('Azure error '+r.status);
+}
+async function azGet(table, filter=''){
+  const url = `${AZ_BASE}/${table}${AZ_SAS}${filter?'&$filter='+encodeURIComponent(filter):''}`;
+  const r = await fetch(url,{headers:azHdr()});
+  if(!r.ok) throw new Error('Azure error '+r.status);
+  const d = await r.json(); return d.value||[];
+}
+
+// ─── LOGO BASE64 ──────────────────────────────────────────────
+const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAABkCAYAAACaEOK3AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABNUlEQVR4nO3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBuAABHgAAAABJRU5ErkJggg==";
+
+// ─── LOGO SIDEBAR ─────────────────────────────────────────────
+const LOGO_HTML = LOGO_B64;
+const LOGO_PDF = LOGO_B64;
+
+// ─── ESTADO ───────────────────────────────────────────────────
+const PASOS = ['Datos generales','Medidas','Condición','Fotografías','Envío'];
+let S = {
+  step: 0,
+  folio: '',
+  usuario: '',
+  email: '',
+  data: { cliente:'', proyecto:'', direccion:'', fecha:'', supervisor:'', tipo:'Estructura', contrato:'' },
+  medEst: { claroMax:'', alturaCols:'', alturaCumbrera:'', pendiente:'', numEjes:'', separacion:'', tipoPerfil:'IPR', calibrePerfil:'', tipoPlaca:'', calibrePlaca:'', anchoAnacla:'', tipoCimentacion:'', obs:'' },
+  medLam: { areaTot:'', tipoLamina:'KR-18', calibre:'', traslape:'', canalon:'', bajantes:'', claraboyas:'', caballete:'', faldon:'', tipoAislante:'', espesorAislante:'', obs:'' },
+  condicion: {},
+  fotos: [],
+  destinos: { costos: true, gerencia: false, cliente: false, otrosEmail: '' },
+  pdfOk: false,
+  enviando: false,
+  borrador: false
+};
+
+// ─── COMPONENTES CONDICION ────────────────────────────────────
+const COMPS_EST = [
+  { id:'oxidacion', name:'Oxidación estructural', desc:'Presencia de herrumbre en columnas, trabes y elementos secundarios' },
+  { id:'deformacion', name:'Deformación / pandeo', desc:'Elementos torcidos, doblados o fuera de plomo' },
+  { id:'soldadura', name:'Estado de soldaduras', desc:'Fisuras, porosidad o falta de fusión en uniones' },
+  { id:'anclajes', name:'Anclajes y placas base', desc:'Condición de placas de anclaje y pernos de cimentación' },
+  { id:'contraventeo', name:'Contraventeo', desc:'Arriostres diagonales y elementos de contraventeo horizontal' },
+  { id:'conexiones', name:'Conexiones y tornillería', desc:'Estado de tornillos, tuercas y elementos de unión' },
+];
+const COMPS_LAM = [
+  { id:'filtraciones', name:'Filtraciones / goteras', desc:'Puntos de entrada de agua, manchas o humedad activa' },
+  { id:'corrosion', name:'Corrosión de lámina', desc:'Oxidación, perforaciones o adelgazamiento de la lámina' },
+  { id:'traslapes', name:'Estado de traslapes', desc:'Sellos, tornillos y condición general de los traslapes' },
+  { id:'canalon', name:'Canalón y bajantes', desc:'Acumulación de agua, obstrucciones y fugas en el sistema pluvial' },
+  { id:'caballete', name:'Caballete / cumbrera', desc:'Sello y condición del caballete en la cumbrera' },
+  { id:'claraboyas', name:'Claraboyas y ventanas', desc:'Transparencia, fisuras y sellado de elementos translúcidos' },
+  { id:'fijaciones', name:'Fijaciones de lámina', desc:'Tornillos, remaches y elementos de fijación a la estructura' },
+];
+const SCL = {1:'Pésimo',2:'Regular',3:'Aceptable',4:'Bueno',5:'Excelente'};
+const SCC = {1:'#A32D2D',2:'#854F0B',3:'#185FA5',4:'#27500A',5:'#1B6E41'};
+
+// ─── UTILS ────────────────────────────────────────────────────
+function showToast(msg, tipo='ok'){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast '+tipo+' show';
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+function fmtDate(d){ return d ? d.split('-').reverse().join('/') : '—'; }
+function genFolio(){ return 'LEV-'+new Date().getFullYear()+'-'+String(Math.floor(Math.random()*900)+100); }
+function h2r(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+function today(){ return new Date().toISOString().slice(0,10); }
+
+// ─── MSAL ─────────────────────────────────────────────────────
+async function loginMS(){
+  if(!msalInstance){ showToast('MSAL no disponible','err'); return; }
+  try{ await msalInstance.loginRedirect({scopes:['User.Read','Mail.Send']}); } catch(e){ document.getElementById('loginAlerta').textContent=e.message; }
+}
+async function getToken(){
+  if(!msalInstance) return null;
+  const acc = msalInstance.getAllAccounts();
+  if(!acc.length) return null;
+  try{
+    const r = await msalInstance.acquireTokenSilent({scopes:['Mail.Send'],account:acc[0]});
+    return r.accessToken;
+  } catch(e){ return null; }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+window.addEventListener('load', async ()=>{
+  // Render logo
+  const logoEl = document.getElementById('logo-el');
+  const logoSb = document.getElementById('logo-sb');
+  const imgHtml = `<img src="${LOGO_HTML}" style="height:36px;width:auto;object-fit:contain" alt="METARCO">`;
+  if(logoEl) logoEl.innerHTML = imgHtml;
+  if(logoSb) logoSb.innerHTML = imgHtml;
+
+  if(!msalInstance){ mostrarApp('Demo','demo@metarco.com.mx'); return; }
+  try{
+    const resp = await msalInstance.handleRedirectPromise();
+    if(resp && resp.account){
+      mostrarApp(resp.account.name, resp.account.username); return;
+    }
+  } catch(e){}
+  const accs = msalInstance.getAllAccounts();
+  if(accs.length){ mostrarApp(accs[0].name, accs[0].username); return; }
+  document.getElementById('loginScreen').style.display='flex';
+});
+
+function mostrarApp(nombre, email){
+  S.usuario = nombre || 'Supervisor';
+  S.email = email || '';
+  S.data.supervisor = S.usuario;
+  S.data.fecha = today();
+  S.folio = genFolio();
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  document.getElementById('folio-tag-sb').textContent = S.folio;
+  document.getElementById('mobFolio').textContent = S.folio;
+  waitPDF(); render();
+}
+
+// ─── NAV ──────────────────────────────────────────────────────
+function go(i){ S.step=i; render(); window.scrollTo(0,0); }
+function renderNav(){
+  const el = document.getElementById('nav');
+  el.innerHTML = PASOS.map((nm,i)=>`
+    <div class="ni ${i===S.step?'cur':i<S.step?'done':''}" onclick="go(${i})">
+      <div class="nn">${i<S.step?'✓':(i+1)}</div>
+      <div><div class="nl">${nm}</div></div>
+    </div>`).join('');
+  document.getElementById('kpi-tipo').textContent = S.data.tipo || '—';
+  document.getElementById('kpi-fotos').textContent = S.fotos.length;
+  const nCond = Object.keys(S.condicion).length;
+  document.getElementById('kpi-cond').textContent = nCond ? nCond+' evaluados' : '—';
+}
+
+// ─── STEPS ────────────────────────────────────────────────────
+function step0(){
+  const d = S.data;
+  return `
+  <div class="ph"><div class="ph-t">Datos generales</div><div class="ph-s">Información del proyecto · Folio <b style="font-family:'DM Mono',monospace">${S.folio}</b></div></div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Tipo de levantamiento</div></div>
+    <div class="tipo-opts">
+      <button class="tipo-btn ${d.tipo==='Estructura'?'on':''}" onclick="setTipo('Estructura')">🏗 Estructura metálica</button>
+      <button class="tipo-btn ${d.tipo==='Cubierta'?'on':''}" onclick="setTipo('Cubierta')">🏠 Cubierta / Laminación</button>
+      <button class="tipo-btn ${d.tipo==='Mixto'?'on':''}" onclick="setTipo('Mixto')">🔀 Mixto</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Cliente y proyecto</div></div>
+    <div class="g2 mb10">
+      <div><label class="fl">Cliente *</label><input type="text" value="${d.cliente}" oninput="S.data.cliente=this.value" placeholder="Nombre del cliente"></div>
+      <div><label class="fl">No. de contrato / referencia</label><input type="text" value="${d.contrato}" oninput="S.data.contrato=this.value" placeholder="ej. C-2025-041"></div>
+    </div>
+    <div class="mb10"><label class="fl">Nombre del proyecto *</label><input type="text" value="${d.proyecto}" oninput="S.data.proyecto=this.value" placeholder="ej. Nave industrial Planta WEG Querétaro"></div>
+    <div class="mb10"><label class="fl">Dirección / ubicación</label><input type="text" value="${d.direccion}" oninput="S.data.direccion=this.value" placeholder="Calle, colonia, ciudad"></div>
+    <div class="g2">
+      <div><label class="fl">Fecha del levantamiento</label><input type="date" value="${d.fecha}" oninput="S.data.fecha=this.value"></div>
+      <div><label class="fl">Supervisor responsable</label><input type="text" value="${d.supervisor}" oninput="S.data.supervisor=this.value"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Observaciones generales</div></div>
+    <textarea placeholder="Contexto del levantamiento, condiciones de acceso, notas previas…" oninput="S.data.obsGen=this.value">${d.obsGen||''}</textarea>
+  </div>
+
+  <div class="brow">
+    <button class="btn btn-green" onclick="go(1)">Siguiente → Medidas</button>
+  </div>`;
+}
+
+function setTipo(t){ S.data.tipo=t; render(); }
+
+function step1(){
+  const tipo = S.data.tipo;
+  const eEst = tipo==='Estructura'||tipo==='Mixto';
+  const eLam = tipo==='Cubierta'||tipo==='Mixto';
+  let html = `<div class="ph"><div class="ph-t">Medidas del proyecto</div><div class="ph-s">${S.data.tipo} · ${S.data.cliente||'Sin cliente'}</div></div>`;
+
+  if(eEst){
+    const m = S.medEst;
+    html += `
+    <div class="card">
+      <div class="sh"><div class="sb2"></div><div class="st">Estructura metálica</div></div>
+      <div class="med-section">
+        <div class="med-title">Geometría general</div>
+        <div class="g3 mb10">
+          <div><label class="fl">Claro máximo (m)</label><input type="number" value="${m.claroMax}" oninput="S.medEst.claroMax=this.value" placeholder="0.00" step="0.01"></div>
+          <div><label class="fl">Altura de columnas (m)</label><input type="number" value="${m.alturaCols}" oninput="S.medEst.alturaCols=this.value" placeholder="0.00" step="0.01"></div>
+          <div><label class="fl">Altura de cumbrera (m)</label><input type="number" value="${m.alturaCumbrera}" oninput="S.medEst.alturaCumbrera=this.value" placeholder="0.00" step="0.01"></div>
+        </div>
+        <div class="g3 mb10">
+          <div><label class="fl">Pendiente (%)</label><input type="number" value="${m.pendiente}" oninput="S.medEst.pendiente=this.value" placeholder="0.00" step="0.01"></div>
+          <div><label class="fl">Número de ejes</label><input type="number" value="${m.numEjes}" oninput="S.medEst.numEjes=this.value" placeholder="0"></div>
+          <div><label class="fl">Separación entre ejes (m)</label><input type="number" value="${m.separacion}" oninput="S.medEst.separacion=this.value" placeholder="0.00" step="0.01"></div>
+        </div>
+      </div>
+      <div class="med-section">
+        <div class="med-title">Perfiles y elementos</div>
+        <div class="g2 mb10">
+          <div><label class="fl">Tipo de perfil principal</label>
+            <select onchange="S.medEst.tipoPerfil=this.value">
+              ${['IPR','PTR','OR','Armadura','Perfil W','Perfil C','Otro'].map(v=>`<option ${m.tipoPerfil===v?'selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div><label class="fl">Calibre / sección (in o mm)</label><input type="text" value="${m.calibrePerfil}" oninput="S.medEst.calibrePerfil=this.value" placeholder="ej. 8x8x3/8"></div>
+        </div>
+        <div class="g2 mb10">
+          <div><label class="fl">Tipo de placa de anclaje</label><input type="text" value="${m.tipoPlaca}" oninput="S.medEst.tipoPlaca=this.value" placeholder="ej. 20x20x1/2 + 4 anclas"></div>
+          <div><label class="fl">Ancho de ancla / pernos</label><input type="text" value="${m.anchoAnacla}" oninput="S.medEst.anchoAnacla=this.value" placeholder="ej. 5/8 x 30 cm"></div>
+        </div>
+        <div><label class="fl">Tipo de cimentación</label>
+          <select onchange="S.medEst.tipoCimentacion=this.value">
+            ${['Zapata aislada','Zapata corrida','Losa de cimentación','Pilotes','Dado de concreto','Otro'].map(v=>`<option ${m.tipoCimentacion===v?'selected':''}>${v}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="med-section">
+        <div class="med-title">Observaciones de estructura</div>
+        <textarea oninput="S.medEst.obs=this.value" placeholder="Condiciones especiales, elementos dañados, notas de campo…">${m.obs||''}</textarea>
+      </div>
+    </div>`;
+  }
+
+  if(eLam){
+    const m = S.medLam;
+    html += `
+    <div class="card">
+      <div class="sh"><div class="sb2"></div><div class="st">Cubierta / Laminación</div></div>
+      <div class="med-section">
+        <div class="med-title">Dimensiones</div>
+        <div class="g3 mb10">
+          <div><label class="fl">Área total (m²)</label><input type="number" value="${m.areaTot}" oninput="S.medLam.areaTot=this.value" placeholder="0.00" step="0.01"></div>
+          <div><label class="fl">Tipo de lámina</label>
+            <select onchange="S.medLam.tipoLamina=this.value">
+              ${['KR-18','KR-25','Standing Seam','Lámina galvanizada','Policarbonato','Losa Aceralia','Otro'].map(v=>`<option ${m.tipoLamina===v?'selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div><label class="fl">Calibre</label><input type="text" value="${m.calibre}" oninput="S.medLam.calibre=this.value" placeholder="ej. Cal.26"></div>
+        </div>
+        <div class="g3 mb10">
+          <div><label class="fl">Traslape (cm)</label><input type="number" value="${m.traslape}" oninput="S.medLam.traslape=this.value" placeholder="0" step="0.5"></div>
+          <div><label class="fl">Canalón (m lineal)</label><input type="number" value="${m.canalon}" oninput="S.medLam.canalon=this.value" placeholder="0.00" step="0.1"></div>
+          <div><label class="fl">Bajantes pluviales (pzas)</label><input type="number" value="${m.bajantes}" oninput="S.medLam.bajantes=this.value" placeholder="0"></div>
+        </div>
+        <div class="g3 mb10">
+          <div><label class="fl">Claraboyas (m²)</label><input type="number" value="${m.claraboyas}" oninput="S.medLam.claraboyas=this.value" placeholder="0.00" step="0.01"></div>
+          <div><label class="fl">Caballete (m lineal)</label><input type="number" value="${m.caballete}" oninput="S.medLam.caballete=this.value" placeholder="0.00" step="0.1"></div>
+          <div><label class="fl">Faldón (m lineal)</label><input type="number" value="${m.faldon}" oninput="S.medLam.faldon=this.value" placeholder="0.00" step="0.1"></div>
+        </div>
+      </div>
+      <div class="med-section">
+        <div class="med-title">Aislamiento térmico</div>
+        <div class="g2 mb10">
+          <div><label class="fl">Tipo de aislante</label>
+            <select onchange="S.medLam.tipoAislante=this.value">
+              ${['Sin aislante','Fibra de vidrio','Poliuretano','Poliestireno','Lana mineral','Otro'].map(v=>`<option ${m.tipoAislante===v?'selected':''}>${v}</option>`).join('')}
+            </select>
+          </div>
+          <div><label class="fl">Espesor (pulg / mm)</label><input type="text" value="${m.espesorAislante}" oninput="S.medLam.espesorAislante=this.value" placeholder="ej. 2 pulg"></div>
+        </div>
+        <textarea oninput="S.medLam.obs=this.value" placeholder="Observaciones de cubierta…">${m.obs||''}</textarea>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="brow">
+    <button class="btn btn-ghost" onclick="go(0)">← Atrás</button>
+    <button class="btn btn-green" onclick="go(2)">Siguiente → Condición</button>
+  </div>`;
+  return html;
+}
+
+function step2(){
+  const tipo = S.data.tipo;
+  const comps = tipo==='Cubierta' ? COMPS_LAM : tipo==='Mixto' ? [...COMPS_EST,...COMPS_LAM] : COMPS_EST;
+  return `
+  <div class="ph"><div class="ph-t">Condición actual</div><div class="ph-s">Evaluación visual de componentes · ${S.data.tipo}</div></div>
+  <div class="card" style="background:#FEF9E7;border-color:#F0C040">
+    <div style="font-size:12px;font-weight:600;color:#854F0B;margin-bottom:4px">📋 Instrucciones</div>
+    <div style="font-size:12px;color:#854F0B;line-height:1.6">Evalúa cada componente según lo que observas en campo. <b>1 = Pésimo</b> (requiere intervención inmediata), <b>5 = Excelente</b> (sin deficiencias). Si un componente no aplica, déjalo sin calificar.</div>
+  </div>
+  ${comps.map(c=>{
+    const s = S.condicion[c.id];
+    return `
+    <div class="comp ${s?'scored':''}">
+      <div class="comp-top"><div class="comp-name">${c.name}</div>${s?`<span class="chip chip-green" style="color:${SCC[s]};background:${s<=2?'#FCEBEB':s===3?'#E6F1FB':'#EAF3DE'}">${SCL[s]}</span>`:''}</div>
+      <div class="comp-desc">${c.desc}</div>
+      <div class="sr">
+        ${[1,2,3,4,5].map(n=>`<button class="sb3 s${n} ${s===n?'on':''}" onclick="setCondicion('${c.id}',${n})">${n} — ${SCL[n]}</button>`).join('')}
+      </div>
+    </div>`;
+  }).join('')}
+  <div class="brow">
+    <button class="btn btn-ghost" onclick="go(1)">← Atrás</button>
+    <button class="btn btn-green" onclick="go(3)">Siguiente → Fotografías</button>
+  </div>`;
+}
+
+function setCondicion(id, val){
+  S.condicion[id] = val; render();
+}
+
+function step3(){
+  return `
+  <div class="ph"><div class="ph-t">Fotografías</div><div class="ph-s">${S.fotos.length} foto${S.fotos.length!==1?'s':''} capturada${S.fotos.length!==1?'s':''}</div></div>
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Agregar fotografías</div></div>
+    <div class="dz" onclick="document.getElementById('fotoInput').click()">
+      <div class="dz-icon">📷</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:4px">Tomar foto o seleccionar de galería</div>
+      <div style="font-size:12px;color:var(--muted)">Incluye fotos de dron, fachadas, detalles y puntos críticos</div>
+      <input type="file" id="fotoInput" accept="image/*" multiple capture="environment" onchange="agregarFotos(this)">
+    </div>
+    <div class="pgrid" id="pgrid">${renderFotos()}</div>
+  </div>
+  <div class="brow">
+    <button class="btn btn-ghost" onclick="go(2)">← Atrás</button>
+    <button class="btn btn-green" onclick="go(4)">Siguiente → Envío</button>
+  </div>`;
+}
+
+function renderFotos(){
+  return S.fotos.map((f,i)=>`
+    <div class="pcrd">
+      <img src="${f.dataUrl}" alt="Foto ${i+1}">
+      <button class="pdel" onclick="eliminarFoto(${i})">×</button>
+      <div class="pcrd-b">
+        <input type="text" class="fl" value="${f.caption||''}" placeholder="Pie de foto…" oninput="S.fotos[${i}].caption=this.value" style="width:100%;border:1px solid var(--line);border-radius:5px;padding:3px 6px;font-size:11px;margin-bottom:4px">
+        <select style="font-size:11px;padding:3px 5px;width:100%;border:1px solid var(--line);border-radius:5px" onchange="S.fotos[${i}].categoria=this.value">
+          ${['General','Estructura','Cubierta','Dron','Detalle','Daño','Acceso'].map(c=>`<option ${f.categoria===c?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+    </div>`).join('');
+}
+
+function agregarFotos(input){
+  const files = Array.from(input.files);
+  files.forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      S.fotos.push({ dataUrl:e.target.result, caption:'', categoria:'General' });
+      document.getElementById('pgrid').innerHTML = renderFotos();
+      document.getElementById('kpi-fotos').textContent = S.fotos.length;
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value='';
+}
+
+function eliminarFoto(i){
+  S.fotos.splice(i,1);
+  document.getElementById('pgrid').innerHTML = renderFotos();
+  document.getElementById('kpi-fotos').textContent = S.fotos.length;
+}
+
+function step4(){
+  const d = S.data;
+  const dest = S.destinos;
+  return `
+  <div class="ph"><div class="ph-t">Envío del levantamiento</div><div class="ph-s">Folio ${S.folio} · ${S.fotos.length} foto${S.fotos.length!==1?'s':''}</div></div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Resumen del levantamiento</div></div>
+    <table class="otable" style="width:100%">
+      <tr><td style="width:35%;font-weight:600;color:var(--muted);font-size:11px">Cliente</td><td>${d.cliente||'—'}</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px">Proyecto</td><td>${d.proyecto||'—'}</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px">Tipo</td><td>${d.tipo}</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px">Fecha</td><td>${fmtDate(d.fecha)}</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px">Supervisor</td><td>${d.supervisor||'—'}</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px">Fotografías</td><td>${S.fotos.length} capturadas</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px">Condición evaluada</td><td>${Object.keys(S.condicion).length} componente${Object.keys(S.condicion).length!==1?'s':''}</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Destinatarios</div></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">CC siempre a: <b>a.medina@metarco.com.mx</b> y <b>proyectos1@metarco.com.mx</b></div>
+    <label class="dest-check">
+      <input type="checkbox" ${dest.costos?'checked':''} onchange="S.destinos.costos=this.checked">
+      <label>📊 Costos</label>
+      <span>costos@metarco.com.mx</span>
+    </label>
+    <label class="dest-check">
+      <input type="checkbox" ${dest.gerencia?'checked':''} onchange="S.destinos.gerencia=this.checked">
+      <label>👔 Gerencia de Operaciones</label>
+      <span>juancarlos.lopez@metarco.com.mx</span>
+    </label>
+    <label class="dest-check">
+      <input type="checkbox" ${dest.cliente?'checked':''} onchange="S.destinos.cliente=this.checked">
+      <label>🏢 Cliente</label>
+      <span>Correo del cliente</span>
+    </label>
+    ${dest.cliente?`<div style="margin-top:6px"><label class="fl">Correo del cliente</label><input type="email" value="${dest.clienteEmail||''}" oninput="S.destinos.clienteEmail=this.value" placeholder="cliente@empresa.com"></div>`:''}
+    <div style="margin-top:10px"><label class="fl">Correos adicionales (separados por coma)</label><input type="text" value="${dest.otrosEmail||''}" oninput="S.destinos.otrosEmail=this.value" placeholder="otro@empresa.com, otro2@empresa.com"></div>
+  </div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Acciones</div></div>
+    <button class="pdfbtn" id="pdf-btn" onclick="descargarPDF()" ${S.pdfOk?'':'disabled'}>
+      <span style="font-size:16px">📄</span>
+      ${S.pdfOk?'Descargar PDF — Levantamiento '+S.folio:'Cargando generador PDF…'}
+    </button>
+    <div class="brow" style="margin-top:12px">
+      <button class="btn btn-outline" onclick="guardarBorrador()">💾 Guardar borrador</button>
+      <button class="btn btn-dark" onclick="enviarAhora()" ${S.enviando?'disabled':''}>
+        ${S.enviando?'⏳ Enviando…':'📨 Enviar por correo'}
+      </button>
+      <button class="btn btn-green" onclick="guardarYEnviar()" ${S.enviando?'disabled':''}>
+        ✅ Guardar y enviar
+      </button>
+    </div>
+  </div>
+
+  <div class="brow">
+    <button class="btn btn-ghost" onclick="go(3)">← Atrás</button>
+    <button class="btn btn-ghost" onclick="nuevoLevantamiento()">🔄 Nuevo levantamiento</button>
+  </div>`;
+}
+
+// ─── RENDER ───────────────────────────────────────────────────
+function render(){
+  renderNav();
+  const m = document.getElementById('main');
+  if(S.step===0) m.innerHTML=step0();
+  else if(S.step===1) m.innerHTML=step1();
+  else if(S.step===2) m.innerHTML=step2();
+  else if(S.step===3) m.innerHTML=step3();
+  else if(S.step===4) m.innerHTML=step4();
+}
+
+// ─── PDF ──────────────────────────────────────────────────────
+function waitPDF(){
+  if(window.jspdf && window.jspdf.jsPDF){ S.pdfOk=true; const b=document.getElementById('pdf-btn'); if(b){b.disabled=false;b.innerHTML='<span style="font-size:16px">📄</span>Descargar PDF — Levantamiento '+S.folio;}}
+  else setTimeout(waitPDF,600);
+}
+
+function genPDFDoc(){
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF('p','mm','a4');
+  const W=210,M=14,UW=W-M*2;
+  const d=S.data, tipo=d.tipo;
+
+  const fill=h=>{const[r,g,b]=h2r(h);doc.setFillColor(r,g,b);};
+  const tc=h=>{const[r,g,b]=h2r(h);doc.setTextColor(r,g,b);};
+  const dc=h=>{const[r,g,b]=h2r(h);doc.setDrawColor(r,g,b);};
+
+  const chrome=()=>{
+    fill('#1A1A2E');doc.rect(0,0,W,20,'F');
+    fill('#2ECC71');doc.rect(0,20,W,1.2,'F');
+    if(LOGO_PDF){try{doc.addImage(LOGO_PDF.split(',')[1]?LOGO_PDF:'','PNG',M,3,40,14);}catch(e){}}
+    tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('METARCO',M+44,10);
+    tc('#2ECC71');doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text('Levantamiento técnico de obra',W-M,9,{align:'right'});
+    tc('#AAAAAA');doc.setFontSize(6.5);doc.text(`Folio: ${S.folio}  ·  Fecha: ${fmtDate(d.fecha)}  ·  Supervisor: ${d.supervisor||'—'}`,W-M,15,{align:'right'});
+    fill('#1A1A2E');doc.rect(0,287,W,10,'F');
+    fill('#2ECC71');doc.rect(0,286.5,W,0.8,'F');
+    tc('#FFFFFF');doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.text('METARCO — Construcción y Estructuras Metálicas',M,293);
+    tc('#2ECC71');doc.text(`Pág. ${doc.internal.getCurrentPageInfo().pageNumber}  ·  ${S.folio}`,W-M,293,{align:'right'});
+  };
+  const banner=(y,txt)=>{fill('#1A1A2E');doc.rect(M,y,UW,8,'F');fill('#2ECC71');doc.rect(M,y,3,8,'F');tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text(txt.toUpperCase(),M+6,y+5.5);return y+11;};
+  const chkY=(y,need)=>{if(y+need>272){doc.addPage();chrome();return 26;}return y;};
+
+  chrome(); let y=26;
+
+  // PORTADA
+  fill('#1A1A2E');doc.rect(M,y,UW,26,'F');
+  tc('#2ECC71');doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('Levantamiento técnico de obra — '+tipo,M+8,y+6);
+  tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(d.proyecto||'Levantamiento sin nombre',M+8,y+15,{maxWidth:UW-16});
+  tc('#AACCAA');doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text(`${d.cliente||'—'}  ·  ${fmtDate(d.fecha)}  ·  Folio: ${S.folio}`,M+8,y+23);
+  y+=31;
+
+  // DATOS GENERALES
+  y=banner(y,'Datos generales del proyecto');
+  const flds=[['Cliente',d.cliente||'—'],['No. contrato',d.contrato||'—'],['Proyecto',d.proyecto||'—'],['Dirección',d.direccion||'—'],['Fecha',fmtDate(d.fecha)],['Supervisor',d.supervisor||'—'],['Tipo',tipo]];
+  const fw2=(UW-2)/2;
+  flds.forEach((fi,i)=>{const left=i%2===0,row=Math.floor(i/2),fx=M+(left?0:fw2+2),fy=y+row*11;fill(row%2===0?'#FFFFFF':'#F5F7F5');dc('#E0E0E0');doc.setLineWidth(0.15);doc.rect(fx,fy,fw2,11,'F');doc.rect(fx,fy,fw2,11,'S');tc('#888888');doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.text(fi[0],fx+3,fy+4);tc('#1A1A1A');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text(String(fi[1]).slice(0,40),fx+3,fy+9);});
+  y+=Math.ceil(flds.length/2)*11+6;
+
+  // MEDIDAS ESTRUCTURA
+  if(tipo==='Estructura'||tipo==='Mixto'){
+    const m=S.medEst;
+    y=chkY(y,30);y=banner(y,'Medidas — Estructura metálica');
+    const rows=[];
+    if(m.claroMax) rows.push(['Claro máximo',m.claroMax+' m']);
+    if(m.alturaCols) rows.push(['Altura de columnas',m.alturaCols+' m']);
+    if(m.alturaCumbrera) rows.push(['Altura de cumbrera',m.alturaCumbrera+' m']);
+    if(m.pendiente) rows.push(['Pendiente',m.pendiente+'%']);
+    if(m.numEjes) rows.push(['Número de ejes',m.numEjes]);
+    if(m.separacion) rows.push(['Separación entre ejes',m.separacion+' m']);
+    if(m.tipoPerfil) rows.push(['Tipo de perfil',m.tipoPerfil]);
+    if(m.calibrePerfil) rows.push(['Calibre / sección',m.calibrePerfil]);
+    if(m.tipoPlaca) rows.push(['Placa de anclaje',m.tipoPlaca]);
+    if(m.anchoAnacla) rows.push(['Anclas / pernos',m.anchoAnacla]);
+    if(m.tipoCimentacion) rows.push(['Tipo de cimentación',m.tipoCimentacion]);
+    if(rows.length) doc.autoTable({startY:y,head:[['Parámetro','Valor']],body:rows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},headStyles:{fillColor:h2r('#1A1A2E'),textColor:[255,255,255],fontSize:8,fontStyle:'bold'},columnStyles:{0:{cellWidth:UW*0.5,fontStyle:'bold'},1:{cellWidth:UW*0.5}},alternateRowStyles:{fillColor:[245,247,245]},didDrawPage(){chrome();}});
+    y=doc.lastAutoTable?doc.lastAutoTable.finalY+5:y+5;
+    if(m.obs){y=chkY(y,18);fill('#F5F7F5');fill('#2ECC71');doc.rect(M,y,2.5,14,'F');fill('#F5F7F5');doc.rect(M,y,UW,14,'F');tc('#1A1A1A');doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text(doc.splitTextToSize('Obs. estructura: '+m.obs,UW-10),M+7,y+5);y+=18;}
+  }
+
+  // MEDIDAS CUBIERTA
+  if(tipo==='Cubierta'||tipo==='Mixto'){
+    const m=S.medLam;
+    y=chkY(y,30);y=banner(y,'Medidas — Cubierta / Laminación');
+    const rows=[];
+    if(m.areaTot) rows.push(['Área total',m.areaTot+' m²']);
+    if(m.tipoLamina) rows.push(['Tipo de lámina',m.tipoLamina]);
+    if(m.calibre) rows.push(['Calibre',m.calibre]);
+    if(m.traslape) rows.push(['Traslape',m.traslape+' cm']);
+    if(m.canalon) rows.push(['Canalón',m.canalon+' m']);
+    if(m.bajantes) rows.push(['Bajantes pluviales',m.bajantes+' pzas']);
+    if(m.claraboyas) rows.push(['Claraboyas',m.claraboyas+' m²']);
+    if(m.caballete) rows.push(['Caballete',m.caballete+' m']);
+    if(m.faldon) rows.push(['Faldón',m.faldon+' m']);
+    if(m.tipoAislante) rows.push(['Aislante',m.tipoAislante+(m.espesorAislante?' — '+m.espesorAislante:'')]);
+    if(rows.length) doc.autoTable({startY:y,head:[['Parámetro','Valor']],body:rows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},headStyles:{fillColor:h2r('#1A1A2E'),textColor:[255,255,255],fontSize:8,fontStyle:'bold'},columnStyles:{0:{cellWidth:UW*0.5,fontStyle:'bold'},1:{cellWidth:UW*0.5}},alternateRowStyles:{fillColor:[245,247,245]},didDrawPage(){chrome();}});
+    y=doc.lastAutoTable?doc.lastAutoTable.finalY+5:y+5;
+  }
+
+  // CONDICION
+  const comps = tipo==='Cubierta'?COMPS_LAM:tipo==='Mixto'?[...COMPS_EST,...COMPS_LAM]:COMPS_EST;
+  const evComps = comps.filter(c=>S.condicion[c.id]);
+  if(evComps.length){
+    y=chkY(y,30);y=banner(y,'Evaluación de condición actual');
+    doc.autoTable({startY:y,head:[['Componente','Calificación','Condición']],
+      body:evComps.map(c=>{const s=S.condicion[c.id];return[c.name,s+'/5',SCL[s]];}),
+      margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},
+      headStyles:{fillColor:h2r('#1A1A2E'),textColor:[255,255,255],fontSize:8,fontStyle:'bold'},
+      columnStyles:{0:{cellWidth:UW*0.55},1:{cellWidth:UW*0.1,halign:'center'},2:{cellWidth:UW*0.35}},
+      alternateRowStyles:{fillColor:[245,247,245]},
+      didParseCell(dd){if(dd.column.index===2&&dd.section==='body'){const s=S.condicion[evComps[dd.row.index]?.id];if(s){dd.cell.styles.textColor=h2r(SCC[s]);dd.cell.styles.fontStyle='bold';}}},
+      didDrawPage(){chrome();}});
+    y=doc.lastAutoTable.finalY+5;
+  }
+
+  // FOTOS
+  if(S.fotos.length){
+    // Agrupar por categoría
+    const cats = [...new Set(S.fotos.map(f=>f.categoria||'General'))];
+    cats.forEach(cat=>{
+      const fCat = S.fotos.filter(f=>(f.categoria||'General')===cat);
+      if(!fCat.length) return;
+      y=chkY(y,20);y=banner(y,'Registro fotográfico — '+cat);
+      const iw=(UW-5)/2,ih=iw*0.65;
+      fCat.forEach((f,i)=>{
+        if(i%2===0){y=chkY(y,ih+14);}
+        const col=i%2,x=M+col*(iw+5);
+        try{
+          doc.addImage(f.dataUrl,'JPEG',x,y,iw,ih);
+          fill('#1A1A2E');doc.rect(x,y+ih-9,iw,9,'F');
+          tc('#2ECC71');doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+          doc.text(f.caption||`Foto ${S.fotos.indexOf(f)+1}`,x+4,y+ih-3.5,{maxWidth:iw-8});
+        } catch(e){}
+        if(i%2===1||i===fCat.length-1) y+=ih+12;
+      });
+      y+=4;
+    });
+  }
+
+  // FIRMA
+  y=chkY(y,36);
+  fill('#F5F7F5');dc('#E0E0E0');doc.setLineWidth(0.15);doc.rect(M,y,UW,30,'F');doc.rect(M,y,UW,30,'S');
+  tc('#888888');doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.text('ELABORADO POR — METARCO',M+UW/2,y+6,{align:'center'});
+  tc('#BBBBBB');doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.text('Este levantamiento fue realizado por personal técnico de METARCO. Los datos son referenciales y sujetos a validación en gabinete.',M+UW/2,y+11,{align:'center',maxWidth:UW-20});
+  const sw=UW*0.38,sy2=y+26;
+  [[M+6,'Supervisor / Fecha'],[M+UW-sw-6,'METARCO / Revisión']].forEach(([fx,lbl])=>{dc('#AAAAAA');doc.setLineWidth(0.4);doc.line(fx,sy2,fx+sw,sy2);tc('#AAAAAA');doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text(lbl,fx+sw/2,sy2+4,{align:'center'});});
+
+  return doc;
+}
+
+function descargarPDF(){
+  if(!S.pdfOk){showToast('PDF cargando, espera un momento','err');return;}
+  try{
+    const doc = genPDFDoc();
+    const cliente = (S.data.cliente||'cliente').replace(/[^a-z0-9]/gi,'_').slice(0,20);
+    doc.save(`METARCO_Levantamiento_${S.folio}_${cliente}.pdf`);
+  } catch(e){ showToast('Error generando PDF: '+e.message,'err'); }
+}
+
+// ─── AZURE SAVE ───────────────────────────────────────────────
+async function guardarEnAzure(){
+  const entity = {
+    PartitionKey: 'levantamientos',
+    RowKey: S.folio,
+    folio: S.folio,
+    usuario: S.usuario,
+    email: S.email,
+    fecha: S.data.fecha,
+    cliente: S.data.cliente,
+    proyecto: S.data.proyecto,
+    direccion: S.data.direccion,
+    tipo: S.data.tipo,
+    supervisor: S.data.supervisor,
+    contrato: S.data.contrato,
+    obsGen: S.data.obsGen||'',
+    medEst: JSON.stringify(S.medEst),
+    medLam: JSON.stringify(S.medLam),
+    condicion: JSON.stringify(S.condicion),
+    nFotos: S.fotos.length,
+    estado: 'borrador',
+    fechaGuardado: new Date().toISOString()
+  };
+  await azUpsert('levantamientos', entity);
+}
+
+async function guardarBorrador(){
+  try{
+    await guardarEnAzure();
+    showToast('Borrador guardado en Azure ✓','ok');
+  } catch(e){ showToast('Error guardando: '+e.message,'err'); }
+}
+
+// ─── CORREO VIA GRAPH ─────────────────────────────────────────
+async function enviarCorreo(pdfBase64){
+  const token = await getToken();
+  if(!token){ showToast('No hay sesión activa para enviar correo','err'); return false; }
+
+  const dest = S.destinos;
+  const toList = [];
+  if(dest.costos) toList.push({emailAddress:{address:'costos@metarco.com.mx',name:'Costos METARCO'}});
+  if(dest.gerencia) toList.push({emailAddress:{address:'juancarlos.lopez@metarco.com.mx',name:'Juan Carlos López'}});
+  if(dest.cliente && dest.clienteEmail) toList.push({emailAddress:{address:dest.clienteEmail,name:'Cliente'}});
+  if(dest.otrosEmail) dest.otrosEmail.split(',').forEach(e=>{ const em=e.trim(); if(em) toList.push({emailAddress:{address:em}}); });
+
+  if(!toList.length){ showToast('Selecciona al menos un destinatario','err'); return false; }
+
+  const ccList = [
+    {emailAddress:{address:'a.medina@metarco.com.mx',name:'Arturo Medina'}},
+    {emailAddress:{address:'proyectos1@metarco.com.mx',name:'Proyectos 1'}}
+  ];
+
+  const d = S.data;
+  const asunto = `Levantamiento técnico — ${d.proyecto||'Proyecto'} | ${d.cliente||'Cliente'} | Folio ${S.folio}`;
+  const cuerpo = `
+    <div style="font-family:Arial,sans-serif;max-width:600px">
+      <div style="background:#1A1A2E;padding:20px;border-radius:8px 8px 0 0">
+        <h2 style="color:#2ECC71;margin:0;font-size:18px">METARCO — Levantamiento técnico</h2>
+      </div>
+      <div style="background:#f9f9f9;padding:20px;border-radius:0 0 8px 8px;border:1px solid #ddd;border-top:none">
+        <p style="margin:0 0 16px;color:#333">Se adjunta el levantamiento técnico con folio <strong>${S.folio}</strong>.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <tr style="background:#1A1A2E;color:#fff"><th style="padding:8px;text-align:left">Campo</th><th style="padding:8px;text-align:left">Detalle</th></tr>
+          <tr style="background:#fff"><td style="padding:7px 8px;font-weight:600;color:#555">Cliente</td><td style="padding:7px 8px">${d.cliente||'—'}</td></tr>
+          <tr style="background:#f5f5f5"><td style="padding:7px 8px;font-weight:600;color:#555">Proyecto</td><td style="padding:7px 8px">${d.proyecto||'—'}</td></tr>
+          <tr style="background:#fff"><td style="padding:7px 8px;font-weight:600;color:#555">Tipo</td><td style="padding:7px 8px">${d.tipo}</td></tr>
+          <tr style="background:#f5f5f5"><td style="padding:7px 8px;font-weight:600;color:#555">Fecha</td><td style="padding:7px 8px">${fmtDate(d.fecha)}</td></tr>
+          <tr style="background:#fff"><td style="padding:7px 8px;font-weight:600;color:#555">Supervisor</td><td style="padding:7px 8px">${d.supervisor||'—'}</td></tr>
+          <tr style="background:#f5f5f5"><td style="padding:7px 8px;font-weight:600;color:#555">Fotografías</td><td style="padding:7px 8px">${S.fotos.length}</td></tr>
+        </table>
+        <p style="margin:16px 0 0;font-size:12px;color:#888">Este correo fue generado automáticamente por el sistema de levantamientos METARCO.</p>
+      </div>
+    </div>`;
+
+  const payload = {
+    message:{
+      subject: asunto,
+      body:{contentType:'HTML',content:cuerpo},
+      toRecipients: toList,
+      ccRecipients: ccList,
+      attachments:[{
+        '@odata.type':'#microsoft.graph.fileAttachment',
+        name:`METARCO_Levantamiento_${S.folio}.pdf`,
+        contentType:'application/pdf',
+        contentBytes: pdfBase64
+      }]
+    },
+    saveToSentItems: true
+  };
+
+  const r = await fetch('https://graph.microsoft.com/v1.0/me/sendMail',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if(!r.ok){ const err=await r.text(); throw new Error('Graph error: '+err.slice(0,120)); }
+  return true;
+}
+
+function getPDFBase64(){
+  const doc = genPDFDoc();
+  return doc.output('datauristring').split(',')[1];
+}
+
+async function enviarAhora(){
+  if(!S.pdfOk){showToast('PDF aún cargando','err');return;}
+  S.enviando=true; render();
+  try{
+    const b64 = getPDFBase64();
+    await enviarCorreo(b64);
+    showToast('Correo enviado exitosamente ✓','ok');
+  } catch(e){ showToast('Error al enviar: '+e.message,'err'); }
+  S.enviando=false; render();
+}
+
+async function guardarYEnviar(){
+  if(!S.pdfOk){showToast('PDF aún cargando','err');return;}
+  S.enviando=true; render();
+  try{
+    await guardarEnAzure();
+    const b64 = getPDFBase64();
+    await enviarCorreo(b64);
+    // Marcar como enviado
+    const entity = {PartitionKey:'levantamientos',RowKey:S.folio,estado:'enviado',fechaEnvio:new Date().toISOString()};
+    await azUpsert('levantamientos',entity);
+    showToast('Guardado y enviado ✓','ok');
+  } catch(e){ showToast('Error: '+e.message,'err'); }
+  S.enviando=false; render();
+}
+
+function nuevoLevantamiento(){
+  if(!confirm('¿Iniciar un nuevo levantamiento? Se perderá el progreso no guardado.')) return;
+  S={ step:0, folio:genFolio(), usuario:S.usuario, email:S.email,
+    data:{cliente:'',proyecto:'',direccion:'',fecha:today(),supervisor:S.usuario,tipo:'Estructura',contrato:''},
+    medEst:{claroMax:'',alturaCols:'',alturaCumbrera:'',pendiente:'',numEjes:'',separacion:'',tipoPerfil:'IPR',calibrePerfil:'',tipoPlaca:'',calibrePlaca:'',anchoAnacla:'',tipoCimentacion:'',obs:''},
+    medLam:{areaTot:'',tipoLamina:'KR-18',calibre:'',traslape:'',canalon:'',bajantes:'',claraboyas:'',caballete:'',faldon:'',tipoAislante:'',espesorAislante:'',obs:''},
+    condicion:{}, fotos:[], destinos:{costos:true,gerencia:false,cliente:false,otrosEmail:''}, pdfOk:S.pdfOk, enviando:false };
+  document.getElementById('folio-tag-sb').textContent=S.folio;
+  render();
+}
+
+// ─── KICK ─────────────────────────────────────────────────────
+// Logo render
+(()=>{const w=document.getElementById('logo-el');if(w){w.innerHTML=`<img src="${LOGO_HTML}" style="height:60px;width:auto;object-fit:contain;margin-bottom:8px" alt="METARCO">`;} })();
+</script>
+</body>
+</html>
