@@ -214,11 +214,8 @@ async function azGet(table, filter=''){
 }
 
 // ─── LOGO BASE64 ──────────────────────────────────────────────
-const LOGO_B64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPoAAABkCAYAAACaEOK3AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABNUlEQVR4nO3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBuAABHgAAAABJRU5ErkJggg==";
-
-// ─── LOGO SIDEBAR ─────────────────────────────────────────────
-const LOGO_HTML = LOGO_B64;
-const LOGO_PDF = LOGO_B64;
+const LOGO_HTML = 'https://arme183.github.io/cao-metarco/LOGO_METARCO1.png';
+const LOGO_PDF  = 'https://arme183.github.io/cao-metarco/LOGO_METARCO1.png';
 
 // ─── ESTADO ───────────────────────────────────────────────────
 const PASOS = ['Datos generales','Medidas','Condición','Fotografías','Envío'];
@@ -652,7 +649,7 @@ function genPDFDoc(){
   const chrome=()=>{
     fill('#1A1A2E');doc.rect(0,0,W,20,'F');
     fill('#2ECC71');doc.rect(0,20,W,1.2,'F');
-    if(LOGO_PDF){try{doc.addImage(LOGO_PDF.split(',')[1]?LOGO_PDF:'','PNG',M,3,40,14);}catch(e){}}
+    if(LOGO_PDF){try{doc.addImage(LOGO_PDF,'PNG',M,3,40,14);}catch(e){}}
     tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('METARCO',M+44,10);
     tc('#2ECC71');doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text('Levantamiento técnico de obra',W-M,9,{align:'right'});
     tc('#AAAAAA');doc.setFontSize(6.5);doc.text(`Folio: ${S.folio}  ·  Fecha: ${fmtDate(d.fecha)}  ·  Supervisor: ${d.supervisor||'—'}`,W-M,15,{align:'right'});
