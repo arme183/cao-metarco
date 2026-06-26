@@ -2,7 +2,7 @@
   "name": "CAO Metarco",
   "short_name": "CAO Metarco",
   "description": "Sistema de Control de Avance de Obra — Metarco",
-  "start_url": "/cao-metarco/",
+  "start_url": "/cao-metarco/supervisor.html",
   "scope": "/cao-metarco/",
   "display": "standalone",
   "orientation": "portrait",
