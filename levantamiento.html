@@ -116,7 +116,7 @@ textarea{resize:none;min-height:60px;line-height:1.5}
 /* LOGIN */
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--dark)}
 .login-box{background:#fff;border-radius:16px;padding:36px 32px;max-width:380px;width:100%;text-align:center}
-.login-logo{margin-bottom:20px}
+.login-logo{background:var(--dark);border-radius:12px;padding:16px;margin-bottom:20px;display:inline-block}
 .login-title{font-size:20px;font-weight:700;margin-bottom:6px}
 .login-sub{font-size:13px;color:var(--muted);margin-bottom:24px}
 .btn-ms{width:100%;padding:12px;border:1.5px solid #E0E0E0;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;gap:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s}
@@ -250,22 +250,22 @@ const ELEMENTOS = {
     { id:'tsec',  icon:'─',  nom:'Trabes secundarias',   campos:[{k:'cantidad',l:'Cantidad (pzas)',t:'number'},{k:'perfil',l:'Perfil',t:'text'},{k:'sep',l:'Separación entre ejes (m)',t:'number'},{k:'obs',l:'Observaciones',t:'area'}] },
     { id:'contra',icon:'✕',  nom:'Contraventeo',         campos:[{k:'tipo',l:'Tipo (diagonal/cruz/etc)',t:'text'},{k:'perfil',l:'Perfil',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
     { id:'placa', icon:'⬛', nom:'Placas de anclaje',    campos:[{k:'cantidad',l:'Cantidad (pzas)',t:'number'},{k:'dim',l:'Dimensiones (mm)',t:'text'},{k:'anclas',l:'No. anclas / pernos',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'cim',   icon:'🏗',  nom:'Cimentación',          campos:[{k:'tipo',l:'Tipo',t:'select',ops:['Zapata aislada','Zapata corrida','Losa','Pilotes','Dado de concreto','Otro']},{k:'dim',l:'Dimensiones aprox.',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'entre', icon:'⬜', nom:'Entrepisos / Mezanine', campos:[{k:'area',l:'Área (m²)',t:'number'},{k:'tipo',l:'Tipo de losa/deck',t:'text'},{k:'carga',l:'Carga diseño (kg/m²)',t:'number'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'cim',   icon:'🏗',  nom:'Cimentacion',          campos:[{k:'tipo',l:'Tipo',t:'select',ops:['Zapata aislada','Zapata corrida','Losa','Pilotes','Dado de concreto','Otro']},{k:'dim',l:'Dimensiones aprox.',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'entre', icon:'⬜', nom:'Entrepisos / Mezanine', campos:[{k:'area',l:'Area (m2)',t:'number'},{k:'tipo',l:'Tipo de losa/deck',t:'text'},{k:'carga',l:'Carga diseño (kg/m2)',t:'number'},{k:'obs',l:'Observaciones',t:'area'}] },
     { id:'puerta',icon:'🚪', nom:'Puertas industriales',  campos:[{k:'cantidad',l:'Cantidad',t:'number'},{k:'dim',l:'Dimensiones (m)',t:'text'},{k:'tipo',l:'Tipo (enrollable/seccional)',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'muro',  icon:'🧱', nom:'Muros / Fachadas',      campos:[{k:'area',l:'Área (m²)',t:'number'},{k:'material',l:'Material',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'muro',  icon:'🧱', nom:'Muros / Fachadas',      campos:[{k:'area',l:'Area (m2)',t:'number'},{k:'material',l:'Material',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
   ],
   Cubierta: [
-    { id:'lam',   icon:'🏠', nom:'Lámina principal',      campos:[{k:'area',l:'Área total (m²)',t:'number'},{k:'tipo',l:'Tipo de lámina',t:'select',ops:['KR-18','KR-25','Standing Seam','Lámina galvanizada','Policarbonato','Losa Aceralia','Otro']},{k:'calibre',l:'Calibre',t:'text'},{k:'traslape',l:'Traslape (cm)',t:'number'},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'canal', icon:'🌊', nom:'Canalón',                campos:[{k:'longitud',l:'Longitud total (m)',t:'number'},{k:'seccion',l:'Sección (cm)',t:'text'},{k:'material',l:'Material',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'bajada',icon:'⬇',  nom:'Bajadas pluviales',     campos:[{k:'cantidad',l:'Cantidad (pzas)',t:'number'},{k:'diametro',l:'Diámetro (pulg)',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'lam',   icon:'🏠', nom:'Lamina principal',      campos:[{k:'area',l:'Area total (m2)',t:'number'},{k:'tipo',l:'Tipo de lamina',t:'select',ops:['KR-18','KR-25','Standing Seam','Lamina galvanizada','Policarbonato','Losa Aceralia','Otro']},{k:'calibre',l:'Calibre',t:'text'},{k:'traslape',l:'Traslape (cm)',t:'number'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'canal', icon:'🌊', nom:'Canalon',                campos:[{k:'longitud',l:'Longitud total (m)',t:'number'},{k:'seccion',l:'Seccion (cm)',t:'text'},{k:'material',l:'Material',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'bajada',icon:'⬇',  nom:'Bajadas pluviales',     campos:[{k:'cantidad',l:'Cantidad (pzas)',t:'number'},{k:'diametro',l:'Diametro (pulg)',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
     { id:'cab',   icon:'▲',  nom:'Caballete / Cumbrera',  campos:[{k:'longitud',l:'Longitud (m)',t:'number'},{k:'tipo',l:'Tipo de caballete',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'claro', icon:'💡', nom:'Claraboyas',             campos:[{k:'area',l:'Área total (m²)',t:'number'},{k:'cantidad',l:'Cantidad (pzas)',t:'number'},{k:'material',l:'Material',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'faldon',icon:'📐', nom:'Faldón',                 campos:[{k:'longitud',l:'Longitud (m)',t:'number'},{k:'material',l:'Material',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'claro', icon:'💡', nom:'Claraboyas',             campos:[{k:'area',l:'Area total (m2)',t:'number'},{k:'cantidad',l:'Cantidad (pzas)',t:'number'},{k:'material',l:'Material',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'faldon',icon:'📐', nom:'Faldon',                 campos:[{k:'longitud',l:'Longitud (m)',t:'number'},{k:'material',l:'Material',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
     { id:'sell',  icon:'🔒', nom:'Sellados y traslapes',   campos:[{k:'estado_sell',l:'Estado general',t:'select',ops:['Bueno','Regular','Deteriorado','Sin sello']},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'aisle', icon:'🧊', nom:'Aislamiento térmico',    campos:[{k:'tipo',l:'Tipo',t:'select',ops:['Sin aislante','Fibra de vidrio','Poliuretano','Poliestireno','Lana mineral','Otro']},{k:'espesor',l:'Espesor (pulg)',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'imper', icon:'💧', nom:'Impermeabilización',     campos:[{k:'area',l:'Área (m²)',t:'number'},{k:'sistema',l:'Sistema aplicado',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
-    { id:'vent',  icon:'🌬', nom:'Ventilación',            campos:[{k:'tipo',l:'Tipo (natural/mecánica)',t:'text'},{k:'cantidad',l:'Extractores (pzas)',t:'number'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'aisle', icon:'🧊', nom:'Aislamiento termico',    campos:[{k:'tipo',l:'Tipo',t:'select',ops:['Sin aislante','Fibra de vidrio','Poliuretano','Poliestireno','Lana mineral','Otro']},{k:'espesor',l:'Espesor (pulg)',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'imper', icon:'💧', nom:'Impermeabilizacion',     campos:[{k:'area',l:'Area (m2)',t:'number'},{k:'sistema',l:'Sistema aplicado',t:'text'},{k:'obs',l:'Observaciones',t:'area'}] },
+    { id:'vent',  icon:'🌬', nom:'Ventilacion',            campos:[{k:'tipo',l:'Tipo (natural/mecanica)',t:'text'},{k:'cantidad',l:'Extractores (pzas)',t:'number'},{k:'obs',l:'Observaciones',t:'area'}] },
   ]
 };
 const ESTADOS = ['✅ Bueno','⚠️ Regular','🔴 Requiere atención','🚨 Crítico'];
@@ -808,16 +808,18 @@ function genPDFDoc(){
     fill('#1A1A2E');doc.rect(0,0,W,20,'F');
     fill('#2ECC71');doc.rect(0,20,W,1.2,'F');
     if(LOGO_B64){try{doc.addImage(LOGO_B64,'PNG',M,3,40,14);}catch(e){}}
-    tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(10);doc.text('METARCO',M+44,10);
     tc('#2ECC71');doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text('Levantamiento técnico de obra',W-M,9,{align:'right'});
     tc('#AAAAAA');doc.setFontSize(6.5);doc.text(`Folio: ${S.folio}  ·  Fecha: ${fmtDate(d.fecha)}  ·  Supervisor: ${d.supervisor||'—'}`,W-M,15,{align:'right'});
     fill('#1A1A2E');doc.rect(0,287,W,10,'F');
     fill('#2ECC71');doc.rect(0,286.5,W,0.8,'F');
-    tc('#FFFFFF');doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.text('METARCO — Construcción y Estructuras Metálicas',M,293);
-    tc('#2ECC71');doc.text(`Pág. ${doc.internal.getCurrentPageInfo().pageNumber}  ·  ${S.folio}`,W-M,293,{align:'right'});
+    tc('#FFFFFF');doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.text('METARCO — Construccion y Estructuras Metalicas',M,293);
+    tc('#2ECC71');doc.text(`Pag. ${doc.internal.getCurrentPageInfo().pageNumber}  |  ${S.folio}`,W-M,293,{align:'right'});
   };
   const banner=(y,txt)=>{fill('#1A1A2E');doc.rect(M,y,UW,8,'F');fill('#2ECC71');doc.rect(M,y,3,8,'F');tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text(txt.toUpperCase(),M+6,y+5.5);return y+11;};
   const chkY=(y,need)=>{if(y+need>272){doc.addPage();chrome();return 26;}return y;};
+  // didDrawPage para autoTable — usa número de página actual, no llama chrome() de nuevo
+  const atOpts = {margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},headStyles:{fillColor:h2r('#1A1A2E'),textColor:[255,255,255],fontSize:8,fontStyle:'bold'},alternateRowStyles:{fillColor:[245,247,245]},
+    didDrawPage:function(data){ chrome(); }};
 
   chrome(); let y=26;
 
@@ -858,7 +860,7 @@ function genPDFDoc(){
         return [campo?campo.l:k, String(v)];
       });
       if(camposRows.length){
-        doc.autoTable({startY:y,body:camposRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2,font:'helvetica',lineColor:[220,220,220],lineWidth:0.1},columnStyles:{0:{cellWidth:UW*0.4,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.6}},alternateRowStyles:{fillColor:[250,252,250]},didDrawPage(){chrome();}});
+        doc.autoTable({startY:y,body:camposRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2,font:'helvetica',lineColor:[220,220,220],lineWidth:0.1},columnStyles:{0:{cellWidth:UW*0.4,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.6}},alternateRowStyles:{fillColor:[250,252,250]}});
         y=doc.lastAutoTable.finalY+3;
       }
       if(el.campos.obs){
@@ -903,7 +905,7 @@ function genPDFDoc(){
   ].filter(Boolean);
   if(cpRows.length||cp.restricciones){
     y=chkY(y,30);y=banner(y,'Condiciones dentro de planta');
-    if(cpRows.length) doc.autoTable({startY:y,body:cpRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},columnStyles:{0:{cellWidth:UW*0.4,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.6}},alternateRowStyles:{fillColor:[245,247,245]},didDrawPage(){chrome();}});
+    if(cpRows.length) doc.autoTable({startY:y,body:cpRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},columnStyles:{0:{cellWidth:UW*0.4,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.6}},alternateRowStyles:{fillColor:[245,247,245]}});
     y=doc.lastAutoTable?doc.lastAutoTable.finalY+3:y;
     if(cp.restricciones){y=chkY(y,16);fill('#FEF3D7');dc('#F0C040');doc.setLineWidth(0.15);doc.rect(M,y,UW,14,'F');doc.rect(M,y,UW,14,'S');tc('#854F0B');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('Restricciones especiales:',M+4,y+4.5);doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(cp.restricciones,UW-8)[0],M+4,y+10);y+=17;}
   }
@@ -918,7 +920,7 @@ function genPDFDoc(){
   ].filter(Boolean);
   if(ccRows.length||cc.incluye||cc.noIncluye||cc.notasComerciales){
     y=chkY(y,30);y=banner(y,'Condiciones comerciales');
-    if(ccRows.length) doc.autoTable({startY:y,body:ccRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},columnStyles:{0:{cellWidth:UW*0.4,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.6}},alternateRowStyles:{fillColor:[245,247,245]},didDrawPage(){chrome();}});
+    if(ccRows.length) doc.autoTable({startY:y,body:ccRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},columnStyles:{0:{cellWidth:UW*0.4,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.6}},alternateRowStyles:{fillColor:[245,247,245]}});
     y=doc.lastAutoTable?doc.lastAutoTable.finalY+4:y;
     if(cc.incluye){y=chkY(y,18);fill('#EAF3DE');dc('#B8D8B8');doc.setLineWidth(0.15);doc.rect(M,y,UW,16,'F');doc.rect(M,y,UW,16,'S');tc('#1B6E41');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('INCLUYE:',M+4,y+4.5);doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(cc.incluye,UW-8)[0],M+4,y+10.5);y+=19;}
     if(cc.noIncluye){y=chkY(y,18);fill('#FCEBEB');dc('#E24B4A');doc.setLineWidth(0.15);doc.rect(M,y,UW,16,'F');doc.rect(M,y,UW,16,'S');tc('#A32D2D');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('NO INCLUYE:',M+4,y+4.5);doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(cc.noIncluye,UW-8)[0],M+4,y+10.5);y+=19;}
