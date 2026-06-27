@@ -235,8 +235,8 @@ let S = {
   data: { cliente:'', proyecto:'', direccion:'', fecha:'', supervisor:'', tipo:'Estructura', contrato:'' },
   elementos: {},
   croquis: null,
-  condPlanta: { gruaDisponible:'', gruaCapacidad:'', andamios:'', accesoAltura:'', horario:'', soldadura:'', permisoAltura:'', riesgoElectrico:'', contactoNombre:'', contactoTel:'', restricciones:'' },
-  condComercial: { anticipo:'50', contraEntrega:'50', plazo:'', vigencia:'30 días', incluye:'', noIncluye:'', notasComerciales:'' },
+  condPlanta: { condiciones: [], nuevaCond: '' },
+  condComercial: { formaPago:'', diasCredito:'', fianza:'', altaProveedor:'', facturaAntes:'', moneda:'MXN', contactoCompras:'', emailCompras:'', telCompras:'', obs:'' },
   fotos: [],
   destinos: { costos:true, gerencia:false, cliente:false, clienteEmail:'', otrosEmail:'' },
   pdfOk: false, enviando: false
@@ -527,62 +527,59 @@ function subirCroquis(input){
 }
 
 // ─── STEP 2: CONDICIONES DE PLANTA ────────────────────────────
+const COND_RAPIDAS = ['Grua disponible','Andamios en planta','Acceso en altura','Permiso de soldadura','Permiso trabajo en altura','Riesgo electrico','Solo fines de semana','Solo turno nocturno','Requiere EPP especial','Sin interrumpir produccion','Supervision requerida'];
+
+function agregarCondPlanta(texto){
+  var t = texto.trim();
+  if(!t) return;
+  S.condPlanta.condiciones.push({texto:t, nota:''});
+  S.condPlanta.nuevaCond = '';
+  render();
+}
+
+function eliminarCondPlanta(i){ S.condPlanta.condiciones.splice(i,1); render(); }
+
 function step2(){
   const c = S.condPlanta;
-  const yesno = (k)=>`
-    <div style="display:flex;gap:8px">
-      ${['Sí','No','N/A'].map(v=>`<button onclick="S.condPlanta.${k}='${v}';render()" style="flex:1;padding:7px;border-radius:7px;border:1.5px solid ${c[k]===v?'var(--green)':'var(--line)'};background:${c[k]===v?'#F0FAF5':'#FAFCFA'};color:${c[k]===v?'var(--gdark)':'var(--muted)'};font-size:12px;font-weight:${c[k]===v?'700':'500'};cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
-    </div>`;
+  const lista = c.condiciones || [];
   return `
-  <div class="ph"><div class="ph-t">Condiciones dentro de planta</div><div class="ph-s">Información para planear la ejecución del trabajo</div></div>
+  <div class="ph"><div class="ph-t">Condiciones dentro de planta</div><div class="ph-s">${lista.length} condicion${lista.length!==1?'es':''} registrada${lista.length!==1?'s':''}</div></div>
 
-  <div class="card">
-    <div class="sh"><div class="sb2"></div><div class="st">🏗 Equipo disponible</div></div>
-    <div class="mb10">
-      <label class="fl">¿Hay grúa disponible en planta?</label>
-      ${yesno('gruaDisponible')}
-    </div>
-    ${c.gruaDisponible==='Sí'?`<div class="mb10"><label class="fl">Capacidad de la grúa</label><input type="text" value="${c.gruaCapacidad||''}" oninput="S.condPlanta.gruaCapacidad=this.value" placeholder="ej. 5 ton, puente grúa 10 ton"></div>`:''}
-    <div class="mb10">
-      <label class="fl">¿Hay andamios disponibles?</label>
-      ${yesno('andamios')}
-    </div>
-    <div class="mb10">
-      <label class="fl">¿Hay acceso en altura (escaleras fijas, plataformas)?</label>
-      ${yesno('accesoAltura')}
-    </div>
+  <div class="card" style="background:#E8F4FD;border-color:#185FA5">
+    <div style="font-size:12px;font-weight:600;color:#185FA5;margin-bottom:4px">📋 ¿Cómo usar?</div>
+    <div style="font-size:12px;color:#185FA5;line-height:1.6">Agrega cualquier condición que afecte la ejecución del trabajo — accesos, horarios, restricciones, equipo disponible. Usa los accesos rápidos o escribe lo que necesites.</div>
   </div>
 
   <div class="card">
-    <div class="sh"><div class="sb2"></div><div class="st">⚙️ Condiciones de trabajo</div></div>
-    <div class="mb10">
-      <label class="fl">¿Se permite soldar dentro de la planta?</label>
-      ${yesno('soldadura')}
+    <div class="sh"><div class="sb2"></div><div class="st">Agregar condición</div></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input class="form-input" id="nuevaCondInput" type="text" value="${c.nuevaCond||''}" 
+        oninput="S.condPlanta.nuevaCond=this.value"
+        onkeydown="if(event.key==='Enter'){agregarCondPlanta(this.value);}"
+        placeholder="ej. Grúa de 5 ton disponible, acceso solo por portón norte…"
+        style="flex:1">
+      <button class="btn btn-green" onclick="agregarCondPlanta(document.getElementById('nuevaCondInput').value)" style="white-space:nowrap">+ Agregar</button>
     </div>
-    <div class="mb10">
-      <label class="fl">¿Se requiere permiso de trabajo en altura?</label>
-      ${yesno('permisoAltura')}
-    </div>
-    <div class="mb10">
-      <label class="fl">¿Hay riesgo eléctrico en zona de trabajo?</label>
-      ${yesno('riesgoElectrico')}
-    </div>
-    <div class="mb10">
-      <label class="fl">Horario de trabajo permitido</label>
-      <input type="text" value="${c.horario||''}" oninput="S.condPlanta.horario=this.value" placeholder="ej. Lunes a viernes 7:00 - 17:00, fines de semana">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">Accesos rápidos:</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+      ${COND_RAPIDAS.map(r=>`<button onclick="agregarCondPlanta('${r}')" style="padding:4px 10px;border-radius:20px;border:1px solid var(--line);background:#FAFCFA;color:var(--txt);font-size:11px;cursor:pointer;font-family:var(--font);transition:all .12s" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--line)'">${r}</button>`).join('')}
     </div>
   </div>
 
+  ${lista.length>0?`
   <div class="card">
-    <div class="sh"><div class="sb2"></div><div class="st">👤 Contacto en planta</div></div>
-    <div class="g2 mb10">
-      <div><label class="fl">Nombre del contacto</label><input type="text" value="${c.contactoNombre||''}" oninput="S.condPlanta.contactoNombre=this.value" placeholder="Nombre completo"></div>
-      <div><label class="fl">Teléfono / WhatsApp</label><input type="text" value="${c.contactoTel||''}" oninput="S.condPlanta.contactoTel=this.value" placeholder="ej. 442 123 4567"></div>
-    </div>
-    <div><label class="fl">Restricciones o condiciones especiales</label>
-      <textarea oninput="S.condPlanta.restricciones=this.value" placeholder="ej. No se puede interrumpir producción, área restringida los martes, usar tapones auditivos…">${c.restricciones||''}</textarea>
-    </div>
-  </div>
+    <div class="sh"><div class="sb2"></div><div class="st">Condiciones registradas</div></div>
+    ${lista.map((cond,i)=>`
+    <div style="border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin-bottom:7px;background:#FAFCFA;display:flex;gap:10px;align-items:flex-start">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600;color:var(--txt);margin-bottom:4px">${cond.texto}</div>
+        <input type="text" value="${cond.nota||''}" oninput="S.condPlanta.condiciones[${i}].nota=this.value" 
+          placeholder="Nota adicional (opcional)…"
+          style="width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px;font-size:12px;font-family:var(--font);color:var(--txt);background:#fff">
+      </div>
+      <button onclick="eliminarCondPlanta(${i})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;line-height:1">×</button>
+    </div>`).join('')}
+  </div>`:''}
 
   <div class="brow">
     <button class="btn btn-ghost" onclick="go(1)">← Atrás</button>
@@ -593,57 +590,56 @@ function step2(){
 // ─── STEP 3: CONDICIONES COMERCIALES ──────────────────────────
 function step3(){
   const c = S.condComercial;
+  const yesno = (k,label)=>`
+    <div class="mb10">
+      <label class="fl">${label}</label>
+      <div style="display:flex;gap:8px">
+        ${['Si','No','Por definir'].map(v=>`<button onclick="S.condComercial.${k}='${v}';render()" style="flex:1;padding:7px;border-radius:7px;border:1.5px solid ${c[k]===v?'var(--green)':'var(--line)'};background:${c[k]===v?'#F0FAF5':'#FAFCFA'};color:${c[k]===v?'var(--gdark)':'var(--muted)'};font-size:12px;font-weight:${c[k]===v?'700':'500'};cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
+      </div>
+    </div>`;
   return `
-  <div class="ph"><div class="ph-t">Condiciones comerciales</div><div class="ph-s">Términos y condiciones preliminares de la propuesta</div></div>
+  <div class="ph"><div class="ph-t">Condiciones comerciales del cliente</div><div class="ph-s">Requisitos que el cliente impone — información para que Costos pueda cotizar correctamente</div></div>
 
   <div class="card">
-    <div class="sh"><div class="sb2"></div><div class="st">💰 Forma de pago</div></div>
-    <div class="g2 mb10">
-      <div>
-        <label class="fl">Anticipo (%)</label>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-          ${['30','40','50','60','70'].map(v=>`<button onclick="S.condComercial.anticipo='${v}';S.condComercial.contraEntrega='${100-parseInt(v)}';render()" style="padding:5px 10px;border-radius:20px;border:1.5px solid ${c.anticipo===v?'var(--green)':'var(--line)'};background:${c.anticipo===v?'#F0FAF5':'#FAFCFA'};color:${c.anticipo===v?'var(--gdark)':'var(--muted)'};font-size:11px;font-weight:${c.anticipo===v?'700':'500'};cursor:pointer;font-family:var(--font)">${v}%</button>`).join('')}
-        </div>
-        <input type="number" value="${c.anticipo}" oninput="S.condComercial.anticipo=this.value" min="0" max="100" placeholder="50">
+    <div class="sh"><div class="sb2"></div><div class="st">Forma de pago del cliente</div></div>
+    <div class="mb10">
+      <label class="fl">¿Cómo paga el cliente?</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+        ${['Anticipo + finiquito','Contra entrega','A credito','Por estimaciones','Por avance mensual'].map(v=>`<button onclick="S.condComercial.formaPago='${v}'" style="padding:6px 12px;border-radius:20px;border:1.5px solid ${c.formaPago===v?'var(--green)':'var(--line)'};background:${c.formaPago===v?'#F0FAF5':'#FAFCFA'};color:${c.formaPago===v?'var(--gdark)':'var(--muted)'};font-size:11px;font-weight:${c.formaPago===v?'700':'500'};cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
       </div>
-      <div>
-        <label class="fl">Contra entrega (%)</label>
-        <input type="number" value="${c.contraEntrega}" oninput="S.condComercial.contraEntrega=this.value" min="0" max="100" placeholder="50">
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">Total: ${(parseInt(c.anticipo||0)+parseInt(c.contraEntrega||0))}% ${(parseInt(c.anticipo||0)+parseInt(c.contraEntrega||0))===100?'✅':'⚠️'}</div>
+      <input type="text" value="${c.formaPago||''}" oninput="S.condComercial.formaPago=this.value" placeholder="O describe la forma de pago…">
+    </div>
+    <div class="mb10">
+      <label class="fl">Días de crédito</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        ${['0 días','15 días','30 días','45 días','60 días','90 días'].map(v=>`<button onclick="S.condComercial.diasCredito='${v}'" style="padding:4px 10px;border-radius:20px;border:1px solid ${c.diasCredito===v?'var(--green)':'var(--line)'};background:${c.diasCredito===v?'#F0FAF5':'#FAFCFA'};color:${c.diasCredito===v?'var(--gdark)':'var(--muted)'};font-size:11px;cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
+      </div>
+      <input type="text" value="${c.diasCredito||''}" oninput="S.condComercial.diasCredito=this.value" placeholder="Días de crédito o condición de pago">
+    </div>
+    <div class="mb10">
+      <label class="fl">Moneda</label>
+      <div style="display:flex;gap:8px">
+        ${['MXN','USD','EUR'].map(v=>`<button onclick="S.condComercial.moneda='${v}'" style="flex:1;padding:7px;border-radius:7px;border:1.5px solid ${c.moneda===v?'var(--green)':'var(--line)'};background:${c.moneda===v?'#F0FAF5':'#FAFCFA'};color:${c.moneda===v?'var(--gdark)':'var(--muted)'};font-size:13px;font-weight:${c.moneda===v?'700':'500'};cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
       </div>
     </div>
   </div>
 
   <div class="card">
-    <div class="sh"><div class="sb2"></div><div class="st">📅 Tiempos</div></div>
-    <div class="g2 mb10">
-      <div>
-        <label class="fl">Plazo estimado de ejecución</label>
-        <input type="text" value="${c.plazo||''}" oninput="S.condComercial.plazo=this.value" placeholder="ej. 15 días hábiles">
-      </div>
-      <div>
-        <label class="fl">Vigencia de la propuesta</label>
-        <div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap">
-          ${['15 días','30 días','45 días','60 días'].map(v=>`<button onclick="S.condComercial.vigencia='${v}'" style="padding:4px 8px;border-radius:20px;border:1px solid ${c.vigencia===v?'var(--green)':'var(--line)'};background:${c.vigencia===v?'#F0FAF5':'#FAFCFA'};color:${c.vigencia===v?'var(--gdark)':'var(--muted)'};font-size:11px;cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
-        </div>
-        <input type="text" value="${c.vigencia||''}" oninput="S.condComercial.vigencia=this.value" placeholder="ej. 30 días">
-      </div>
-    </div>
+    <div class="sh"><div class="sb2"></div><div class="st">Requisitos administrativos</div></div>
+    ${yesno('fianza','¿Requiere fianza o garantía?')}
+    ${yesno('altaProveedor','¿Requiere alta como proveedor?')}
+    ${yesno('facturaAntes','¿Requiere factura antes del pago?')}
   </div>
 
   <div class="card">
-    <div class="sh"><div class="sb2"></div><div class="st">📋 Alcance de la propuesta</div></div>
-    <div class="mb10">
-      <label class="fl">La cotización incluye</label>
-      <textarea oninput="S.condComercial.incluye=this.value" placeholder="ej. Mano de obra, materiales, andamios, equipo de seguridad, limpieza…">${c.incluye||''}</textarea>
+    <div class="sh"><div class="sb2"></div><div class="st">Contacto de compras / administración</div></div>
+    <div class="mb10"><label class="fl">Nombre</label><input type="text" value="${c.contactoCompras||''}" oninput="S.condComercial.contactoCompras=this.value" placeholder="Nombre del contacto de compras"></div>
+    <div class="g2 mb10">
+      <div><label class="fl">Email</label><input type="email" value="${c.emailCompras||''}" oninput="S.condComercial.emailCompras=this.value" placeholder="compras@empresa.com"></div>
+      <div><label class="fl">Teléfono</label><input type="text" value="${c.telCompras||''}" oninput="S.condComercial.telCompras=this.value" placeholder="442 123 4567"></div>
     </div>
-    <div class="mb10">
-      <label class="fl">La cotización NO incluye</label>
-      <textarea oninput="S.condComercial.noIncluye=this.value" placeholder="ej. Grúa, permisos municipales, trabajos eléctricos, pintura…">${c.noIncluye||''}</textarea>
-    </div>
-    <div>
-      <label class="fl">Notas adicionales</label>
-      <textarea oninput="S.condComercial.notasComerciales=this.value" placeholder="Condiciones especiales, garantía, penalizaciones, notas…">${c.notasComerciales||''}</textarea>
+    <div><label class="fl">Observaciones adicionales para Costos</label>
+      <textarea oninput="S.condComercial.obs=this.value" placeholder="Cualquier información relevante que Costos deba saber para cotizar…">${c.obs||''}</textarea>
     </div>
   </div>
 
@@ -894,39 +890,31 @@ function genPDFDoc(){
   }
 
   // CONDICIONES DE PLANTA
-  const cp=S.condPlanta;
-  const cpRows=[
-    cp.gruaDisponible&&['¿Grúa disponible?',cp.gruaDisponible+(cp.gruaCapacidad?' — '+cp.gruaCapacidad:'')],
-    cp.andamios&&['¿Andamios disponibles?',cp.andamios],
-    cp.accesoAltura&&['¿Acceso en altura?',cp.accesoAltura],
-    cp.soldadura&&['¿Permiso de soldadura?',cp.soldadura],
-    cp.permisoAltura&&['¿Permiso trabajo en altura?',cp.permisoAltura],
-    cp.riesgoElectrico&&['¿Riesgo eléctrico?',cp.riesgoElectrico],
-    cp.horario&&['Horario de trabajo',cp.horario],
-    cp.contactoNombre&&['Contacto en planta',cp.contactoNombre+(cp.contactoTel?' — '+cp.contactoTel:'')],
-  ].filter(Boolean);
-  if(cpRows.length||cp.restricciones){
+  const cp = S.condPlanta;
+  const cpLista = cp.condiciones || [];
+  if(cpLista.length){
     y=chkY(y,30);y=banner(y,'Condiciones dentro de planta');
-    if(cpRows.length) doc.autoTable({startY:y,body:cpRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},columnStyles:{0:{cellWidth:UW*0.4,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.6}},alternateRowStyles:{fillColor:[245,247,245]}});
-    y=doc.lastAutoTable?doc.lastAutoTable.finalY+3:y;
-    if(cp.restricciones){y=chkY(y,16);fill('#FEF3D7');dc('#F0C040');doc.setLineWidth(0.15);doc.rect(M,y,UW,14,'F');doc.rect(M,y,UW,14,'S');tc('#854F0B');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('Restricciones especiales:',M+4,y+4.5);doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(cp.restricciones,UW-8)[0],M+4,y+10);y+=17;}
+    const cpRows = cpLista.map(function(c){ return [c.texto, c.nota||'—']; });
+    doc.autoTable({startY:y,head:[['Condicion','Nota']],body:cpRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},headStyles:{fillColor:h2r('#1A1A2E'),textColor:[255,255,255],fontSize:8,fontStyle:'bold'},columnStyles:{0:{cellWidth:UW*0.55,fontStyle:'bold'},1:{cellWidth:UW*0.45}},alternateRowStyles:{fillColor:[245,247,245]}});
+    y=doc.lastAutoTable?doc.lastAutoTable.finalY+5:y+5;
   }
 
   // CONDICIONES COMERCIALES
   const cc=S.condComercial;
   const ccRows=[
-    cc.anticipo&&['Anticipo',cc.anticipo+'%'],
-    cc.contraEntrega&&['Contra entrega',cc.contraEntrega+'%'],
-    cc.plazo&&['Plazo de ejecución',cc.plazo],
-    cc.vigencia&&['Vigencia de propuesta',cc.vigencia],
+    cc.formaPago&&['Forma de pago del cliente',cc.formaPago],
+    cc.diasCredito&&['Dias de credito',cc.diasCredito],
+    cc.moneda&&['Moneda',cc.moneda],
+    cc.fianza&&['Requiere fianza',cc.fianza],
+    cc.altaProveedor&&['Alta de proveedor',cc.altaProveedor],
+    cc.facturaAntes&&['Factura antes del pago',cc.facturaAntes],
+    cc.contactoCompras&&['Contacto de compras',cc.contactoCompras+(cc.telCompras?' — '+cc.telCompras:'')+(cc.emailCompras?' | '+cc.emailCompras:'')],
   ].filter(Boolean);
-  if(ccRows.length||cc.incluye||cc.noIncluye||cc.notasComerciales){
-    y=chkY(y,30);y=banner(y,'Condiciones comerciales');
-    if(ccRows.length) doc.autoTable({startY:y,body:ccRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},columnStyles:{0:{cellWidth:UW*0.4,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.6}},alternateRowStyles:{fillColor:[245,247,245]}});
+  if(ccRows.length||cc.obs){
+    y=chkY(y,30);y=banner(y,'Condiciones comerciales del cliente');
+    if(ccRows.length) doc.autoTable({startY:y,body:ccRows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},columnStyles:{0:{cellWidth:UW*0.45,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.55}},alternateRowStyles:{fillColor:[245,247,245]}});
     y=doc.lastAutoTable?doc.lastAutoTable.finalY+4:y;
-    if(cc.incluye){y=chkY(y,18);fill('#EAF3DE');dc('#B8D8B8');doc.setLineWidth(0.15);doc.rect(M,y,UW,16,'F');doc.rect(M,y,UW,16,'S');tc('#1B6E41');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('INCLUYE:',M+4,y+4.5);doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(cc.incluye,UW-8)[0],M+4,y+10.5);y+=19;}
-    if(cc.noIncluye){y=chkY(y,18);fill('#FCEBEB');dc('#E24B4A');doc.setLineWidth(0.15);doc.rect(M,y,UW,16,'F');doc.rect(M,y,UW,16,'S');tc('#A32D2D');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('NO INCLUYE:',M+4,y+4.5);doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(cc.noIncluye,UW-8)[0],M+4,y+10.5);y+=19;}
-    if(cc.notasComerciales){y=chkY(y,16);fill('#F5F7F5');dc('#E0E0E0');doc.setLineWidth(0.15);doc.rect(M,y,UW,14,'F');doc.rect(M,y,UW,14,'S');tc('#1A1A1A');doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text(doc.splitTextToSize('Notas: '+cc.notasComerciales,UW-8)[0],M+4,y+5);y+=17;}
+    if(cc.obs){y=chkY(y,16);fill('#F5F7F5');dc('#E0E0E0');doc.setLineWidth(0.15);doc.rect(M,y,UW,14,'F');doc.rect(M,y,UW,14,'S');tc('#1A1A1A');doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.text(doc.splitTextToSize('Obs. para Costos: '+cc.obs,UW-8)[0],M+4,y+5);y+=17;}
   }
 
   // FOTOS
@@ -1107,8 +1095,8 @@ function nuevoLevantamiento(){
   if(!confirm('¿Iniciar un nuevo levantamiento? Se perderá el progreso no guardado.')) return;
   S.step=0; S.folio=genFolio(); S.elementos={}; S.croquis=null;
   S.data={cliente:'',proyecto:'',direccion:'',fecha:today(),supervisor:S.usuario,tipo:'Estructura',contrato:''};
-  S.condPlanta={gruaDisponible:'',gruaCapacidad:'',andamios:'',accesoAltura:'',horario:'',soldadura:'',permisoAltura:'',riesgoElectrico:'',contactoNombre:'',contactoTel:'',restricciones:''};
-  S.condComercial={anticipo:'50',contraEntrega:'50',plazo:'',vigencia:'30 días',incluye:'',noIncluye:'',notasComerciales:''};
+  S.condPlanta={condiciones:[], nuevaCond:''};
+  S.condComercial={formaPago:'',diasCredito:'',fianza:'',altaProveedor:'',facturaAntes:'',moneda:'MXN',contactoCompras:'',emailCompras:'',telCompras:'',obs:''};
   S.fotos=[]; S.destinos={costos:true,gerencia:false,cliente:false,clienteEmail:'',otrosEmail:''};
   S.enviando=false;
   document.getElementById('folio-tag-sb').textContent=S.folio;
