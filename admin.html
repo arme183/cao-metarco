@@ -260,7 +260,44 @@ tr:hover td { background:#f7faff; }
 .upload-area-text { font-size:13px; color:var(--gris-muted); }
 input[type=file] { display:none; }
 
-/* Toast */
+/* ── CIERRE DE OBRA ── */
+.cierre-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+@media(max-width:900px){ .cierre-grid{ grid-template-columns:1fr; } }
+.cierre-seccion { background:#fff; border-radius:12px; border:1.5px solid var(--borde); overflow:hidden; }
+.cierre-sec-header { padding:12px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--borde); }
+.cierre-sec-title { font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.cierre-progress { font-size:11px; font-weight:600; }
+.cierre-items { padding:8px 0; }
+.cierre-item { display:flex; align-items:flex-start; gap:10px; padding:8px 16px; border-bottom:1px solid #f5f5f5; transition:background .1s; }
+.cierre-item:last-child { border-bottom:none; }
+.cierre-item:hover { background:#fafcfa; }
+.cierre-item-check { width:18px; height:18px; min-width:18px; border-radius:4px; border:2px solid var(--borde); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:11px; transition:all .15s; margin-top:1px; }
+.cierre-item-check.done { background:var(--verde); border-color:var(--verde); color:#fff; }
+.cierre-item-check.na { background:#e5e7eb; border-color:#d1d5db; color:#6b7280; }
+.cierre-item-check.bloq { background:#ef4444; border-color:#ef4444; color:#fff; }
+.cierre-item-info { flex:1 }
+.cierre-item-nom { font-size:12px; font-weight:500; color:var(--azul-oscuro); line-height:1.4; }
+.cierre-item-nom.done { text-decoration:line-through; color:var(--gris-muted); }
+.cierre-item-meta { font-size:10px; color:var(--gris-muted); margin-top:2px; }
+.cierre-item-actions { display:flex; gap:4px; }
+.cierre-btn { font-size:10px; padding:2px 7px; border-radius:4px; border:1px solid var(--borde); background:#f5f7fc; cursor:pointer; font-family:'Inter',sans-serif; color:var(--gris-muted); transition:all .1s; }
+.cierre-btn:hover { border-color:var(--azul-claro); color:var(--azul-claro); }
+.cierre-btn.active-na { background:#f3f4f6; border-color:#9ca3af; color:#6b7280; }
+/* Semáforo */
+.sem-dot { width:14px; height:14px; border-radius:50%; display:inline-block; }
+.sem-rojo { background:#ef4444; }
+.sem-amarillo { background:#f59e0b; }
+.sem-verde { background:#10b981; }
+/* Retro */
+.retro-pregunta { margin-bottom:14px; }
+.retro-label { font-size:12px; font-weight:600; color:var(--azul-oscuro); margin-bottom:5px; display:block; }
+.retro-stars { display:flex; gap:4px; margin-bottom:6px; }
+.retro-star { font-size:20px; cursor:pointer; opacity:.3; transition:opacity .1s; }
+.retro-star.on { opacity:1; }
+/* Barra progreso cierre */
+.cierre-bar-wrap { background:#e5e7eb; border-radius:10px; height:6px; overflow:hidden; width:80px; }
+.cierre-bar { height:100%; border-radius:10px; transition:width .3s; }
+
 .toast {
   position:fixed; bottom:24px; right:24px; z-index:999;
   padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600;
@@ -362,6 +399,9 @@ input[type=file] { display:none; }
       <div class="nav-section-title">Datos</div>
       <div class="nav-item" data-page="registros">
         <span class="nav-item-icon">📝</span> Registros
+      </div>
+      <div class="nav-item" data-page="cierre" id="navCierre">
+        <span class="nav-item-icon">🏁</span> Cierre de obra
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -475,6 +515,24 @@ input[type=file] { display:none; }
             <thead><tr><th>Fecha</th><th>Supervisor</th><th>Obra</th><th>Actividad</th><th>Subfase</th><th>Cantidad</th><th>PPC</th><th>Notas</th></tr></thead>
             <tbody id="registrosBody"><tr><td colspan="8" class="loading">Cargando...</td></tr></tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CIERRE DE OBRA ── -->
+    <div class="page" id="page-cierre">
+      <div class="toolbar">
+        <select class="filter-btn" id="filtroCierreObra" style="padding:8px 12px;border-radius:8px;border:1.5px solid var(--borde);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;">
+          <option value="">Selecciona una obra</option>
+        </select>
+        <div style="flex:1"></div>
+        <div id="cierreSemaforo" style="display:none;align-items:center;gap:10px"></div>
+      </div>
+      <div id="cierreContenido">
+        <div style="text-align:center;padding:60px 20px;color:var(--gris-muted)">
+          <div style="font-size:48px;margin-bottom:12px">🏁</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:6px">Módulo de Cierre de Obra</div>
+          <div style="font-size:13px">Selecciona una obra para ver y gestionar su checklist de cierre</div>
         </div>
       </div>
     </div>
@@ -1253,6 +1311,7 @@ function poblarSelectObras() {
     el.innerHTML = (hasEmpty ? '<option value="">Todas las obras</option>' : '') +
       allObras.map(function(o){ var n = o.RowKey||''; return '<option value="' + n + '">' + n + '</option>'; }).join('');
   });
+  poblarSelectCierre();
 }
 
 function poblarSelectResidente(seleccionado) {
@@ -1585,7 +1644,354 @@ document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
   });
 });
 
-// Verificar sesión cacheada al cargar
+// ══════════════════════════════════════════════
+// MÓDULO DE CIERRE DE OBRA
+// ══════════════════════════════════════════════
+
+// Catálogo de items del checklist
+var CIERRE_ITEMS = {
+  contractual: {
+    titulo: 'Cierre contractual / legal',
+    icono: '📜',
+    color: '#185FA5',
+    items: [
+      { id:'contrato_firmado',    nom:'Contrato firmado por ambas partes',      critico:true  },
+      { id:'anticipo_cobrado',    nom:'Anticipo cobrado',                        critico:true  },
+      { id:'estimaciones',        nom:'Estimaciones / facturas emitidas',        critico:false },
+      { id:'saldo_cobrado',       nom:'Saldo final cobrado',                     critico:true  },
+      { id:'fianza_vigente',      nom:'Fianza de cumplimiento vigente',          critico:false },
+      { id:'fianza_liberada',     nom:'Fianza liberada',                         critico:false },
+      { id:'acta_entrega',        nom:'Acta de entrega-recepción firmada',       critico:true  },
+      { id:'carta_no_adeudo',     nom:'Carta de no adeudo del cliente',          critico:false },
+      { id:'retenciones_lib',     nom:'Retenciones liberadas',                   critico:false },
+    ]
+  },
+  operativo: {
+    titulo: 'Cierre técnico / operativo',
+    icono: '🔧',
+    color: '#1B6E41',
+    items: [
+      { id:'as_built',            nom:'Planos as-built elaborados',              critico:true  },
+      { id:'memoria_fot',         nom:'Memoria fotográfica final',               critico:false },
+      { id:'reporte_tecnico',     nom:'Reporte técnico de obra',                 critico:true  },
+      { id:'checklist_calidad',   nom:'Checklist de calidad firmado',            critico:false },
+      { id:'punch_list',          nom:'Punch list cerrado (observaciones resueltas)', critico:false },
+      { id:'equipo_retirado',     nom:'Equipo y herramienta retirados de obra',  critico:false },
+      { id:'limpieza_final',      nom:'Limpieza final realizada',                critico:false },
+      { id:'materiales_ret',      nom:'Materiales sobrantes inventariados/retirados', critico:false },
+    ]
+  },
+  administrativo: {
+    titulo: 'Cierre administrativo interno',
+    icono: '📊',
+    color: '#854F0B',
+    items: [
+      { id:'balance_obra',        nom:'Balance de obra (presupuesto vs real)',   critico:true  },
+      { id:'costo_mo',            nom:'Costo real de mano de obra documentado',  critico:false },
+      { id:'costo_mat',           nom:'Costo real de materiales documentado',    critico:false },
+      { id:'desviaciones',        nom:'Desviaciones documentadas',               critico:false },
+      { id:'facturas_prov',       nom:'Facturas de proveedores cerradas',        critico:true  },
+      { id:'retenciones_sub',     nom:'Retenciones a subcontratistas liberadas', critico:false },
+    ]
+  }
+};
+
+var RETRO_PREGUNTAS = [
+  { id:'salio_bien',    label:'¿Qué salió bien que debemos repetir?' },
+  { id:'salio_mal',     label:'¿Qué salió mal y cómo lo evitamos la próxima vez?' },
+  { id:'presupuesto',   label:'¿El presupuesto fue preciso? ¿Dónde nos fuimos?' },
+  { id:'cliente',       label:'¿El cliente quedó satisfecho? ¿Por qué sí / no?' },
+  { id:'proveedores',   label:'¿Tuvimos problemas con proveedores?' },
+  { id:'aprendizaje',   label:'¿Qué aprendimos técnicamente?' },
+];
+
+var cierreData = {};      // { [obraKey]: { items:{}, retro:{}, calificacion:0, noAplica:{} } }
+var obraCierreActual = '';
+
+// Permisos por rol
+function puedeMarcarItem(seccion) {
+  if (userRole === 'admin') return true;
+  if (userRole === 'coordinador' && seccion !== 'administrativo') return true;
+  return false;
+}
+function puedeCerrarOficialmente() { return userRole === 'admin'; }
+function puedeMarcarNA() { return userRole === 'admin' || userRole === 'coordinador'; }
+
+// Cargar cierre desde Azure
+async function cargarCierre(obra) {
+  try {
+    var url = 'https://' + AZURE_ACCOUNT + '.table.core.windows.net/cierres(PartitionKey=\'cierres\',RowKey=\'' + encodeURIComponent(obra) + '\')' + AZURE_SAS;
+    var res = await fetch(url, { headers: azureHeaders() });
+    if (res.ok) {
+      var d = await res.json();
+      cierreData[obra] = {
+        items:        JSON.parse(d.items        || '{}'),
+        noAplica:     JSON.parse(d.noAplica     || '{}'),
+        retro:        JSON.parse(d.retro        || '{}'),
+        calificacion: d.calificacion || 0,
+        cerrada:      d.cerrada || false,
+        fechaCierre:  d.fechaCierre || ''
+      };
+    } else {
+      cierreData[obra] = { items:{}, noAplica:{}, retro:{}, calificacion:0, cerrada:false, fechaCierre:'' };
+    }
+  } catch(e) {
+    cierreData[obra] = { items:{}, noAplica:{}, retro:{}, calificacion:0, cerrada:false, fechaCierre:'' };
+  }
+}
+
+async function guardarCierre(obra) {
+  var d = cierreData[obra] || {};
+  var entity = {
+    PartitionKey:  'cierres',
+    RowKey:        obra,
+    items:         JSON.stringify(d.items || {}),
+    noAplica:      JSON.stringify(d.noAplica || {}),
+    retro:         JSON.stringify(d.retro || {}),
+    calificacion:  d.calificacion || 0,
+    cerrada:       d.cerrada || false,
+    fechaCierre:   d.fechaCierre || '',
+    usuario:       userName,
+    fechaActualiz: new Date().toISOString()
+  };
+  try {
+    var url = 'https://' + AZURE_ACCOUNT + '.table.core.windows.net/cierres(PartitionKey=\'cierres\',RowKey=\'' + encodeURIComponent(obra) + '\')' + AZURE_SAS;
+    await fetch(url, { method:'PUT', headers:{ ...azureHeaders(), 'If-Match':'*' }, body:JSON.stringify(entity) });
+    showToast('Cierre guardado', 'ok');
+  } catch(e) { showToast('Error al guardar: ' + e.message, 'err'); }
+}
+
+// Calcular progreso de una sección
+function calcProgreso(obra, seccionKey) {
+  var d = cierreData[obra] || {};
+  var items = CIERRE_ITEMS[seccionKey].items;
+  var total = 0, done = 0;
+  items.forEach(function(it) {
+    if (d.noAplica && d.noAplica[it.id]) return; // ignorar N/A
+    total++;
+    if (d.items && d.items[it.id]) done++;
+  });
+  return { done:done, total:total, pct: total===0 ? 100 : Math.round(done/total*100) };
+}
+
+// Semáforo por sección
+function colorSemaforo(pct) {
+  if (pct >= 100) return '#10b981';
+  if (pct >= 50)  return '#f59e0b';
+  return '#ef4444';
+}
+
+// Verificar si puede cerrarse (items críticos completos)
+function puedeOficialmentesCerrar(obra) {
+  var d = cierreData[obra] || {};
+  var ok = true;
+  Object.values(CIERRE_ITEMS).forEach(function(sec) {
+    sec.items.forEach(function(it) {
+      if (it.critico && !(d.noAplica && d.noAplica[it.id]) && !(d.items && d.items[it.id])) {
+        ok = false;
+      }
+    });
+  });
+  return ok;
+}
+
+// Render del módulo completo
+function renderCierre(obra) {
+  var d = cierreData[obra] || {};
+  var progresos = {};
+  var totalPct = 0;
+  Object.keys(CIERRE_ITEMS).forEach(function(k) {
+    progresos[k] = calcProgreso(obra, k);
+    totalPct += progresos[k].pct;
+  });
+  totalPct = Math.round(totalPct / Object.keys(CIERRE_ITEMS).length);
+  var colorTotal = colorSemaforo(totalPct);
+  var puedesCerrar = puedeOficialmentesCerrar(obra);
+
+  // Semáforo en toolbar
+  var semHtml = '<div style="display:flex;align-items:center;gap:12px;">';
+  Object.keys(CIERRE_ITEMS).forEach(function(k) {
+    var p = progresos[k];
+    var col = colorSemaforo(p.pct);
+    semHtml += '<div style="display:flex;align-items:center;gap:5px;">' +
+      '<div style="width:12px;height:12px;border-radius:50%;background:'+col+'"></div>' +
+      '<span style="font-size:11px;font-weight:600;color:'+col+'">'+p.pct+'%</span>' +
+      '<span style="font-size:11px;color:var(--gris-muted)">'+CIERRE_ITEMS[k].icono+'</span>' +
+      '</div>';
+  });
+  semHtml += '<div style="width:1px;height:24px;background:var(--borde);margin:0 4px"></div>';
+  semHtml += '<div style="text-align:center">' +
+    '<div style="font-size:18px;font-weight:800;color:'+colorTotal+'">'+totalPct+'%</div>' +
+    '<div style="font-size:10px;color:var(--gris-muted)">cierre total</div>' +
+    '</div>';
+  semHtml += '</div>';
+  document.getElementById('cierreSemaforo').innerHTML = semHtml;
+  document.getElementById('cierreSemaforo').style.display = 'flex';
+
+  // Estado de cierre oficial
+  var cerradaBanner = '';
+  if (d.cerrada) {
+    cerradaBanner = '<div style="background:#dcfce7;border:1.5px solid #10b981;border-radius:10px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:12px">' +
+      '<span style="font-size:24px">✅</span>' +
+      '<div><div style="font-size:14px;font-weight:700;color:#1B6E41">Obra cerrada oficialmente</div>' +
+      '<div style="font-size:12px;color:#1B6E41">Fecha de cierre: ' + (d.fechaCierre||'—') + ' · Por: ' + (d.usuarioCierre||'—') + '</div></div>' +
+      '</div>';
+  }
+
+  // Generar secciones
+  var seccionesHtml = '<div class="cierre-grid">';
+  Object.keys(CIERRE_ITEMS).forEach(function(secKey) {
+    var sec = CIERRE_ITEMS[secKey];
+    var prog = progresos[secKey];
+    var col = colorSemaforo(prog.pct);
+    var puedeMarcar = puedeMarcarItem(secKey) && !d.cerrada;
+
+    seccionesHtml += '<div class="cierre-seccion">' +
+      '<div class="cierre-sec-header">' +
+      '<div class="cierre-sec-title" style="color:'+sec.color+'">'+sec.icono+' '+sec.titulo+'</div>' +
+      '<div style="display:flex;align-items:center;gap:8px">' +
+      '<div class="cierre-bar-wrap"><div class="cierre-bar" style="width:'+prog.pct+'%;background:'+col+'"></div></div>' +
+      '<span class="cierre-progress" style="color:'+col+'">'+prog.done+'/'+prog.total+'</span>' +
+      '</div></div>' +
+      '<div class="cierre-items">';
+
+    sec.items.forEach(function(it) {
+      var done   = !!(d.items   && d.items[it.id]);
+      var na     = !!(d.noAplica && d.noAplica[it.id]);
+      var estado = na ? 'na' : done ? 'done' : '';
+      var checkTxt = na ? 'N/A' : done ? '✓' : '';
+
+      seccionesHtml += '<div class="cierre-item">' +
+        '<div class="cierre-item-check '+estado+'" onclick="'+(puedeMarcar?'toggleCierreItem(\''+obra+'\',\''+secKey+'\',\''+it.id+'\')':'')+'">'+checkTxt+'</div>' +
+        '<div class="cierre-item-info">' +
+        '<div class="cierre-item-nom'+(done?' done':'')+'">'+it.nom+(it.critico?'<span style="color:#ef4444;margin-left:4px;font-size:10px">★ crítico</span>':'')+'</div>' +
+        '</div>' +
+        '<div class="cierre-item-actions">' +
+        (puedeMarcar&&!done?'<button class="cierre-btn'+(na?' active-na':'')+'" onclick="toggleNA(\''+obra+'\',\''+it.id+'\')">'+(na?'Aplica':'N/A')+'</button>':'') +
+        '</div>' +
+        '</div>';
+    });
+
+    seccionesHtml += '</div></div>';
+  });
+  seccionesHtml += '</div>';
+
+  // Retrospectiva
+  var retroHtml = '<div class="card" style="margin-bottom:12px">' +
+    '<div class="sh"><div class="sb2"></div><div class="st">🔍 Retrospectiva del proyecto</div></div>' +
+    '<div style="font-size:12px;color:var(--gris-muted);margin-bottom:14px">Reflexiones sistematizadas para aprender del proyecto ejecutado. Esta información construye el conocimiento institucional de METARCO.</div>';
+
+  // Calificación general
+  retroHtml += '<div class="retro-pregunta"><span class="retro-label">Calificación general del proyecto</span>' +
+    '<div class="retro-stars">';
+  for (var s=1; s<=5; s++) {
+    retroHtml += '<span class="retro-star'+(s<=(d.calificacion||0)?' on':'')+'" onclick="setCalificacion(\''+obra+'\','+s+')">★</span>';
+  }
+  retroHtml += '</div></div>';
+
+  RETRO_PREGUNTAS.forEach(function(p) {
+    retroHtml += '<div class="retro-pregunta">' +
+      '<span class="retro-label">'+p.label+'</span>' +
+      '<textarea class="form-input" style="min-height:60px;resize:vertical" ' +
+      'placeholder="Escribe aquí…" ' +
+      'oninput="setCierreRetro(\''+obra+'\',\''+p.id+'\',this.value)">' +
+      ((d.retro && d.retro[p.id])||'') +
+      '</textarea></div>';
+  });
+  retroHtml += '</div>';
+
+  // Botón cierre oficial
+  var btnCierreHtml = '';
+  if (puedeCerrarOficialmente() && !d.cerrada) {
+    var disabled = !puedesCerrar;
+    btnCierreHtml = '<div class="card" style="background:'+(disabled?'#fef2f2':'#f0fdf4')+';border-color:'+(disabled?'#fca5a5':'#86efac')+'">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">' +
+      '<div>' +
+      '<div style="font-size:14px;font-weight:700;color:'+(disabled?'#dc2626':'#166534')+'">Cierre oficial de la obra</div>' +
+      '<div style="font-size:12px;color:'+(disabled?'#dc2626':'#166534')+';margin-top:3px">' +
+      (disabled?'Completa todos los items críticos (★) para cerrar la obra':'Todos los items críticos están completos. La obra puede cerrarse.') +
+      '</div></div>' +
+      '<button class="btn '+(disabled?'btn-outline':'btn-primary"')+'" '+(disabled?'disabled style="opacity:.5"':'')+' onclick="cerrarObraOficialmente(\''+obra+'\')">' +
+      '🏁 Cerrar obra oficialmente</button>' +
+      '</div></div>';
+  }
+
+  document.getElementById('cierreContenido').innerHTML =
+    cerradaBanner + seccionesHtml + retroHtml + btnCierreHtml;
+}
+
+// Acciones
+function toggleCierreItem(obra, seccion, itemId) {
+  if (!cierreData[obra]) cierreData[obra] = { items:{}, noAplica:{}, retro:{}, calificacion:0 };
+  var d = cierreData[obra];
+  if (d.noAplica && d.noAplica[itemId]) return; // no toggle si es N/A
+  d.items[itemId] = !d.items[itemId];
+  if (!d.items[itemId]) delete d.items[itemId];
+  guardarCierre(obra);
+  renderCierre(obra);
+}
+
+function toggleNA(obra, itemId) {
+  if (!puedeMarcarNA()) return;
+  if (!cierreData[obra]) cierreData[obra] = { items:{}, noAplica:{}, retro:{}, calificacion:0 };
+  var d = cierreData[obra];
+  d.noAplica[itemId] = !d.noAplica[itemId];
+  if (!d.noAplica[itemId]) delete d.noAplica[itemId];
+  // Si es N/A, desmarcar si estaba done
+  if (d.noAplica[itemId] && d.items[itemId]) delete d.items[itemId];
+  guardarCierre(obra);
+  renderCierre(obra);
+}
+
+function setCalificacion(obra, val) {
+  if (!cierreData[obra]) cierreData[obra] = { items:{}, noAplica:{}, retro:{}, calificacion:0 };
+  cierreData[obra].calificacion = val;
+  guardarCierre(obra);
+  renderCierre(obra);
+}
+
+function setCierreRetro(obra, pregId, val) {
+  if (!cierreData[obra]) cierreData[obra] = { items:{}, noAplica:{}, retro:{}, calificacion:0 };
+  if (!cierreData[obra].retro) cierreData[obra].retro = {};
+  cierreData[obra].retro[pregId] = val;
+  // Guardado con debounce
+  clearTimeout(window._retroTimeout);
+  window._retroTimeout = setTimeout(function(){ guardarCierre(obra); }, 1500);
+}
+
+async function cerrarObraOficialmente(obra) {
+  if (!puedeCerrarOficialmente()) return;
+  if (!confirm('¿Confirmas el cierre oficial de la obra "' + obra + '"? Esta acción quedará registrada.')) return;
+  if (!cierreData[obra]) cierreData[obra] = { items:{}, noAplica:{}, retro:{}, calificacion:0 };
+  cierreData[obra].cerrada = true;
+  cierreData[obra].fechaCierre = new Date().toLocaleDateString('es-MX');
+  cierreData[obra].usuarioCierre = userName;
+  await guardarCierre(obra);
+  renderCierre(obra);
+  showToast('Obra "' + obra + '" cerrada oficialmente ✓', 'ok');
+}
+
+// Poblar select de cierre y cargar al cambiar
+document.getElementById('filtroCierreObra').addEventListener('change', async function() {
+  obraCierreActual = this.value;
+  if (!obraCierreActual) {
+    document.getElementById('cierreContenido').innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--gris-muted)"><div style="font-size:48px;margin-bottom:12px">🏁</div><div style="font-size:13px">Selecciona una obra para ver su checklist de cierre</div></div>';
+    document.getElementById('cierreSemaforo').style.display = 'none';
+    return;
+  }
+  document.getElementById('cierreContenido').innerHTML = '<div style="text-align:center;padding:40px;color:var(--gris-muted)">Cargando cierre...</div>';
+  await cargarCierre(obraCierreActual);
+  renderCierre(obraCierreActual);
+});
+
+// Poblar select cuando se carguen obras
+function poblarSelectCierre() {
+  var sel = document.getElementById('filtroCierreObra');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Selecciona una obra</option>' +
+    allObras.map(function(o){ var n=o.RowKey||''; return '<option value="'+n+'">'+n+'</option>'; }).join('');
+}
+
 (async function() {
   var accounts = msalInstance.getAllAccounts();
   if (accounts.length > 0) {
