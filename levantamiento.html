@@ -814,7 +814,7 @@ function step5(){
       <span>juancarlos.lopez@metarco.com.mx</span>
     </label>
     <label class="dest-check">
-      <input type="checkbox" ${dest.cliente?'checked':''} onchange="S.destinos.cliente=this.checked">
+      <input type="checkbox" ${dest.cliente?'checked':''} onchange="S.destinos.cliente=this.checked;render()">
       <label>🏢 Cliente</label>
       <span>Correo del cliente</span>
     </label>
@@ -1034,14 +1034,6 @@ function descargarPDF(){
 
 // ─── AZURE SAVE ───────────────────────────────────────────────
 async function guardarEnAzure(urlsSP){
-  // Crear tabla si no existe
-  try {
-    await fetch(`${AZ_BASE}/Tables${AZ_SAS}`, {
-      method: 'POST',
-      headers: {...azHdr(), 'Content-Type':'application/json'},
-      body: JSON.stringify({TableName:'levantamientos'})
-    });
-  } catch(e) {} // Si ya existe, ignora el error
   const entity = {
     PartitionKey: 'levantamientos', RowKey: S.folio,
     folio: S.folio, usuario: S.usuario, email: S.email,
