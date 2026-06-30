@@ -319,7 +319,9 @@ fetch(LOGO_HTML)
 
 // ─── ESTADO ───────────────────────────────────────────────────
 const PASOS = ['Datos generales','Elementos','Condiciones planta','Condiciones comerciales','Fotografías','Envío'];
+const PASOS_MANT = ['Datos generales','Estado ANTES','Actividades','Estado DESPUES','Firma y envio'];
 let S = {
+  modo: '',  // 'levantamiento' o 'mantenimiento'
   step: 0, folio: '', usuario: '', email: '',
   data: { cliente:'', proyecto:'', direccion:'', fecha:'', supervisor:'', tipo:'Estructura', contrato:'' },
   elementos: {},
@@ -327,11 +329,72 @@ let S = {
   condPlanta: { condiciones: [], nuevaCond: '' },
   condComercial: { formaPago:'', diasCredito:'', fianza:'', altaProveedor:'', facturaAntes:'', moneda:'MXN', contactoCompras:'', emailCompras:'', telCompras:'', obs:'' },
   fotos: [],
+  mant: {
+    cliente:'', direccion:'', tecnico:'', fecha:'', ordenTrabajo:'',
+    fotosAntes:[], actividades:[], fotosDespues:[],
+    firma:null, firmaNombre:'', firmaFecha:'', materialesUsados:''
+  },
   destinos: { costos:true, gerencia:false, cliente:false, clienteEmail:'', otrosEmail:'' },
   pdfOk: false, enviando: false
 };
 
-// ─── CATÁLOGO DE ELEMENTOS ────────────────────────────────────
+// ─── MARCA DE AGUA ────────────────────────────────────────────
+function aplicarMarcaDeAgua(dataUrl, etiqueta){
+  return new Promise(function(resolve){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      // Fondo semitransparente esquina inferior derecha
+      var padX = 14, padY = 10, lineH = 18, fontSize = Math.max(14, Math.round(img.width/80));
+      ctx.font = 'bold ' + fontSize + 'px Arial';
+      var lines = [
+        'METARCO',
+        'Folio: ' + S.folio,
+        etiqueta || '',
+        S.usuario || S.mant.tecnico || '',
+        new Date().toLocaleDateString('es-MX')
+      ].filter(Boolean);
+      var maxW = 0;
+      lines.forEach(function(l){ var w=ctx.measureText(l).width; if(w>maxW)maxW=w; });
+      var boxW = maxW + padX*2;
+      var boxH = lines.length * lineH + padY*2;
+      var x = img.width - boxW - 16;
+      var y = img.height - boxH - 16;
+      ctx.fillStyle = 'rgba(26,26,46,0.75)';
+      ctx.beginPath();
+      ctx.roundRect(x, y, boxW, boxH, 8);
+      ctx.fill();
+      // Logo placeholder (texto)
+      ctx.fillStyle = '#2ECC71';
+      ctx.font = 'bold ' + fontSize + 'px Arial';
+      ctx.fillText(lines[0], x + padX, y + padY + fontSize);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = (fontSize-2) + 'px Arial';
+      lines.slice(1).forEach(function(l, i){
+        ctx.fillText(l, x + padX, y + padY + fontSize + (i+1)*lineH);
+      });
+      resolve(canvas.toDataURL('image/jpeg', 0.88));
+    };
+    img.onerror = function(){ resolve(dataUrl); }; // Si falla, devuelve original
+    img.src = dataUrl;
+  });
+}
+
+// Agrega marca de agua a un array de fotos y retorna nuevo array
+async function marcarFotos(fotos, etiqueta){
+  var resultado = [];
+  for(var i=0;i<fotos.length;i++){
+    var f = fotos[i];
+    var marcado = await aplicarMarcaDeAgua(f.dataUrl, etiqueta);
+    resultado.push({...f, dataUrl: marcado});
+  }
+  return resultado;
+}
+
+
 const ELEMENTOS = {
   Estructura: [
     { id:'col',   icon:'🏛', nom:'Columnas',            campos:[{k:'cantidad',l:'Cantidad (pzas)',t:'number'},{k:'perfil',l:'Perfil (tipo)',t:'text'},{k:'calibre',l:'Calibre / sección',t:'text'},{k:'alto',l:'Altura (m)',t:'number'},{k:'obs',l:'Observaciones',t:'area'}] },
@@ -414,6 +477,8 @@ window.addEventListener('load', async ()=>{
 function mostrarApp(nombre, email){
   S.usuario = nombre || 'Supervisor';
   S.email = email || '';
+  S.mant.tecnico = S.usuario;
+  S.mant.fecha = today();
   S.data.supervisor = S.usuario;
   S.data.fecha = today();
   S.folio = genFolio();
@@ -421,22 +486,88 @@ function mostrarApp(nombre, email){
   document.getElementById('appScreen').style.display='block';
   document.getElementById('folio-tag-sb').textContent = S.folio;
   document.getElementById('mobFolio').textContent = S.folio;
-  waitPDF(); render();
+  waitPDF();
+  // Mostrar pantalla de selección de modo
+  if(!S.modo) mostrarSelectorModo();
+  else render();
+}
+
+function mostrarSelectorModo(){
+  var main = document.getElementById('main');
+  if(!main) return;
+  main.innerHTML = `
+  <div style="max-width:560px;margin:60px auto 0;padding:0 16px">
+    <div style="text-align:center;margin-bottom:32px">
+      <div style="font-size:32px;margin-bottom:10px">📋</div>
+      <div style="font-size:22px;font-weight:700;color:var(--dark);margin-bottom:6px">¿Qué vas a realizar hoy?</div>
+      <div style="font-size:14px;color:var(--muted)">Selecciona el tipo de visita para comenzar</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <button onclick="seleccionarModo('levantamiento')" style="padding:28px 16px;border:2px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;text-align:center;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='#F0FAF5'" onmouseout="this.style.borderColor='var(--line)';this.style.background='#fff'">
+        <div style="font-size:36px;margin-bottom:10px">📐</div>
+        <div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:6px">Levantamiento técnico</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">Medidas, elementos, condiciones de planta y comerciales. Genera reporte PDF.</div>
+      </button>
+      <button onclick="seleccionarModo('mantenimiento')" style="padding:28px 16px;border:2px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;text-align:center;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--green)';this.style.background='#F0FAF5'" onmouseout="this.style.borderColor='var(--line)';this.style.background='#fff'">
+        <div style="font-size:36px;margin-bottom:10px">🔧</div>
+        <div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:6px">Reporte de mantenimiento</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.5">Fotos antes/después, actividades realizadas y firma digital del cliente.</div>
+      </button>
+    </div>
+  </div>`;
+  // Ocultar nav en modo selector
+  document.getElementById('nav').innerHTML = '';
+  document.getElementById('kpi-tipo').textContent = '—';
+}
+
+function seleccionarModo(modo){
+  S.modo = modo;
+  render();
 }
 
 // ─── NAV ──────────────────────────────────────────────────────
 function go(i){ S.step=i; render(); window.scrollTo(0,0); }
 function renderNav(){
-  const el = document.getElementById('nav');
-  el.innerHTML = PASOS.map((nm,i)=>`
-    <div class="ni ${i===S.step?'cur':i<S.step?'done':''}" onclick="go(${i})">
-      <div class="nn">${i<S.step?'✓':(i+1)}</div>
-      <div><div class="nl">${nm}</div></div>
-    </div>`).join('');
-  document.getElementById('kpi-tipo').textContent = S.data.tipo || '—';
-  document.getElementById('kpi-fotos').textContent = S.fotos.length + Object.values(S.elementos||{}).reduce((a,e)=>a+(e.fotos?e.fotos.length:0),0);
-  const nEl = Object.keys(S.elementos||{}).length;
-  document.getElementById('kpi-cond').textContent = nEl ? nEl+' elemento'+(nEl!==1?'s':'') : '—';
+  var pasos = S.modo === 'mantenimiento' ? PASOS_MANT : PASOS;
+  var el = document.getElementById('nav');
+  el.innerHTML = pasos.map(function(nm,i){ return (
+    '<div class="ni '+(i===S.step?'cur':i<S.step?'done':'')+'" onclick="go('+i+')">' +
+    '<div class="nn">'+(i<S.step?'✓':(i+1))+'</div>' +
+    '<div><div class="nl">'+nm+'</div></div></div>');
+  }).join('');
+  if(S.modo === 'mantenimiento'){
+    document.getElementById('kpi-tipo').textContent = 'Mantenimiento';
+    var totalFotos = S.mant.fotosAntes.length + S.mant.fotosDespues.length;
+    document.getElementById('kpi-fotos').textContent = totalFotos;
+    document.getElementById('kpi-cond').textContent = S.mant.actividades.filter(function(a){return a.done;}).length + ' actividades';
+  } else {
+    document.getElementById('kpi-tipo').textContent = S.data.tipo || '—';
+    document.getElementById('kpi-fotos').textContent = S.fotos.length + Object.values(S.elementos||{}).reduce(function(a,e){return a+(e.fotos?e.fotos.length:0);},0);
+    var nEl = Object.keys(S.elementos||{}).length;
+    document.getElementById('kpi-cond').textContent = nEl ? nEl+' elemento'+(nEl!==1?'s':'') : '—';
+  }
+}
+
+function render(){
+  if(!S.modo){ mostrarSelectorModo(); return; }
+  renderNav();
+  var m = document.getElementById('main');
+  if(S.modo === 'mantenimiento'){
+    if(S.step===0) m.innerHTML = stepMant0();
+    else if(S.step===1) m.innerHTML = stepMant1();
+    else if(S.step===2) m.innerHTML = stepMant2();
+    else if(S.step===3) m.innerHTML = stepMant3();
+    else if(S.step===4) m.innerHTML = stepMant4();
+    // Inicializar canvas firma si es paso 4
+    if(S.step===4) iniciarCanvasFirma();
+  } else {
+    if(S.step===0) m.innerHTML=step0();
+    else if(S.step===1) m.innerHTML=step1();
+    else if(S.step===2) m.innerHTML=step2();
+    else if(S.step===3) m.innerHTML=step3();
+    else if(S.step===4) m.innerHTML=step4();
+    else if(S.step===5) m.innerHTML=step5();
+  }
 }
 
 // ─── STEPS ────────────────────────────────────────────────────
@@ -863,17 +994,7 @@ function step5(){
   </div>`;
 }
 
-// ─── RENDER ───────────────────────────────────────────────────
-function render(){
-  renderNav();
-  const m = document.getElementById('main');
-  if(S.step===0) m.innerHTML=step0();
-  else if(S.step===1) m.innerHTML=step1();
-  else if(S.step===2) m.innerHTML=step2();
-  else if(S.step===3) m.innerHTML=step3();
-  else if(S.step===4) m.innerHTML=step4();
-  else if(S.step===5) m.innerHTML=step5();
-}
+// ─── STEPS LEVANTAMIENTO ──────────────────────────────────────
 
 // ─── PDF ──────────────────────────────────────────────────────
 function waitPDF(){
@@ -1193,7 +1314,407 @@ async function guardarYEnviar(){
   S.enviando=false; render();
 }
 
-// ─── BORRADORES ───────────────────────────────────────────────
+// ══════════════════════════════════════════════
+// MÓDULO DE MANTENIMIENTO
+// ══════════════════════════════════════════════
+
+// Componente de upload de fotos con color de semáforo
+function fotoUploader(arrayKey, color, etiqueta, inputId){
+  var fotos = S.mant[arrayKey] || [];
+  var colorBg = color === 'rojo' ? '#FEF2F2' : '#F0FDF4';
+  var colorBorder = color === 'rojo' ? '#FCA5A5' : '#86EFAC';
+  var colorText = color === 'rojo' ? '#DC2626' : '#16A34A';
+  var colorDot = color === 'rojo' ? '#EF4444' : '#22C55E';
+  return `
+  <div style="border:2px dashed ${colorBorder};border-radius:10px;padding:16px;background:${colorBg};margin-bottom:10px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <div style="width:12px;height:12px;border-radius:50%;background:${colorDot};flex-shrink:0"></div>
+      <div style="font-size:13px;font-weight:700;color:${colorText}">${etiqueta}</div>
+      <div style="font-size:11px;color:var(--muted);margin-left:auto">${fotos.length} foto${fotos.length!==1?'s':''}</div>
+    </div>
+    <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;background:#fff;border-radius:8px;border:1px solid ${colorBorder};cursor:pointer;font-size:13px;font-weight:600;color:${colorText}">
+      📷 Agregar foto
+      <input type="file" accept="image/*" capture="environment" style="display:none" onchange="agregarFotoMant('${arrayKey}',this)">
+    </label>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:10px">
+      ${fotos.map(function(f,i){ return (
+        '<div style="position:relative">' +
+        '<img src="'+f.dataUrl+'" style="width:100%;height:80px;object-fit:cover;border-radius:7px;border:2px solid '+colorBorder+'">' +
+        '<button onclick="eliminarFotoMant(\''+arrayKey+'\','+i+')" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);border:none;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center">×</button>' +
+        '<input type="text" value="'+(f.caption||'')+'" placeholder="Pie de foto…" oninput="S.mant.'+arrayKey+'['+i+'].caption=this.value" style="width:100%;font-size:10px;padding:2px 4px;border:1px solid var(--line);border-radius:4px;margin-top:3px">' +
+        '</div>');
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function agregarFotoMant(arrayKey, input){
+  var file = input.files[0]; if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){ S.mant[arrayKey].push({dataUrl:e.target.result, caption:''}); render(); };
+  reader.readAsDataURL(file); input.value='';
+}
+function eliminarFotoMant(arrayKey, i){ S.mant[arrayKey].splice(i,1); render(); }
+
+// PASO 0 — Datos generales mantenimiento
+function stepMant0(){
+  var m = S.mant;
+  return `
+  <div class="ph"><div class="ph-t">Reporte de mantenimiento</div><div class="ph-s">Folio <b style="font-family:monospace">${S.folio}</b></div></div>
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Datos de la visita</div></div>
+    <div class="g2 mb10">
+      <div><label class="fl">Cliente *</label><input class="form-input" type="text" value="${m.cliente}" oninput="S.mant.cliente=this.value" placeholder="Nombre del cliente"></div>
+      <div><label class="fl">No. de orden de trabajo</label><input class="form-input" type="text" value="${m.ordenTrabajo}" oninput="S.mant.ordenTrabajo=this.value" placeholder="OT-2026-001"></div>
+    </div>
+    <div class="mb10"><label class="fl">Dirección / ubicación</label><input class="form-input" type="text" value="${m.direccion}" oninput="S.mant.direccion=this.value" placeholder="Calle, colonia, ciudad"></div>
+    <div class="g2 mb10">
+      <div><label class="fl">Técnico responsable</label><input class="form-input" type="text" value="${m.tecnico}" oninput="S.mant.tecnico=this.value"></div>
+      <div><label class="fl">Fecha</label><input class="form-input" type="date" value="${m.fecha}" oninput="S.mant.fecha=this.value"></div>
+    </div>
+  </div>
+  <div class="brow"><button class="btn btn-ghost" onclick="S.modo='';render()">← Cambiar tipo</button><button class="btn btn-green" onclick="go(1)">Siguiente → Estado ANTES</button></div>`;
+}
+
+// PASO 1 — Fotos ANTES (semáforo rojo)
+function stepMant1(){
+  return `
+  <div class="ph">
+    <div class="ph-t" style="display:flex;align-items:center;gap:10px">
+      <div style="width:16px;height:16px;border-radius:50%;background:#EF4444;flex-shrink:0"></div>
+      Estado ANTES
+    </div>
+    <div class="ph-s">Documenta el estado actual del problema — fotos y descripción</div>
+  </div>
+  <div class="card">
+    <div class="sh"><div class="sb2" style="background:#EF4444"></div><div class="st" style="color:#DC2626">Fotografías — Estado ANTES</div></div>
+    ${fotoUploader('fotosAntes','rojo','📷 Fotos del estado actual / problema')}
+    <div class="mb10"><label class="fl">Descripción del problema</label>
+      <textarea class="form-input" style="min-height:80px" placeholder="Describe el problema encontrado, área afectada, observaciones…" oninput="S.mant.descAntes=this.value">${S.mant.descAntes||''}</textarea>
+    </div>
+  </div>
+  <div class="brow"><button class="btn btn-ghost" onclick="go(0)">← Atrás</button><button class="btn btn-green" onclick="go(2)">Siguiente → Actividades</button></div>`;
+}
+
+// PASO 2 — Actividades realizadas
+var ACT_RAPIDAS = ['Limpieza general','Aplicación de sellador','Colocación de lámina','Reparación de goteras','Ajuste de tornillería','Cambio de bajada pluvial','Refuerzo estructural','Pintura anticorrosiva','Cambio de claraboya','Restitución de caballete','Instalación de ventilación'];
+
+function stepMant2(){
+  var acts = S.mant.actividades || [];
+  return `
+  <div class="ph"><div class="ph-t">Actividades realizadas</div><div class="ph-s">${acts.filter(function(a){return a.done;}).length} de ${acts.length} completadas</div></div>
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Agregar actividad</div></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <input class="form-input" id="nuevaActInput" type="text" placeholder="Describe la actividad realizada…" style="flex:1" onkeydown="if(event.key==='Enter'){agregarActividad(this.value);}">
+      <button class="btn btn-green" onclick="agregarActividad(document.getElementById('nuevaActInput').value)">+ Agregar</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600">Accesos rápidos:</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      ${ACT_RAPIDAS.map(function(a){ return '<button onclick="agregarActividad(\''+a+'\')" style="padding:4px 10px;border-radius:20px;border:1px solid var(--line);background:#FAFCFA;color:var(--txt);font-size:11px;cursor:pointer;font-family:var(--font)">'+a+'</button>'; }).join('')}
+    </div>
+    ${acts.length ? `
+    <div style="border-top:1px solid var(--line);padding-top:10px">
+      ${acts.map(function(a,i){ return (
+        '<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid #f5f5f5">' +
+        '<div onclick="toggleActividad('+i+')" style="width:22px;height:22px;min-width:22px;border-radius:6px;border:2px solid '+(a.done?'#10b981':'var(--line)')+';background:'+(a.done?'#10b981':'#fff')+';display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:13px">'+(a.done?'✓':'')+'</div>' +
+        '<div style="flex:1"><div style="font-size:13px;font-weight:'+(a.done?'600':'400')+';color:'+(a.done?'var(--gdark)':'var(--txt)')+';text-decoration:'+(a.done?'none':'none')+'">'+a.texto+'</div>' +
+        '<input type="text" value="'+(a.nota||'')+'" placeholder="Nota adicional…" oninput="S.mant.actividades['+i+'].nota=this.value" style="width:100%;font-size:11px;padding:3px 6px;border:1px solid var(--line);border-radius:5px;margin-top:4px"></div>' +
+        '<button onclick="S.mant.actividades.splice('+i+',1);render()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">×</button>' +
+        '</div>');
+      }).join('')}
+    </div>` : ''}
+    <div class="mb10" style="margin-top:12px"><label class="fl">Materiales utilizados</label>
+      <textarea class="form-input" placeholder="Lista de materiales, cantidades…" oninput="S.mant.materialesUsados=this.value">${S.mant.materialesUsados||''}</textarea>
+    </div>
+  </div>
+  <div class="brow"><button class="btn btn-ghost" onclick="go(1)">← Atrás</button><button class="btn btn-green" onclick="go(3)">Siguiente → Estado DESPUÉS</button></div>`;
+}
+
+function agregarActividad(texto){
+  var t = (texto||'').trim(); if(!t) return;
+  S.mant.actividades.push({texto:t, done:false, nota:''});
+  var inp = document.getElementById('nuevaActInput'); if(inp) inp.value='';
+  render();
+}
+function toggleActividad(i){ S.mant.actividades[i].done = !S.mant.actividades[i].done; render(); }
+
+// PASO 3 — Fotos DESPUÉS (semáforo verde)
+function stepMant3(){
+  return `
+  <div class="ph">
+    <div class="ph-t" style="display:flex;align-items:center;gap:10px">
+      <div style="width:16px;height:16px;border-radius:50%;background:#22C55E;flex-shrink:0"></div>
+      Estado DESPUES
+    </div>
+    <div class="ph-s">Documenta el resultado del trabajo realizado</div>
+  </div>
+  <div class="card">
+    <div class="sh"><div class="sb2" style="background:#22C55E"></div><div class="st" style="color:#16A34A">Fotografías — Estado DESPUES</div></div>
+    ${fotoUploader('fotosDespues','verde','📷 Fotos del trabajo terminado')}
+    <div class="mb10"><label class="fl">Descripción del resultado</label>
+      <textarea class="form-input" style="min-height:80px" placeholder="Describe el trabajo realizado y el estado final…" oninput="S.mant.descDespues=this.value">${S.mant.descDespues||''}</textarea>
+    </div>
+  </div>
+  <div class="brow"><button class="btn btn-ghost" onclick="go(2)">← Atrás</button><button class="btn btn-green" onclick="go(4)">Siguiente → Firma y envío</button></div>`;
+}
+
+// PASO 4 — Firma digital y envío
+function stepMant4(){
+  var m = S.mant;
+  return `
+  <div class="ph"><div class="ph-t">Firma y envío</div><div class="ph-s">Folio ${S.folio} · ${m.fotosAntes.length} fotos antes + ${m.fotosDespues.length} fotos después</div></div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Resumen del trabajo</div></div>
+    <table style="width:100%">
+      <tr><td style="width:35%;font-weight:600;color:var(--muted);font-size:11px;padding:6px 0">Cliente</td><td>${m.cliente||'—'}</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px;padding:6px 0">Orden de trabajo</td><td>${m.ordenTrabajo||'—'}</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px;padding:6px 0">Técnico</td><td>${m.tecnico||'—'}</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px;padding:6px 0">Actividades</td><td>${m.actividades.filter(function(a){return a.done;}).length} de ${m.actividades.length} completadas</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px;padding:6px 0">Fotos antes</td><td>${m.fotosAntes.length}</td></tr>
+      <tr><td style="font-weight:600;color:var(--muted);font-size:11px;padding:6px 0">Fotos después</td><td>${m.fotosDespues.length}</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Firma de conformidad</div></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px">El cliente o responsable firma confirmando que el trabajo fue realizado satisfactoriamente.</div>
+    <canvas id="firmaCanvas" width="100%" style="width:100%;height:180px;border:2px solid var(--line);border-radius:10px;background:#fafcfa;touch-action:none;cursor:crosshair"></canvas>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="limpiarFirma()">🗑 Limpiar firma</button>
+      <button class="btn btn-outline btn-sm" onclick="guardarFirma()">✓ Confirmar firma</button>
+    </div>
+    ${m.firma?'<div style="font-size:11px;color:var(--gdark);margin-top:6px;font-weight:600">✅ Firma capturada</div>':''}
+    <div class="g2 mb10" style="margin-top:12px">
+      <div><label class="fl">Nombre de quien recibe</label><input class="form-input" type="text" value="${m.firmaNombre}" oninput="S.mant.firmaNombre=this.value" placeholder="Nombre completo"></div>
+      <div><label class="fl">Fecha de conformidad</label><input class="form-input" type="date" value="${m.firmaFecha||today()}" oninput="S.mant.firmaFecha=this.value"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Destinatarios</div></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">CC siempre a: <b>a.medina@metarco.com.mx</b> y <b>proyectos1@metarco.com.mx</b></div>
+    <label class="dest-check"><input type="checkbox" ${S.destinos.costos?'checked':''} onchange="S.destinos.costos=this.checked"><label>📊 Costos</label><span>costos@metarco.com.mx</span></label>
+    <label class="dest-check"><input type="checkbox" ${S.destinos.gerencia?'checked':''} onchange="S.destinos.gerencia=this.checked"><label>👔 Gerencia</label><span>juancarlos.lopez@metarco.com.mx</span></label>
+    <label class="dest-check"><input type="checkbox" ${S.destinos.cliente?'checked':''} onchange="S.destinos.cliente=this.checked;render()"><label>🏢 Cliente</label><span>Correo del cliente</span></label>
+    ${S.destinos.cliente?'<div style="margin-top:6px"><label class="fl">Correo del cliente</label><input class="form-input" type="email" value="'+(S.destinos.clienteEmail||'')+'" oninput="S.destinos.clienteEmail=this.value" placeholder="cliente@empresa.com"></div>':''}
+    <div style="margin-top:10px"><label class="fl">Correos adicionales</label><input class="form-input" type="text" value="${S.destinos.otrosEmail||''}" oninput="S.destinos.otrosEmail=this.value" placeholder="otro@empresa.com"></div>
+  </div>
+
+  <div class="card">
+    <div class="sh"><div class="sb2"></div><div class="st">Acciones</div></div>
+    <button class="pdfbtn" onclick="descargarPDFMant()" ${S.pdfOk?'':'disabled'}><span style="font-size:16px">📄</span>${S.pdfOk?'Descargar PDF — '+S.folio:'Cargando generador...'}</button>
+    <div class="brow" style="margin-top:12px">
+      <button class="btn btn-outline" onclick="guardarBorradorMant()">💾 Guardar borrador</button>
+      <button class="btn btn-green" onclick="guardarYEnviarMant()" ${S.enviando?'disabled':''}>${S.enviando?'⏳ Enviando…':'✅ Guardar y enviar'}</button>
+    </div>
+  </div>
+  <div class="brow"><button class="btn btn-ghost" onclick="go(3)">← Atrás</button></div>`;
+}
+
+// Canvas firma
+var firmaCtx = null, firmaDibujando = false;
+function iniciarCanvasFirma(){
+  setTimeout(function(){
+    var canvas = document.getElementById('firmaCanvas');
+    if(!canvas) return;
+    canvas.width = canvas.offsetWidth;
+    firmaCtx = canvas.getContext('2d');
+    firmaCtx.strokeStyle = '#0b1e3d';
+    firmaCtx.lineWidth = 2.5;
+    firmaCtx.lineCap = 'round';
+    function getPos(e, c){ var r=c.getBoundingClientRect(),src=e.touches?e.touches[0]:e; return {x:(src.clientX-r.left)*(c.width/r.width),y:(src.clientY-r.top)*(c.height/r.height)}; }
+    canvas.addEventListener('mousedown', function(e){ firmaDibujando=true; var p=getPos(e,canvas); firmaCtx.beginPath(); firmaCtx.moveTo(p.x,p.y); });
+    canvas.addEventListener('mousemove', function(e){ if(!firmaDibujando) return; var p=getPos(e,canvas); firmaCtx.lineTo(p.x,p.y); firmaCtx.stroke(); });
+    canvas.addEventListener('mouseup', function(){ firmaDibujando=false; });
+    canvas.addEventListener('touchstart', function(e){ e.preventDefault(); firmaDibujando=true; var p=getPos(e,canvas); firmaCtx.beginPath(); firmaCtx.moveTo(p.x,p.y); },{passive:false});
+    canvas.addEventListener('touchmove', function(e){ e.preventDefault(); if(!firmaDibujando) return; var p=getPos(e,canvas); firmaCtx.lineTo(p.x,p.y); firmaCtx.stroke(); },{passive:false});
+    canvas.addEventListener('touchend', function(){ firmaDibujando=false; });
+  }, 100);
+}
+function limpiarFirma(){ S.mant.firma=null; if(firmaCtx){ var c=document.getElementById('firmaCanvas'); firmaCtx.clearRect(0,0,c.width,c.height); } }
+function guardarFirma(){ var c=document.getElementById('firmaCanvas'); if(c){ S.mant.firma=c.toDataURL('image/png'); showToast('Firma capturada ✓','ok'); } }
+
+// PDF mantenimiento
+async function genPDFMant(){
+  var m = S.mant;
+  // Aplicar marca de agua a fotos antes/después
+  var fotosAntesM = await marcarFotos(m.fotosAntes, 'ANTES');
+  var fotosDesM   = await marcarFotos(m.fotosDespues, 'DESPUES');
+
+  var {jsPDF} = window.jspdf;
+  var doc = new jsPDF('p','mm','a4');
+  var W=210, M=14, UW=W-M*2;
+  var fill=function(h){var r=h2r(h);doc.setFillColor(r[0],r[1],r[2]);};
+  var tc=function(h){var r=h2r(h);doc.setTextColor(r[0],r[1],r[2]);};
+  var dc=function(h){var r=h2r(h);doc.setDrawColor(r[0],r[1],r[2]);};
+
+  var chrome=function(){
+    fill('#1A1A2E');doc.rect(0,0,W,20,'F');
+    fill('#2ECC71');doc.rect(0,20,W,1.2,'F');
+    if(LOGO_B64){try{doc.addImage(LOGO_B64,'PNG',M,3,40,14);}catch(e){}}
+    tc('#2ECC71');doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text('Reporte de mantenimiento',W-M,9,{align:'right'});
+    tc('#AAAAAA');doc.setFontSize(6.5);doc.text('Folio: '+S.folio+'  |  Fecha: '+fmtDate(m.fecha)+'  |  Tecnico: '+(m.tecnico||'—'),W-M,15,{align:'right'});
+    fill('#1A1A2E');doc.rect(0,287,W,10,'F');
+    fill('#2ECC71');doc.rect(0,286.5,W,0.8,'F');
+    tc('#FFFFFF');doc.setFontSize(6.5);doc.text('METARCO — Construccion y Estructuras Metalicas',M,293);
+    tc('#2ECC71');doc.text('Pag. '+doc.internal.getCurrentPageInfo().pageNumber+' | '+S.folio,W-M,293,{align:'right'});
+  };
+  var banner=function(y,txt,color){
+    var col=color||'#1A1A2E';
+    fill(col);doc.rect(M,y,UW,8,'F');
+    fill('#2ECC71');doc.rect(M,y,3,8,'F');
+    tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text(txt.toUpperCase(),M+6,y+5.5);
+    return y+11;
+  };
+  var chkY=function(y,need){if(y+need>272){doc.addPage();chrome();return 26;}return y;};
+
+  chrome(); var y=26;
+
+  // Portada
+  fill('#1A1A2E');doc.rect(M,y,UW,24,'F');
+  tc('#2ECC71');doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('Reporte de mantenimiento',M+8,y+6);
+  tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(14);doc.text(m.cliente||'Cliente',M+8,y+15);
+  tc('#AACCAA');doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('OT: '+(m.ordenTrabajo||'—')+'  |  '+fmtDate(m.fecha)+'  |  Folio: '+S.folio,M+8,y+21);
+  y+=29;
+
+  // Datos generales
+  y=banner(y,'Datos generales');
+  var rows=[['Cliente',m.cliente||'—'],['Direccion',m.direccion||'—'],['Tecnico',m.tecnico||'—'],['Fecha',fmtDate(m.fecha)],['Orden de trabajo',m.ordenTrabajo||'—']];
+  doc.autoTable({startY:y,body:rows,margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},columnStyles:{0:{cellWidth:UW*0.4,fontStyle:'bold',textColor:h2r('#555555')},1:{cellWidth:UW*0.6}},alternateRowStyles:{fillColor:[245,247,245]}});
+  y=doc.lastAutoTable.finalY+6;
+
+  // Descripción del problema
+  if(m.descAntes){
+    y=chkY(y,20);
+    fill('#FEF2F2');dc('#FCA5A5');doc.setLineWidth(0.15);doc.rect(M,y,UW,16,'F');doc.rect(M,y,UW,16,'S');
+    fill('#EF4444');doc.rect(M,y,3,16,'F');
+    tc('#DC2626');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('PROBLEMA DETECTADO:',M+6,y+5);
+    doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(m.descAntes,UW-10)[0],M+6,y+11);
+    y+=19;
+  }
+
+  // Fotos ANTES
+  if(fotosAntesM.length){
+    y=chkY(y,20);y=banner(y,'Estado ANTES — Registro fotografico','#DC2626');
+    var iw=(UW-5)/2, ih=iw*0.6;
+    fotosAntesM.forEach(function(f,i){
+      if(i%2===0){y=chkY(y,ih+12);}
+      var col=i%2, x=M+col*(iw+5);
+      try{doc.addImage(f.dataUrl,'JPEG',x,y,iw,ih);fill('#DC2626');doc.rect(x,y+ih-8,iw,8,'F');tc('#FFFFFF');doc.setFont('helvetica','normal');doc.setFontSize(6);doc.text(f.caption||('Antes — foto '+(i+1)),x+3,y+ih-2.5,{maxWidth:iw-6});}catch(e){}
+      if(i%2===1||i===fotosAntesM.length-1) y+=ih+10;
+    });
+    y+=4;
+  }
+
+  // Actividades realizadas
+  var actsD = m.actividades.filter(function(a){return a.done;});
+  if(actsD.length){
+    y=chkY(y,20);y=banner(y,'Actividades realizadas');
+    doc.autoTable({startY:y,body:actsD.map(function(a){return['✓ '+a.texto, a.nota||'—'];}),margin:{left:M,right:M},styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},columnStyles:{0:{cellWidth:UW*0.6,fontStyle:'bold',textColor:h2r('#1B6E41')},1:{cellWidth:UW*0.4}},alternateRowStyles:{fillColor:[240,253,244]}});
+    y=doc.lastAutoTable.finalY+4;
+  }
+  if(m.materialesUsados){
+    y=chkY(y,18);fill('#F0FDF4');dc('#86EFAC');doc.setLineWidth(0.15);doc.rect(M,y,UW,14,'F');doc.rect(M,y,UW,14,'S');tc('#166534');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('Materiales utilizados:',M+4,y+5);doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(m.materialesUsados,UW-8)[0],M+4,y+10.5);y+=17;
+  }
+
+  // Descripción del resultado
+  if(m.descDespues){
+    y=chkY(y,20);
+    fill('#F0FDF4');dc('#86EFAC');doc.setLineWidth(0.15);doc.rect(M,y,UW,16,'F');doc.rect(M,y,UW,16,'S');
+    fill('#22C55E');doc.rect(M,y,3,16,'F');
+    tc('#16A34A');doc.setFont('helvetica','bold');doc.setFontSize(7);doc.text('RESULTADO DEL TRABAJO:',M+6,y+5);
+    doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(m.descDespues,UW-10)[0],M+6,y+11);
+    y+=19;
+  }
+
+  // Fotos DESPUÉS
+  if(fotosDesM.length){
+    y=chkY(y,20);y=banner(y,'Estado DESPUES — Registro fotografico','#16A34A');
+    var iw2=(UW-5)/2, ih2=iw2*0.6;
+    fotosDesM.forEach(function(f,i){
+      if(i%2===0){y=chkY(y,ih2+12);}
+      var col=i%2, x=M+col*(iw2+5);
+      try{doc.addImage(f.dataUrl,'JPEG',x,y,iw2,ih2);fill('#16A34A');doc.rect(x,y+ih2-8,iw2,8,'F');tc('#FFFFFF');doc.setFont('helvetica','normal');doc.setFontSize(6);doc.text(f.caption||('Despues — foto '+(i+1)),x+3,y+ih2-2.5,{maxWidth:iw2-6});}catch(e){}
+      if(i%2===1||i===fotosDesM.length-1) y+=ih2+10;
+    });
+    y+=4;
+  }
+
+  // Firma
+  y=chkY(y,50);
+  y=banner(y,'Conformidad del cliente');
+  if(m.firma){
+    try{doc.addImage(m.firma,'PNG',M,y,80,30);y+=34;}catch(e){}
+  } else {
+    fill('#F5F7F5');doc.rect(M,y,80,28,'F');tc('#888');doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text('(Sin firma capturada)',M+40,y+15,{align:'center'});y+=32;
+  }
+  fill('#F5F7F5');doc.rect(M,y,UW,18,'F');
+  tc('#555');doc.setFont('helvetica','bold');doc.setFontSize(8);doc.text('Nombre: '+(m.firmaNombre||'—'),M+4,y+7);
+  doc.text('Fecha: '+(m.firmaFecha?fmtDate(m.firmaFecha):'—'),M+4,y+14);
+  y+=22;
+
+  return doc;
+}
+
+async function descargarPDFMant(){
+  if(!S.pdfOk){showToast('PDF aún cargando','err');return;}
+  try{
+    var doc = await genPDFMant();
+    doc.save('METARCO_Mant_'+S.folio+'_'+(S.mant.cliente||'cliente').replace(/[^a-z0-9]/gi,'_').slice(0,15)+'.pdf');
+  }catch(e){showToast('Error PDF: '+e.message,'err');}
+}
+
+async function guardarBorradorMant(){
+  S.enviando=true; render();
+  try{
+    var entity={PartitionKey:'levantamientos',RowKey:S.folio,
+      folio:S.folio,usuario:S.usuario,email:S.email,modo:'mantenimiento',
+      mant:JSON.stringify({...S.mant,fotosAntes:[],fotosDespues:[],firma:null}),
+      destinos:JSON.stringify(S.destinos),
+      nFotosAntes:S.mant.fotosAntes.length,nFotosDespues:S.mant.fotosDespues.length,
+      estado:'borrador',fechaGuardado:new Date().toISOString()
+    };
+    await azUpsert('levantamientos',entity);
+    showToast('Borrador guardado ✓','ok');
+  }catch(e){showToast('Error: '+e.message,'err');}
+  S.enviando=false; render();
+}
+
+async function guardarYEnviarMant(){
+  if(!S.pdfOk){showToast('PDF aún cargando','err');return;}
+  S.enviando=true; render();
+  try{
+    // Marca de agua en fotos antes de subir
+    S.mant.fotosAntes  = await marcarFotos(S.mant.fotosAntes,  'ANTES');
+    S.mant.fotosDespues= await marcarFotos(S.mant.fotosDespues,'DESPUES');
+    // Subir fotos a SharePoint
+    var spBase = 'CONSTRUCCION/CAO-Levantamientos/'+S.folio;
+    for(var i=0;i<S.mant.fotosAntes.length;i++){
+      try{await subirArchivoSP(spBase+'/antes/antes_'+(i+1)+'.jpg',S.mant.fotosAntes[i].dataUrl,'image/jpeg');}catch(e){}
+    }
+    for(var j=0;j<S.mant.fotosDespues.length;j++){
+      try{await subirArchivoSP(spBase+'/despues/despues_'+(j+1)+'.jpg',S.mant.fotosDespues[j].dataUrl,'image/jpeg');}catch(e){}
+    }
+    if(S.mant.firma){
+      try{await subirArchivoSP(spBase+'/firma.png',S.mant.firma,'image/png');}catch(e){}
+    }
+    // Generar y subir PDF
+    var doc = await genPDFMant();
+    try{await subirArchivoSP(spBase+'/METARCO_Mant_'+S.folio+'.pdf',doc.output('blob'),'application/pdf');}catch(e){}
+    // Guardar en Azure
+    await guardarBorradorMant();
+    // Enviar correo
+    var b64 = doc.output('datauristring').split(',')[1];
+    await enviarCorreo(b64);
+    showToast('Reporte enviado y guardado en SharePoint ✓','ok');
+  }catch(e){showToast('Error: '+e.message,'err');}
+  S.enviando=false; render();
+}
+
+// ── FIN MÓDULO MANTENIMIENTO ──────────────────────────────────
+
 function abrirBorradores(){
   var modal = document.getElementById('modalBorradores');
   modal.style.display = 'flex';
@@ -1244,20 +1765,24 @@ async function cargarBorradores(){
 
 function continuarBorrador(encoded){
   var r = JSON.parse(decodeURIComponent(encoded));
-  // Restaurar estado desde Azure (sin fotos — esas viven en SharePoint)
   S.folio   = r.folio || r.RowKey || S.folio;
-  S.data    = { cliente:r.cliente||'', proyecto:r.proyecto||'', direccion:r.direccion||'', fecha:r.fecha||today(), supervisor:r.supervisor||S.usuario, tipo:r.tipo||'Estructura', contrato:r.contrato||'', obsGen:r.obsGen||'' };
-  S.elementos    = r.elementos    ? JSON.parse(r.elementos)    : {};
-  S.condPlanta   = r.condPlanta   ? JSON.parse(r.condPlanta)   : { condiciones:[], nuevaCond:'' };
-  S.condComercial= r.condComercial? JSON.parse(r.condComercial): { formaPago:'', diasCredito:'', fianza:'', altaProveedor:'', facturaAntes:'', moneda:'MXN', contactoCompras:'', emailCompras:'', telCompras:'', obs:'' };
-  S.fotos   = []; // Las fotos no se guardan en Azure, están en SharePoint
-  S.croquis = null;
+  S.modo    = r.modo || 'levantamiento';
+  if(S.modo === 'mantenimiento'){
+    S.mant = r.mant ? JSON.parse(r.mant) : S.mant;
+    S.mant.fotosAntes=[]; S.mant.fotosDespues=[]; S.mant.firma=null;
+  } else {
+    S.data    = { cliente:r.cliente||'', proyecto:r.proyecto||'', direccion:r.direccion||'', fecha:r.fecha||today(), supervisor:r.supervisor||S.usuario, tipo:r.tipo||'Estructura', contrato:r.contrato||'', obsGen:r.obsGen||'' };
+    S.elementos    = r.elementos    ? JSON.parse(r.elementos)    : {};
+    S.condPlanta   = r.condPlanta   ? JSON.parse(r.condPlanta)   : { condiciones:[], nuevaCond:'' };
+    S.condComercial= r.condComercial? JSON.parse(r.condComercial): { formaPago:'', diasCredito:'', fianza:'', altaProveedor:'', facturaAntes:'', moneda:'MXN', contactoCompras:'', emailCompras:'', telCompras:'', obs:'' };
+    S.fotos   = [];
+    S.croquis = null;
+  }
   S.step    = 0;
   document.getElementById('folio-tag-sb').textContent = S.folio;
   document.getElementById('mobFolio').textContent = S.folio;
   cerrarBorradores();
-  // Mostrar aviso de fotos
-  showToast('Borrador cargado — las fotos deben volver a tomarse o están en SharePoint','ok');
+  showToast('Borrador cargado — las fotos deben volver a tomarse','ok');
   render();
 }
 
@@ -1278,11 +1803,13 @@ document.getElementById('modalBorradores').addEventListener('click', function(e)
 });
 
 function nuevoLevantamiento(){
-  if(!confirm('¿Iniciar un nuevo levantamiento? Se perderá el progreso no guardado.')) return;
-  S.step=0; S.folio=genFolio(); S.elementos={}; S.croquis=null;
+  if(!confirm('¿Iniciar un nuevo registro? Se perderá el progreso no guardado.')) return;
+  S.modo=0; S.step=0; S.folio=genFolio(); S.elementos={}; S.croquis=null;
+  S.modo='';
   S.data={cliente:'',proyecto:'',direccion:'',fecha:today(),supervisor:S.usuario,tipo:'Estructura',contrato:''};
   S.condPlanta={condiciones:[], nuevaCond:''};
   S.condComercial={formaPago:'',diasCredito:'',fianza:'',altaProveedor:'',facturaAntes:'',moneda:'MXN',contactoCompras:'',emailCompras:'',telCompras:'',obs:''};
+  S.mant={cliente:'',direccion:'',tecnico:S.usuario,fecha:today(),ordenTrabajo:'',fotosAntes:[],actividades:[],fotosDespues:[],firma:null,firmaNombre:'',firmaFecha:'',materialesUsados:''};
   S.fotos=[]; S.destinos={costos:true,gerencia:false,cliente:false,clienteEmail:'',otrosEmail:''};
   S.enviando=false;
   document.getElementById('folio-tag-sb').textContent=S.folio;
