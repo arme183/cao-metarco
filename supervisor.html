@@ -622,6 +622,78 @@ const SHAREPOINT_SITE_ID = "173d71cd-18eb-456a-93af-7b6b3d086f9b";
 var AZURE_ACCOUNT_SUP = 'metarcostorage';
 var AZURE_SAS_SUP = '?sv=2026-02-06&ss=bfqt&srt=o&sp=rwdlacupiytfx&se=2028-01-01T09:03:16Z&st=2026-06-02T00:48:16Z&spr=https&sig=jopE8S7LFpN79M86LWlZ5B%2Bws5%2BYbZvECNdVUAtHiGI%3D';
 
+// ─── SHAREPOINT CONFIG ────────────────────────────────────────
+var SP_SITE_ID_SUP  = '173d71cd-18eb-456a-93af-7b6b3d086f9b';
+var SP_DRIVE_ID_SUP = 'b!zXE9F-sYakWTr3trPQhvm9LhlMApQzFBnWsOJI0dJvEWJOxhdaHCQ4wtFzmOtjn_';
+var SP_BASE_SUP     = 'https://graph.microsoft.com/v1.0/sites/' + SP_SITE_ID_SUP + '/drives/' + SP_DRIVE_ID_SUP;
+var SP_ROOT_SUP     = 'CONSTRUCCION/CAO-Supervisor';
+
+// Obtener token MSAL para Graph API
+async function getTokenSup(){
+  if(!msalInstance) return null;
+  var accs = msalInstance.getAllAccounts();
+  if(!accs.length) return null;
+  try{
+    var r = await msalInstance.acquireTokenSilent({scopes:['Sites.ReadWrite.All'],account:accs[0]});
+    return r.accessToken;
+  }catch(e){ return null; }
+}
+
+// Convertir dataURL a Blob
+function dataURLtoBlobSup(dataUrl){
+  var arr=dataUrl.split(','), mime=arr[0].match(/:(.*?);/)[1];
+  var bstr=atob(arr[1]), n=bstr.length, u8=new Uint8Array(n);
+  while(n--) u8[n]=bstr.charCodeAt(n);
+  return new Blob([u8],{type:mime});
+}
+
+// Aplicar marca de agua idéntica a levantamiento
+function aplicarMarcaDeAguaSup(dataUrl, obra, supervisor){
+  return new Promise(function(resolve){
+    var img = new Image();
+    img.onload = function(){
+      var canvas = document.createElement('canvas');
+      canvas.width=img.width; canvas.height=img.height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img,0,0);
+      var fontSize = Math.max(14, Math.round(img.width/80));
+      ctx.font = 'bold '+fontSize+'px Arial';
+      var fecha = new Date().toLocaleDateString('es-MX');
+      var lines = ['METARCO', 'Obra: '+obra, supervisor||'', fecha].filter(Boolean);
+      var maxW=0;
+      lines.forEach(function(l){var w=ctx.measureText(l).width;if(w>maxW)maxW=w;});
+      var padX=14,padY=10,lineH=18;
+      var boxW=maxW+padX*2, boxH=lines.length*lineH+padY*2;
+      var x=img.width-boxW-16, y=img.height-boxH-16;
+      ctx.fillStyle='rgba(26,26,46,0.75)';
+      ctx.beginPath();
+      if(ctx.roundRect) ctx.roundRect(x,y,boxW,boxH,8); else ctx.rect(x,y,boxW,boxH);
+      ctx.fill();
+      ctx.fillStyle='#2ECC71'; ctx.font='bold '+fontSize+'px Arial';
+      ctx.fillText(lines[0],x+padX,y+padY+fontSize);
+      ctx.fillStyle='#ffffff'; ctx.font=(fontSize-2)+'px Arial';
+      lines.slice(1).forEach(function(l,i){ ctx.fillText(l,x+padX,y+padY+fontSize+(i+1)*lineH); });
+      resolve(canvas.toDataURL('image/jpeg',0.88));
+    };
+    img.onerror=function(){ resolve(dataUrl); };
+    img.src=dataUrl;
+  });
+}
+
+// Subir foto a SharePoint: CONSTRUCCION/CAO-Supervisor/{obra}/{sem}/{nombre}
+async function subirFotoSupSP(dataUrl, obra, sem, nombreArchivo){
+  var token = await getTokenSup();
+  if(!token) throw new Error('Sin token SharePoint');
+  var dataUrlMarca = await aplicarMarcaDeAguaSup(dataUrl, obra, sessionStorage.getItem('usuarioNombre')||'');
+  var blob = dataURLtoBlobSup(dataUrlMarca);
+  var path = SP_ROOT_SUP+'/'+obra+'/'+sem+'/'+nombreArchivo;
+  var url = SP_BASE_SUP+'/root:/'+encodeURI(path)+':/content';
+  var r = await fetch(url,{method:'PUT',headers:{'Authorization':'Bearer '+token,'Content-Type':'image/jpeg'},body:blob});
+  if(!r.ok){ var err=await r.text(); throw new Error('SP error: '+err.slice(0,100)); }
+  var data = await r.json();
+  return data.webUrl;
+}
+
 function azureUrlSup(tabla, filtro) {
   var url = 'https://' + AZURE_ACCOUNT_SUP + '.table.core.windows.net/' + tabla + AZURE_SAS_SUP;
   if (filtro) url += '&$filter=' + encodeURIComponent(filtro);
@@ -691,7 +763,7 @@ try { msalInstance = new msal.PublicClientApplication(msalConfig); } catch(e) {}
 
 // ======= Estado local =======
 let state = {
-  usuario: null, obra: null, modoDemo: false, userRole: 'supervisor',
+  usuario: null, obra: null, modoDemo: false, userRole: 'supervisor', fotoDataUrl: null,
   actividades: [], restricciones: [], registros: [],
   cumplimientoActual: null,
   semana: 7, totalSemanas: 18,
@@ -1653,11 +1725,18 @@ function toggleDia(btn) { btn.classList.toggle("active"); }
 
 function previewFoto(input, containerId) {
   const c = document.getElementById(containerId);
+  c.innerHTML = ''; // limpiar preview anterior
+  state.fotoDataUrl = null; // reset
   Array.from(input.files).forEach(f => {
-    const url = URL.createObjectURL(f);
-    const img = document.createElement("img");
-    img.src = url; img.className = "photo-thumb";
-    c.appendChild(img);
+    const reader = new FileReader();
+    reader.onload = function(e){
+      state.fotoDataUrl = e.target.result; // guardar dataUrl para subir
+      const img = document.createElement("img");
+      img.src = e.target.result; img.className = "photo-thumb";
+      img.style.cssText = 'width:80px;height:60px;object-fit:cover;border-radius:6px;border:2px solid #2ECC71;margin-right:6px';
+      c.appendChild(img);
+    };
+    reader.readAsDataURL(f);
   });
 }
 
@@ -2123,8 +2202,20 @@ async function guardarAvanceCierre() {
     restriccionDesc: restDesc,
     restriccionFecha: restFecha,
     restriccionImpacto: restImpacto,
-    restriccionResponsable: restResp
+    restriccionResponsable: restResp,
+    fotoUrl: '' // se actualiza después si hay foto
   };
+
+  // Subir foto a SharePoint si hay una capturada
+  var fotoUrlSP = '';
+  if(state.fotoDataUrl){
+    try{
+      var nomFoto = obra+'_'+sem+'_'+Date.now()+'.jpg';
+      fotoUrlSP = await subirFotoSupSP(state.fotoDataUrl, obra, sem, nomFoto);
+      body.fotoUrl = fotoUrlSP;
+      state.fotoDataUrl = null; // limpiar después de subir
+    }catch(e){ console.warn('Error subiendo foto a SharePoint:', e.message); }
+  }
 
   var btn = document.querySelector('#modalAvance .btn-submit');
   if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
