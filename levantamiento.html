@@ -676,21 +676,21 @@ function step3(){
     <div class="mb10">
       <label class="fl">¿Cómo paga el cliente?</label>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
-        ${['Anticipo + finiquito','Contra entrega','A credito','Por estimaciones','Por avance mensual'].map(v=>`<button onclick="S.condComercial.formaPago='${v}'" style="padding:6px 12px;border-radius:20px;border:1.5px solid ${c.formaPago===v?'var(--green)':'var(--line)'};background:${c.formaPago===v?'#F0FAF5':'#FAFCFA'};color:${c.formaPago===v?'var(--gdark)':'var(--muted)'};font-size:11px;font-weight:${c.formaPago===v?'700':'500'};cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
+        ${['Anticipo + finiquito','Contra entrega','A credito','Por estimaciones','Por avance mensual'].map(v=>`<button onclick="S.condComercial.formaPago='${v}';render()" style="padding:6px 12px;border-radius:20px;border:1.5px solid ${c.formaPago===v?'var(--green)':'var(--line)'};background:${c.formaPago===v?'#F0FAF5':'#FAFCFA'};color:${c.formaPago===v?'var(--gdark)':'var(--muted)'};font-size:11px;font-weight:${c.formaPago===v?'700':'500'};cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
       </div>
       <input type="text" value="${c.formaPago||''}" oninput="S.condComercial.formaPago=this.value" placeholder="O describe la forma de pago…">
     </div>
     <div class="mb10">
       <label class="fl">Días de crédito</label>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
-        ${['0 días','15 días','30 días','45 días','60 días','90 días'].map(v=>`<button onclick="S.condComercial.diasCredito='${v}'" style="padding:4px 10px;border-radius:20px;border:1px solid ${c.diasCredito===v?'var(--green)':'var(--line)'};background:${c.diasCredito===v?'#F0FAF5':'#FAFCFA'};color:${c.diasCredito===v?'var(--gdark)':'var(--muted)'};font-size:11px;cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
+        ${['0 días','15 días','30 días','45 días','60 días','90 días'].map(v=>`<button onclick="S.condComercial.diasCredito='${v}';render()" style="padding:4px 10px;border-radius:20px;border:1px solid ${c.diasCredito===v?'var(--green)':'var(--line)'};background:${c.diasCredito===v?'#F0FAF5':'#FAFCFA'};color:${c.diasCredito===v?'var(--gdark)':'var(--muted)'};font-size:11px;cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
       </div>
       <input type="text" value="${c.diasCredito||''}" oninput="S.condComercial.diasCredito=this.value" placeholder="Días de crédito o condición de pago">
     </div>
     <div class="mb10">
       <label class="fl">Moneda</label>
       <div style="display:flex;gap:8px">
-        ${['MXN','USD','EUR'].map(v=>`<button onclick="S.condComercial.moneda='${v}'" style="flex:1;padding:7px;border-radius:7px;border:1.5px solid ${c.moneda===v?'var(--green)':'var(--line)'};background:${c.moneda===v?'#F0FAF5':'#FAFCFA'};color:${c.moneda===v?'var(--gdark)':'var(--muted)'};font-size:13px;font-weight:${c.moneda===v?'700':'500'};cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
+        ${['MXN','USD','EUR'].map(v=>`<button onclick="S.condComercial.moneda='${v}';render()" style="flex:1;padding:7px;border-radius:7px;border:1.5px solid ${c.moneda===v?'var(--green)':'var(--line)'};background:${c.moneda===v?'#F0FAF5':'#FAFCFA'};color:${c.moneda===v?'var(--gdark)':'var(--muted)'};font-size:13px;font-weight:${c.moneda===v?'700':'500'};cursor:pointer;font-family:var(--font)">${v}</button>`).join('')}
       </div>
     </div>
   </div>
