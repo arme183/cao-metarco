@@ -12,6 +12,8 @@
 <link rel="apple-touch-icon" href="/cao-metarco/LOGO_METARCO1.png">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2/lib/msal-browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root {
   --azul-oscuro: #0b1e3d;
@@ -1457,92 +1459,151 @@ async function renderRestricciones(verHistorial) {
 }
 
 // ======= RENDER REPORTES =======
+var _semanaExpandida = null; // semana actualmente expandida
+
 async function renderReportes() {
   var c = document.getElementById('mainContent');
   var obra = sessionStorage.getItem('obraActiva') || state.obra;
   var email = sessionStorage.getItem('usuarioEmail') || '';
   var rol = sessionStorage.getItem('userRole') || 'supervisor';
 
-  c.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris-muted);font-size:13px">Cargando reporte semanal...</div>';
+  c.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris-muted);font-size:13px">Cargando reportes...</div>';
 
   try {
-    // Cargar todos los cierres de la obra (supervisor ve los suyos, admin ve todos)
     var filtro = "PartitionKey eq '" + obra + "' and tipRegistro eq 'cierre'";
     if (rol === 'supervisor') filtro += " and supervisor eq '" + email + "'";
-    var url = azureUrlSup('cambios', filtro);
-    var res = await fetch(url, { headers: azureHdrSup() });
+    var res = await fetch(azureUrlSup('cambios', filtro), { headers: azureHdrSup() });
     var cierres = res.ok ? ((await res.json()).value || []) : [];
 
-    // Cargar planes de la obra
     var filtroP = "PartitionKey eq '" + obra + "' and tipRegistro eq 'plan'";
     if (rol === 'supervisor') filtroP += " and supervisor eq '" + email + "'";
-    var urlP = azureUrlSup('cambios', filtroP);
-    var resP = await fetch(urlP, { headers: azureHdrSup() });
+    var resP = await fetch(azureUrlSup('cambios', filtroP), { headers: azureHdrSup() });
     var planes = resP.ok ? ((await resP.json()).value || []) : [];
 
     // Agrupar por semanaISO
     var semanas = {};
     planes.forEach(function(p) {
       var s = p.semanaISO || 'Sin semana';
-      if (!semanas[s]) semanas[s] = { planes: [], cierres: [] };
+      if (!semanas[s]) semanas[s] = { planes:[], cierres:[] };
       semanas[s].planes.push(p);
     });
     cierres.forEach(function(ci) {
       var s = ci.semanaISO || 'Sin semana';
-      if (!semanas[s]) semanas[s] = { planes: [], cierres: [] };
+      if (!semanas[s]) semanas[s] = { planes:[], cierres:[] };
       semanas[s].cierres.push(ci);
     });
 
     var semanasOrdenadas = Object.keys(semanas).sort().reverse();
 
     if (!semanasOrdenadas.length) {
-      c.innerHTML = '<div class="sec-title">Reporte semanal</div>' +
+      c.innerHTML = '<div class="sec-title">Reportes semanales</div>' +
         '<div class="empty-state"><div class="empty-icon">&#128202;</div>' +
-        '<div class="empty-text">Sin registros aun. Completa tu primer plan semanal.</div></div>';
+        '<div class="empty-text">Sin registros aún.</div></div>';
       return;
     }
 
-    // Calcular PPC por semana
+    // PPC promedio global
+    var ppcTotal = semanasOrdenadas.reduce(function(sum, sem) {
+      var d = semanas[sem];
+      var sumasSem = {};
+      d.cierres.forEach(function(ci){ sumasSem[ci.actividad]=(sumasSem[ci.actividad]||0)+(parseFloat(ci.cantidadReal)||0); });
+      var cumpl = d.planes.filter(function(p){ return p.cantidadPlan>0&&(sumasSem[p.actividad]||0)>=p.cantidadPlan; }).length;
+      return sum + (d.planes.length>0 ? cumpl/d.planes.length*100 : 0);
+    }, 0);
+    var ppcProm = semanasOrdenadas.length>0 ? Math.round(ppcTotal/semanasOrdenadas.length) : 0;
+    var ppcPromColor = ppcProm>=90?'#10b981':ppcProm>=80?'#f59e0b':'#ef4444';
+
+    // Generar cards con toggle
     var cards = semanasOrdenadas.map(function(sem) {
       var data = semanas[sem];
       var nPlanes = data.planes.length;
-
-      // Sumar avance por actividad en cierres de esta semana
       var sumasSem = {};
-      data.cierres.forEach(function(ci) {
-        sumasSem[ci.actividad] = (sumasSem[ci.actividad] || 0) + (parseFloat(ci.cantidadReal) || 0);
-      });
+      data.cierres.forEach(function(ci){ sumasSem[ci.actividad]=(sumasSem[ci.actividad]||0)+(parseFloat(ci.cantidadReal)||0); });
+      var cumplidas = data.planes.filter(function(p){ return p.cantidadPlan>0&&(sumasSem[p.actividad]||0)>=p.cantidadPlan; }).length;
+      var ppc = nPlanes>0 ? Math.round(cumplidas/nPlanes*100) : 0;
+      var ppcColor = ppc>=90?'#10b981':ppc>=80?'#f59e0b':'#ef4444';
+      var fillClass = ppc>=90?'prog-fill-green':ppc>=80?'prog-fill-yellow':'prog-fill-red';
+      var nRest = data.cierres.filter(function(ci){ return ci.esRestriccion; }).length;
+      var expandida = _semanaExpandida===sem;
 
-      // Calcular cumplidas
-      var cumplidas = data.planes.filter(function(p) {
-        return p.cantidadPlan > 0 && (sumasSem[p.actividad] || 0) >= p.cantidadPlan;
-      }).length;
+      // Detalle expandido
+      var detalle = '';
+      if(expandida){
+        // Tabla de actividades
+        var filasActs = data.planes.map(function(p){
+          var ejecutado = sumasSem[p.actividad]||0;
+          var cumplioAct = ejecutado>=p.cantidadPlan;
+          var cierre = data.cierres.find(function(ci){ return ci.actividad===p.actividad; });
+          var notas = cierre ? (cierre.notas||'') : '';
+          return '<tr style="border-bottom:1px solid #f0f0f0">' +
+            '<td style="padding:7px 6px;font-size:12px">' + (p.descripcion||p.actividad||'—') + '</td>' +
+            '<td style="padding:7px 6px;font-size:12px;text-align:center">' + (p.unidad||'—') + '</td>' +
+            '<td style="padding:7px 6px;font-size:12px;text-align:center">' + (p.cantidadPlan||0) + '</td>' +
+            '<td style="padding:7px 6px;font-size:12px;text-align:center;font-weight:600">' + ejecutado + '</td>' +
+            '<td style="padding:7px 6px;text-align:center"><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + (cumplioAct?'#d1fae5':'#fee2e2') + ';color:' + (cumplioAct?'#065f46':'#991b1b') + '">' + (cumplioAct?'✓ Cumplido':'✕ NC') + '</span></td>' +
+            '<td style="padding:7px 6px;font-size:11px;color:var(--gris-muted)">' + notas + '</td>' +
+            '</tr>';
+        }).join('');
 
-      var ppc = nPlanes > 0 ? Math.round(cumplidas / nPlanes * 100) : 0;
-      var ppcColor = ppc >= 90 ? '#10b981' : ppc >= 80 ? '#f59e0b' : '#ef4444';
-      var fillClass = ppc >= 90 ? 'prog-fill-green' : ppc >= 80 ? 'prog-fill-yellow' : 'prog-fill-red';
+        // Fotos de evidencia
+        var fotosHtml = '';
+        var cierresConFoto = data.cierres.filter(function(ci){ return ci.fotoUrl; });
+        if(cierresConFoto.length){
+          fotosHtml = '<div style="margin-top:12px">' +
+            '<div style="font-size:11px;font-weight:700;color:var(--gris-muted);letter-spacing:.05em;margin-bottom:8px">FOTOGRAFÍAS DE EVIDENCIA</div>' +
+            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">' +
+            cierresConFoto.map(function(ci){
+              return '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--borde)">' +
+                '<img src="'+ci.fotoUrl+'" style="width:100%;height:80px;object-fit:cover;display:block" onerror="this.style.display=\'none\'">' +
+                '<div style="padding:4px 6px;font-size:9px;color:var(--gris-muted);background:#f8fafc">' + (ci.descripcion||ci.actividad||'').slice(0,30) + '</div>' +
+                '</div>';
+            }).join('') +
+            '</div></div>';
+        }
 
-      // Restricciones de esta semana
-      var nRest = data.cierres.filter(function(ci) { return ci.esRestriccion; }).length;
+        // Restricciones
+        var restHtml = '';
+        var restsData = data.cierres.filter(function(ci){ return ci.esRestriccion; });
+        if(restsData.length){
+          restHtml = '<div style="margin-top:12px;background:#fff7ed;border-radius:8px;padding:10px 12px;border:1px solid #fed7aa">' +
+            '<div style="font-size:11px;font-weight:700;color:#c2410c;margin-bottom:6px">⚠ RESTRICCIONES</div>' +
+            restsData.map(function(r){
+              return '<div style="font-size:12px;color:#7c2d12;margin-bottom:4px">• ' + r.restriccionDesc + (r.restriccionFecha?' · '+r.restriccionFecha:'') + '</div>';
+            }).join('') +
+            '</div>';
+        }
 
-      // Causas de NC
-      var causas = {};
-      data.cierres.filter(function(ci) { return !ci.ppc && ci.causa; }).forEach(function(ci) {
-        causas[ci.causa] = (causas[ci.causa] || 0) + 1;
-      });
-      var causasList = Object.keys(causas).map(function(k) {
-        return '<span style="font-size:10px;background:#f1f5f9;border-radius:10px;padding:2px 7px;margin:2px;display:inline-block">' + k + ': ' + causas[k] + '</span>';
-      }).join('');
+        detalle = '<div style="padding:12px 14px 14px;border-top:1px solid var(--borde);background:#fafcfa">' +
+          '<div style="overflow-x:auto;margin-bottom:4px">' +
+          '<table style="width:100%;border-collapse:collapse">' +
+          '<thead><tr style="background:#f0f4fa">' +
+          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:left">Actividad</th>' +
+          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:center">Unidad</th>' +
+          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:center">Plan</th>' +
+          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:center">Real</th>' +
+          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:center">Estado</th>' +
+          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:left">Notas</th>' +
+          '</tr></thead><tbody>' + filasActs + '</tbody></table></div>' +
+          fotosHtml + restHtml +
+          '<div style="margin-top:12px;display:flex;gap:8px">' +
+          '<button onclick="generarPDFSemana(\'' + sem + '\')" style="flex:1;padding:10px;background:var(--azul-oscuro);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">📄 Descargar PDF semana ' + sem + '</button>' +
+          '</div>' +
+          '</div>';
+      }
 
-      return '<div class="hist-card">' +
+      return '<div class="hist-card" style="padding:0;overflow:hidden;cursor:pointer" onclick="toggleSemana(\'' + sem + '\')">' +
+        '<div style="padding:13px 14px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
           '<div>' +
-            '<div style="font-size:13px;font-weight:700;color:var(--azul-oscuro)">' + sem + '</div>' +
+            '<div style="font-size:13px;font-weight:700;color:var(--azul-oscuro)">📅 Semana ' + sem + '</div>' +
             '<div style="font-size:11px;color:var(--gris-muted)">' + nPlanes + ' actividades comprometidas</div>' +
           '</div>' +
-          '<div style="text-align:right">' +
-            '<div style="font-size:24px;font-weight:700;color:' + ppcColor + '">' + ppc + '%</div>' +
-            '<div style="font-size:10px;color:var(--gris-muted)">PPC</div>' +
+          '<div style="display:flex;align-items:center;gap:10px">' +
+            '<div style="text-align:right">' +
+              '<div style="font-size:22px;font-weight:700;color:' + ppcColor + '">' + ppc + '%</div>' +
+              '<div style="font-size:10px;color:var(--gris-muted)">PPC</div>' +
+            '</div>' +
+            '<div style="font-size:16px;color:var(--gris-muted)">' + (expandida?'▲':'▼') + '</div>' +
           '</div>' +
         '</div>' +
         '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">' +
@@ -1554,49 +1615,150 @@ async function renderReportes() {
             '<div style="font-size:16px;font-weight:700;color:#10b981">' + cumplidas + '</div>' +
             '<div style="font-size:9px;color:var(--gris-muted);text-transform:uppercase">Cumplidas</div>' +
           '</div>' +
-          '<div style="text-align:center;background:' + (nRest > 0 ? '#fff7ed' : '#f8fafc') + ';border-radius:8px;padding:6px">' +
-            '<div style="font-size:16px;font-weight:700;color:' + (nRest > 0 ? '#f59e0b' : 'var(--gris-muted)') + '">' + nRest + '</div>' +
+          '<div style="text-align:center;background:' + (nRest>0?'#fff7ed':'#f8fafc') + ';border-radius:8px;padding:6px">' +
+            '<div style="font-size:16px;font-weight:700;color:' + (nRest>0?'#f59e0b':'var(--gris-muted)') + '">' + nRest + '</div>' +
             '<div style="font-size:9px;color:var(--gris-muted);text-transform:uppercase">Restricciones</div>' +
           '</div>' +
         '</div>' +
-        '<div class="prog-bar" style="margin-bottom:6px"><div class="prog-fill ' + fillClass + '" style="width:' + ppc + '%"></div></div>' +
-        (causasList ? '<div style="margin-top:6px"><div style="font-size:10px;color:var(--gris-muted);margin-bottom:4px">Causas de NC:</div>' + causasList + '</div>' : '') +
+        '<div class="prog-bar"><div class="prog-fill ' + fillClass + '" style="width:' + ppc + '%"></div></div>' +
+        '</div>' +
+        detalle +
       '</div>';
     }).join('');
 
-    // PPC promedio global
-    var ppcTotal = semanasOrdenadas.reduce(function(sum, sem) {
-      var d = semanas[sem];
-      var sumasSem = {};
-      d.cierres.forEach(function(ci) {
-        sumasSem[ci.actividad] = (sumasSem[ci.actividad] || 0) + (parseFloat(ci.cantidadReal) || 0);
-      });
-      var cumpl = d.planes.filter(function(p) {
-        return p.cantidadPlan > 0 && (sumasSem[p.actividad] || 0) >= p.cantidadPlan;
-      }).length;
-      return sum + (d.planes.length > 0 ? cumpl / d.planes.length * 100 : 0);
-    }, 0);
-    var ppcProm = semanasOrdenadas.length > 0 ? Math.round(ppcTotal / semanasOrdenadas.length) : 0;
-    var ppcPromColor = ppcProm >= 90 ? '#10b981' : ppcProm >= 80 ? '#f59e0b' : '#ef4444';
+    // Guardar datos para PDF
+    window._reporteData = { semanas: semanas, obra: obra };
 
     c.innerHTML =
       '<div class="card" style="background:linear-gradient(135deg,var(--azul-oscuro),var(--azul-medio));border:none;margin-bottom:10px">' +
-        '<div style="color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:4px">' + obra + ' \xb7 ' + semanasOrdenadas.length + ' semanas</div>' +
+        '<div style="color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:4px">' + obra + ' · ' + semanasOrdenadas.length + ' semanas</div>' +
         '<div style="display:flex;align-items:center;justify-content:space-between">' +
           '<div style="color:#fff;font-size:18px;font-weight:700">Reporte PPC</div>' +
           '<div style="background:rgba(0,0,0,0.25);border-radius:20px;padding:6px 14px;text-align:center">' +
-            '<div style="color:#fff;font-size:20px;font-weight:700;color:' + ppcPromColor + '">' + ppcProm + '%</div>' +
+            '<div style="font-size:20px;font-weight:700;color:' + ppcPromColor + '">' + ppcProm + '%</div>' +
             '<div style="color:rgba(255,255,255,0.7);font-size:10px">PPC promedio</div>' +
           '</div>' +
         '</div>' +
       '</div>' +
-      '<div class="sec-title">Historial por semana</div>' +
+      '<div class="sec-title">Historial por semana — toca para ver detalle</div>' +
       cards;
 
   } catch(e) {
     c.innerHTML = '<div style="padding:16px;color:var(--rojo);font-size:13px">Error: ' + e.message + '</div>';
   }
 }
+
+function toggleSemana(sem){
+  _semanaExpandida = (_semanaExpandida===sem) ? null : sem;
+  renderReportes();
+}
+
+async function generarPDFSemana(sem){
+  if(!window.jspdf || !window.jspdf.jsPDF){ alert('PDF no disponible'); return; }
+  var data = window._reporteData;
+  if(!data || !data.semanas[sem]){ alert('Sin datos para esta semana'); return; }
+  var obra = data.obra;
+  var semData = data.semanas[sem];
+  var sumasSem = {};
+  semData.cierres.forEach(function(ci){ sumasSem[ci.actividad]=(sumasSem[ci.actividad]||0)+(parseFloat(ci.cantidadReal)||0); });
+  var cumplidas = semData.planes.filter(function(p){ return p.cantidadPlan>0&&(sumasSem[p.actividad]||0)>=p.cantidadPlan; }).length;
+  var ppc = semData.planes.length>0 ? Math.round(cumplidas/semData.planes.length*100) : 0;
+  var supervisor = sessionStorage.getItem('usuarioNombre')||'—';
+
+  var {jsPDF} = window.jspdf;
+  var doc = new jsPDF('p','mm','a4');
+  var W=210,M=14,UW=W-M*2;
+  function fill(h){var r=h2r(h);doc.setFillColor(r[0],r[1],r[2]);}
+  function tc(h){var r=h2r(h);doc.setTextColor(r[0],r[1],r[2]);}
+
+  var chrome=function(){
+    fill('#0b1e3d');doc.rect(0,0,W,20,'F');
+    fill('#2563a8');doc.rect(0,20,W,1.2,'F');
+    tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.text('METARCO — Reporte semanal',M,12);
+    tc('#93c5fd');doc.setFont('helvetica','normal');doc.setFontSize(7);doc.text('Obra: '+obra+' | Semana: '+sem+' | Supervisor: '+supervisor,W-M,10,{align:'right'});
+    tc('#AAAAAA');doc.setFontSize(6.5);doc.text('Generado: '+new Date().toLocaleDateString('es-MX'),W-M,16,{align:'right'});
+    fill('#0b1e3d');doc.rect(0,287,W,10,'F');
+    tc('#FFFFFF');doc.setFontSize(6.5);doc.text('METARCO — Control de Avance de Obra',M,293);
+    tc('#93c5fd');doc.text('Pag. '+doc.internal.getCurrentPageInfo().pageNumber,W-M,293,{align:'right'});
+  };
+  var chkY=function(y,n){if(y+n>272){doc.addPage();chrome();return 26;}return y;};
+  var banner=function(y,txt){fill('#0b1e3d');doc.rect(M,y,UW,8,'F');fill('#2563a8');doc.rect(M,y,3,8,'F');tc('#FFFFFF');doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.text(txt,M+6,y+5.5);return y+11;};
+
+  chrome(); var y=26;
+
+  // KPIs
+  fill('#0b1e3d');doc.rect(M,y,UW,22,'F');
+  var ppcColor2 = ppc>=90?'#10b981':ppc>=80?'#f59e0b':'#ef4444';
+  var [pr,pg,pb]=h2r(ppcColor2);doc.setTextColor(pr,pg,pb);doc.setFont('helvetica','bold');doc.setFontSize(28);doc.text(ppc+'%',M+8,y+15);
+  tc('#FFFFFF');doc.setFont('helvetica','normal');doc.setFontSize(8);doc.text('PPC Semana '+sem,M+8,y+20);
+  doc.setFontSize(11);doc.setFont('helvetica','bold');doc.text(cumplidas+'/'+semData.planes.length,W-M-30,y+12,{align:'center'});
+  doc.setFontSize(7);doc.setFont('helvetica','normal');tc('#93c5fd');doc.text('Actividades cumplidas',W-M-30,y+18,{align:'center'});
+  y+=27;
+
+  // Tabla actividades
+  y=banner(y,'ACTIVIDADES DE LA SEMANA');
+  var rows = semData.planes.map(function(p){
+    var ej=sumasSem[p.actividad]||0;
+    var ok=ej>=p.cantidadPlan;
+    return [p.descripcion||p.actividad||'—', p.unidad||'—', String(p.cantidadPlan||0), String(ej), ok?'Cumplido':'No cumplido'];
+  });
+  doc.autoTable({startY:y,head:[['Actividad','Unidad','Plan','Real','Estado']],body:rows,margin:{left:M,right:M},
+    styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},
+    headStyles:{fillColor:h2r('#0b1e3d'),textColor:[255,255,255],fontSize:8,fontStyle:'bold'},
+    columnStyles:{0:{cellWidth:UW*0.45},1:{cellWidth:UW*0.1,halign:'center'},2:{cellWidth:UW*0.1,halign:'center'},3:{cellWidth:UW*0.1,halign:'center',fontStyle:'bold'},4:{cellWidth:UW*0.25,halign:'center'}},
+    alternateRowStyles:{fillColor:[245,247,250]},
+    didParseCell:function(d){if(d.column.index===4&&d.section==='body'){d.cell.styles.textColor=h2r(d.cell.raw==='Cumplido'?'#065f46':'#991b1b');d.cell.styles.fontStyle='bold';}},
+    didDrawPage:function(){chrome();}});
+  y=doc.lastAutoTable.finalY+6;
+
+  // Restricciones
+  var rests=semData.cierres.filter(function(ci){return ci.esRestriccion;});
+  if(rests.length){
+    y=chkY(y,20);y=banner(y,'RESTRICCIONES');
+    doc.autoTable({startY:y,body:rests.map(function(r){return[r.restriccionDesc||'—',r.restriccionFecha||'—',r.restriccionImpacto||'—'];}),
+      head:[['Descripción','Fecha compromiso','Impacto']],margin:{left:M,right:M},
+      styles:{fontSize:8,cellPadding:2.5,font:'helvetica',lineColor:[220,220,220],lineWidth:0.15},
+      headStyles:{fillColor:h2r('#854F0B'),textColor:[255,255,255],fontSize:8,fontStyle:'bold'},
+      alternateRowStyles:{fillColor:[254,243,230]},didDrawPage:function(){chrome();}});
+    y=doc.lastAutoTable.finalY+6;
+  }
+
+  // Fotos de evidencia
+  var cierresConFoto=semData.cierres.filter(function(ci){return ci.fotoUrl;});
+  if(cierresConFoto.length){
+    y=chkY(y,20);y=banner(y,'FOTOGRAFIAS DE EVIDENCIA');
+    var iw=(UW-5)/2,ih=iw*0.6;
+    var fotosCargadas=0;
+    var cargarFoto=function(ci,i){
+      return new Promise(function(resolve){
+        var img2=new Image();
+        img2.crossOrigin='anonymous';
+        img2.onload=function(){
+          if(i%2===0){y=chkY(y,ih+12);}
+          var col=i%2,x=M+col*(iw+5);
+          try{doc.addImage(img2,'JPEG',x,y,iw,ih);fill('#0b1e3d');doc.rect(x,y+ih-7,iw,7,'F');tc('#93c5fd');doc.setFontSize(6);doc.text((ci.descripcion||ci.actividad||'').slice(0,35),x+3,y+ih-2,{maxWidth:iw-6});}catch(e){}
+          if(i%2===1||i===cierresConFoto.length-1) y+=ih+10;
+          resolve();
+        };
+        img2.onerror=function(){ resolve(); };
+        img2.src=ci.fotoUrl;
+      });
+    };
+    // Cargar fotos de forma secuencial
+    (async function(){
+      for(var i=0;i<cierresConFoto.length;i++){
+        await cargarFoto(cierresConFoto[i],i);
+      }
+      doc.save('METARCO_Reporte_'+obra+'_Sem'+sem+'.pdf');
+    })();
+    return; // salir — el PDF se guarda dentro del async
+  }
+
+  doc.save('METARCO_Reporte_'+obra+'_Sem'+sem+'.pdf');
+}
+
+// helper h2r para el PDF de reportes
+function h2r(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
 
 // ======= FAB =======
 function abrirFAB() {
