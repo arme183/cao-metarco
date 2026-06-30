@@ -203,7 +203,7 @@ const AZ_BASE = `https://${AZ_ACCOUNT}.table.core.windows.net`;
 function azHdr(){ return {'Accept':'application/json;odata=nometadata','Content-Type':'application/json','x-ms-date':new Date().toUTCString()}; }
 async function azUpsert(table, entity){
   const url = `${AZ_BASE}/${table}(PartitionKey='${entity.PartitionKey}',RowKey='${encodeURIComponent(entity.RowKey)}')${AZ_SAS}`;
-  const r = await fetch(url,{method:'PUT',headers:{...azHdr(),'If-Match':'*'},body:JSON.stringify(entity)});
+  const r = await fetch(url,{method:'PUT',headers:azHdr(),body:JSON.stringify(entity)});
   if(!r.ok && r.status!==204) throw new Error('Azure error '+r.status);
 }
 async function azGet(table, filter=''){
