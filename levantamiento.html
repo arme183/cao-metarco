@@ -213,6 +213,77 @@ async function azGet(table, filter=''){
   const d = await r.json(); return d.value||[];
 }
 
+// ─── SHAREPOINT CONFIG ────────────────────────────────────────
+const SP_SITE_ID  = '173d71cd-18eb-456a-93af-7b6b3d086f9b';
+const SP_DRIVE_ID = 'b!zXE9F-sYakWTr3trPQhvm9LhlMApQzFBnWsOJI0dJvEWJOxhdaHCQ4wtFzmOtjn_';
+const SP_BASE      = `https://graph.microsoft.com/v1.0/sites/${SP_SITE_ID}/drives/${SP_DRIVE_ID}`;
+const SP_ROOT       = 'CONSTRUCCION/CAO-Levantamientos';
+
+// Convierte un dataURL (base64) a Blob para subir
+function dataURLtoBlob(dataUrl){
+  const arr = dataUrl.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+  return new Blob([u8arr], {type:mime});
+}
+
+// Sube un archivo a SharePoint vía Graph API. path relativo desde SP_ROOT.
+async function subirArchivoSP(path, dataUrlOrBlob, contentType){
+  const token = await getToken();
+  if(!token) throw new Error('Sin token de sesión para subir a SharePoint');
+  const blob = (typeof dataUrlOrBlob === 'string') ? dataURLtoBlob(dataUrlOrBlob) : dataUrlOrBlob;
+  const fullPath = `${SP_ROOT}/${path}`;
+  const url = `${SP_BASE}/root:/${encodeURI(fullPath)}:/content`;
+  const r = await fetch(url, {
+    method: 'PUT',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': contentType || blob.type || 'application/octet-stream' },
+    body: blob
+  });
+  if(!r.ok){ const err = await r.text(); throw new Error('SharePoint upload error: ' + err.slice(0,150)); }
+  const data = await r.json();
+  return data.webUrl; // URL pública del archivo en SharePoint
+}
+
+// Sube todas las fotos de un levantamiento (elementos + generales + croquis) y retorna mapa de URLs
+async function subirFotosLevantamiento(folio, onProgress){
+  const urls = { elementos:{}, generales:[], croquis:null };
+  let total = S.fotos.length + (S.croquis?1:0);
+  Object.values(S.elementos).forEach(el => total += el.fotos.length);
+  let done = 0;
+  const tick = ()=>{ done++; if(onProgress) onProgress(done, total); };
+
+  // Fotos generales
+  for(let i=0;i<S.fotos.length;i++){
+    const f = S.fotos[i];
+    const name = `foto_general_${i+1}.jpg`;
+    try{ const u = await subirArchivoSP(`${folio}/fotos/${name}`, f.dataUrl, 'image/jpeg'); urls.generales.push(u); }catch(e){ console.warn('Error subiendo foto general', e); }
+    tick();
+  }
+  // Fotos de elementos
+  for(const [id, el] of Object.entries(S.elementos)){
+    urls.elementos[id] = [];
+    for(let i=0;i<el.fotos.length;i++){
+      const name = `${id}_foto_${i+1}.jpg`;
+      try{ const u = await subirArchivoSP(`${folio}/fotos/${name}`, el.fotos[i].dataUrl, 'image/jpeg'); urls.elementos[id].push(u); }catch(e){ console.warn('Error subiendo foto elemento', e); }
+      tick();
+    }
+  }
+  // Croquis
+  if(S.croquis){
+    try{ urls.croquis = await subirArchivoSP(`${folio}/croquis.jpg`, S.croquis.dataUrl, 'image/jpeg'); }catch(e){ console.warn('Error subiendo croquis', e); }
+    tick();
+  }
+  return urls;
+}
+
+// Sube el PDF generado a SharePoint
+async function subirPDFSP(folio, pdfBlob){
+  return await subirArchivoSP(`${folio}/METARCO_Levantamiento_${folio}.pdf`, pdfBlob, 'application/pdf');
+}
+
 // ─── LOGO BASE64 ──────────────────────────────────────────────
 const LOGO_HTML = 'https://arme183.github.io/cao-metarco/LOGO_BLANCO.png';
 const LOGO_PDF  = 'https://arme183.github.io/cao-metarco/LOGO_BLANCO.png';
@@ -289,14 +360,14 @@ function today(){ return new Date().toISOString().slice(0,10); }
 // ─── MSAL ─────────────────────────────────────────────────────
 async function loginMS(){
   if(!msalInstance){ showToast('MSAL no disponible','err'); return; }
-  try{ await msalInstance.loginRedirect({scopes:['User.Read','Mail.Send']}); } catch(e){ document.getElementById('loginAlerta').textContent=e.message; }
+  try{ await msalInstance.loginRedirect({scopes:['User.Read','Mail.Send','Sites.ReadWrite.All']}); } catch(e){ document.getElementById('loginAlerta').textContent=e.message; }
 }
 async function getToken(){
   if(!msalInstance) return null;
   const acc = msalInstance.getAllAccounts();
   if(!acc.length) return null;
   try{
-    const r = await msalInstance.acquireTokenSilent({scopes:['Mail.Send'],account:acc[0]});
+    const r = await msalInstance.acquireTokenSilent({scopes:['Mail.Send','Sites.ReadWrite.All'],account:acc[0]});
     return r.accessToken;
   } catch(e){ return null; }
 }
@@ -962,7 +1033,7 @@ function descargarPDF(){
 }
 
 // ─── AZURE SAVE ───────────────────────────────────────────────
-async function guardarEnAzure(){
+async function guardarEnAzure(urlsSP){
   // Crear tabla si no existe
   try {
     await fetch(`${AZ_BASE}/Tables${AZ_SAS}`, {
@@ -982,16 +1053,24 @@ async function guardarEnAzure(){
     condComercial: JSON.stringify(S.condComercial),
     nFotos: S.fotos.length + Object.values(S.elementos).reduce((a,e)=>a+e.fotos.length,0),
     tieneCroquis: !!S.croquis,
-    estado: 'borrador', fechaGuardado: new Date().toISOString()
+    estado: 'borrador', fechaGuardado: new Date().toISOString(),
+    urlsFotos: urlsSP ? JSON.stringify(urlsSP) : '',
+    carpetaSP: `CONSTRUCCION/CAO-Levantamientos/${S.folio}`
   };
   await azUpsert('levantamientos', entity);
 }
 
 async function guardarBorrador(){
+  S.enviando = true; render();
   try{
-    await guardarEnAzure();
-    showToast('Borrador guardado en Azure ✓','ok');
+    showToast('Subiendo fotos a SharePoint…','ok');
+    const urlsSP = await subirFotosLevantamiento(S.folio, (done,total)=>{
+      var btn = document.getElementById('pdf-btn');
+    });
+    await guardarEnAzure(urlsSP);
+    showToast('Borrador guardado — fotos en SharePoint ✓','ok');
   } catch(e){ showToast('Error guardando: '+e.message,'err'); }
+  S.enviando = false; render();
 }
 
 // ─── CORREO VIA GRAPH ─────────────────────────────────────────
@@ -1030,8 +1109,9 @@ async function enviarCorreo(pdfBase64){
           <tr style="background:#f5f5f5"><td style="padding:7px 8px;font-weight:600;color:#555">Fecha</td><td style="padding:7px 8px">${fmtDate(d.fecha)}</td></tr>
           <tr style="background:#fff"><td style="padding:7px 8px;font-weight:600;color:#555">Supervisor</td><td style="padding:7px 8px">${d.supervisor||'—'}</td></tr>
           <tr style="background:#f5f5f5"><td style="padding:7px 8px;font-weight:600;color:#555">Fotografías</td><td style="padding:7px 8px">${S.fotos.length}</td></tr>
+          <tr style="background:#fff"><td style="padding:7px 8px;font-weight:600;color:#555">Carpeta SharePoint</td><td style="padding:7px 8px;font-size:11px">CONSTRUCCION/CAO-Levantamientos/${S.folio}</td></tr>
         </table>
-        <p style="margin:16px 0 0;font-size:12px;color:#888">Este correo fue generado automáticamente por el sistema de levantamientos METARCO.</p>
+        <p style="margin:16px 0 0;font-size:12px;color:#888">Este correo fue generado automáticamente por el sistema de levantamientos METARCO. Las fotografías originales quedaron respaldadas en SharePoint.</p>
       </div>
     </div>`;
 
@@ -1064,14 +1144,22 @@ function getPDFBase64(){
   const doc = genPDFDoc();
   return doc.output('datauristring').split(',')[1];
 }
+function getPDFBlob(){
+  const doc = genPDFDoc();
+  return doc.output('blob');
+}
 
 async function enviarAhora(){
   if(!S.pdfOk){showToast('PDF aún cargando','err');return;}
   S.enviando=true; render();
   try{
+    showToast('Subiendo fotos a SharePoint…','ok');
+    const urlsSP = await subirFotosLevantamiento(S.folio);
+    const pdfBlob = getPDFBlob();
+    try{ await subirPDFSP(S.folio, pdfBlob); }catch(e){ console.warn('Error subiendo PDF a SP', e); }
     const b64 = getPDFBase64();
     await enviarCorreo(b64);
-    showToast('Correo enviado exitosamente ✓','ok');
+    showToast('Correo enviado · fotos respaldadas en SharePoint ✓','ok');
   } catch(e){ showToast('Error al enviar: '+e.message,'err'); }
   S.enviando=false; render();
 }
@@ -1080,13 +1168,17 @@ async function guardarYEnviar(){
   if(!S.pdfOk){showToast('PDF aún cargando','err');return;}
   S.enviando=true; render();
   try{
-    await guardarEnAzure();
+    showToast('Subiendo fotos a SharePoint…','ok');
+    const urlsSP = await subirFotosLevantamiento(S.folio);
+    const pdfBlob = getPDFBlob();
+    try{ await subirPDFSP(S.folio, pdfBlob); }catch(e){ console.warn('Error subiendo PDF a SP', e); }
+    await guardarEnAzure(urlsSP);
     const b64 = getPDFBase64();
     await enviarCorreo(b64);
     // Marcar como enviado
     const entity = {PartitionKey:'levantamientos',RowKey:S.folio,estado:'enviado',fechaEnvio:new Date().toISOString()};
     await azUpsert('levantamientos',entity);
-    showToast('Guardado y enviado ✓','ok');
+    showToast('Guardado y enviado · respaldo en SharePoint ✓','ok');
   } catch(e){ showToast('Error: '+e.message,'err'); }
   S.enviando=false; render();
 }
