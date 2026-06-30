@@ -430,6 +430,22 @@ input[type=file] { display:none; }
         <div style="background:#f0f4fa;border-radius:8px;padding:10px 12px;font-size:13px;font-weight:600;color:var(--azul-oscuro);" id="avanceMeta">— Sin actividad seleccionada</div>
       </div>
       <div class="form-group">
+        <label class="form-label">Avance acumulado</label>
+        <div id="avanceAcumulado" style="background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid var(--borde)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--gris-muted)">Progreso actual</span>
+            <span id="avancePctLabel" style="font-size:13px;font-weight:700;color:var(--azul-oscuro)">0%</span>
+          </div>
+          <div style="height:8px;background:#e5e7eb;border-radius:10px;overflow:hidden">
+            <div id="avancePctBar" style="height:100%;width:0%;background:var(--azul-claro);border-radius:10px;transition:width .3s"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px">
+            <span id="avanceRealLabel" style="font-size:11px;color:var(--gris-muted)">Real: 0</span>
+            <span id="avancePlanLabel" style="font-size:11px;color:var(--gris-muted)">Plan: 0</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
         <label class="form-label">Cantidad ejecutada hoy</label>
         <input type="number" class="form-input" id="avanceCantidad" placeholder="0">
       </div>
@@ -1398,17 +1414,19 @@ async function renderRestricciones(verHistorial) {
     var rests = await cargarRestriccionesAzure(obra, verHistorial);
     state.restriccionesAzure = rests;
 
-    var titulo = verHistorial ? 'Historial de restricciones' : 'Restricciones activas';
-    var btnToggle = '<button class="btn-add" id="btnToggleHistorial" style="margin-bottom:8px;background:transparent;border:1.5px solid var(--azul-claro);color:var(--azul-claro)">' +
-      (verHistorial ? '&#128274; Ver activas' : '&#128337; Ver historial') + '</button>';
+    var titulo = verHistorial ? 'Historial de restricciones resueltas' : 'Restricciones activas';
+    var btnToggle = '<button class="btn-add" id="btnToggleHistorial" style="margin-bottom:8px;background:' +
+      (verHistorial?'transparent':'transparent') + ';border:1.5px solid ' +
+      (verHistorial?'var(--azul-claro)':'var(--verde)') + ';color:' +
+      (verHistorial?'var(--azul-claro)':'var(--verde)') + '">' +
+      (verHistorial ? '🔴 Ver activas' : '📋 Ver historial resueltas') + '</button>';
 
     if (!rests.length) {
       c.innerHTML =
         btnToggle +
         '<div class="sec-title">' + titulo + '</div>' +
-        '<div class="empty-state"><div class="empty-icon">&#128274;</div>' +
-        '<div class="empty-text">' + (verHistorial ? 'Sin restricciones en el historial.' : 'Sin restricciones activas.') + '</div></div>' +
-     '';
+        '<div class="empty-state"><div class="empty-icon">' + (verHistorial?'📋':'✅') + '</div>' +
+        '<div class="empty-text">' + (verHistorial ? 'Sin restricciones resueltas aún.' : '¡Sin restricciones activas! Todo en orden.') + '</div></div>';
       return;
     }
 
@@ -1424,35 +1442,41 @@ async function renderRestricciones(verHistorial) {
       var vencida = fechaComp && fechaComp < hoy && !r.resuelta;
       var resuelta = r.resuelta === true || r.resuelta === 'true';
 
+      // Fecha de creación con hora
+      var fechaCreacion = r.fecha ? new Date(r.fecha).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+      // Fecha de resolución con hora
+      var fechaResolucion = r.fechaResolucion ? new Date(r.fechaResolucion).toLocaleString('es-MX',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : null;
+
       var estadoBadge = resuelta
-        ? '<span style="font-size:10px;background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-weight:600">&#10003; RESUELTA</span>'
+        ? '<span style="font-size:10px;background:#d1fae5;color:#065f46;padding:2px 7px;border-radius:10px;font-weight:600">✓ RESUELTA' + (fechaResolucion?' · '+fechaResolucion:'') + '</span>'
         : vencida
-          ? '<span style="font-size:10px;background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:10px;font-weight:600">&#9888; VENCIDA</span>'
-          : '';
+          ? '<span style="font-size:10px;background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:10px;font-weight:600">⚠ VENCIDA</span>'
+          : '<span style="font-size:10px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:10px;font-weight:600">⏳ PENDIENTE</span>';
 
       var btnResolver = (!resuelta && puedeEditar())
         ? '<button class="btn-resolver" data-pk="' + r.PartitionKey + '" data-rk="' + r.RowKey + '" ' +
-          'style="margin-top:8px;padding:6px 12px;background:#10b981;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;width:100%">' +
-          '&#10003; Marcar como resuelta</button>'
+          'style="margin-top:8px;padding:8px 12px;background:#10b981;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px">' +
+          '✓ Marcar como resuelta</button>'
         : '';
 
-      return '<div class="restric-card ' + impacto + (vencida?' restric-vencida':'') + '">' +
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">' +
+      return '<div class="restric-card ' + impacto + (vencida?' restric-vencida':'') + (resuelta?' restric-resuelta':'') + '" style="' + (resuelta?'opacity:.8;border-color:#10b981':'') + '">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">' +
           '<div class="restric-title" style="flex:1">' + desc + '</div>' +
           '<span class="badge ' + badgeClass + '">' + impacto.toUpperCase() + '</span>' +
         '</div>' +
-        '<div style="font-size:11px;color:var(--azul-oscuro);margin:4px 0">&#128736; ' + actDesc + '</div>' +
-        '<div class="restric-meta">&#128100; ' + resp + ' &middot; &#128197; Compromiso: ' + (fechaDisplay||'—') + '</div>' +
-        (estadoBadge ? '<div style="margin-top:4px">' + estadoBadge + '</div>' : '') +
+        '<div style="font-size:11px;color:var(--azul-oscuro);margin-bottom:3px">🔧 ' + actDesc + '</div>' +
+        '<div class="restric-meta" style="margin-bottom:4px">👤 ' + resp + ' · 📅 Compromiso: ' + (fechaDisplay||'—') + '</div>' +
+        '<div style="font-size:10px;color:var(--gris-muted);margin-bottom:6px">Registrada: ' + fechaCreacion + '</div>' +
+        '<div>' + estadoBadge + '</div>' +
         btnResolver +
       '</div>';
     }).join('');
 
     c.innerHTML =
       btnToggle +
-      '<div class="sec-title">' + titulo + ' &mdash; ' + rests.length + '</div>' +
-      cards +
-'';
+      '<div class="sec-title">' + titulo + ' — ' + rests.length + '</div>' +
+      cards;
+
   } catch(e) {
     c.innerHTML = '<div style="padding:16px;color:var(--rojo);font-size:13px">Error: ' + e.message + '</div>';
   }
@@ -1535,30 +1559,35 @@ async function renderReportes() {
           var cumplioAct = ejecutado>=p.cantidadPlan;
           var cierre = data.cierres.find(function(ci){ return ci.actividad===p.actividad; });
           var notas = cierre ? (cierre.notas||'') : '';
+          var hora = cierre && cierre.fecha ? new Date(cierre.fecha).toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
           return '<tr style="border-bottom:1px solid #f0f0f0">' +
-            '<td style="padding:7px 6px;font-size:12px">' + (p.descripcion||p.actividad||'—') + '</td>' +
-            '<td style="padding:7px 6px;font-size:12px;text-align:center">' + (p.unidad||'—') + '</td>' +
-            '<td style="padding:7px 6px;font-size:12px;text-align:center">' + (p.cantidadPlan||0) + '</td>' +
-            '<td style="padding:7px 6px;font-size:12px;text-align:center;font-weight:600">' + ejecutado + '</td>' +
-            '<td style="padding:7px 6px;text-align:center"><span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:' + (cumplioAct?'#d1fae5':'#fee2e2') + ';color:' + (cumplioAct?'#065f46':'#991b1b') + '">' + (cumplioAct?'✓ Cumplido':'✕ NC') + '</span></td>' +
-            '<td style="padding:7px 6px;font-size:11px;color:var(--gris-muted)">' + notas + '</td>' +
+            '<td style="padding:6px;font-size:11px;min-width:100px;max-width:160px">' + (p.descripcion||p.actividad||'—') + '</td>' +
+            '<td style="padding:6px;font-size:11px;text-align:center;white-space:nowrap">' + (p.unidad||'—') + '</td>' +
+            '<td style="padding:6px;font-size:11px;text-align:center">' + (p.cantidadPlan||0) + '</td>' +
+            '<td style="padding:6px;font-size:11px;text-align:center;font-weight:700">' + ejecutado + '</td>' +
+            '<td style="padding:6px;text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 5px;border-radius:6px;background:' + (cumplioAct?'#d1fae5':'#fee2e2') + ';color:' + (cumplioAct?'#065f46':'#991b1b') + ';white-space:nowrap">' + (cumplioAct?'✓':'✕ NC') + '</span></td>' +
+            '<td style="padding:6px;font-size:10px;color:var(--gris-muted);white-space:nowrap">' + hora + '</td>' +
+            '<td style="padding:6px;font-size:10px;color:var(--gris-muted)">' + notas + '</td>' +
             '</tr>';
         }).join('');
 
-        // Fotos de evidencia
+        // Fotos de evidencia — lazy loading con token
         var fotosHtml = '';
         var cierresConFoto = data.cierres.filter(function(ci){ return ci.fotoUrl; });
         if(cierresConFoto.length){
+          var fotosId = 'fotos_'+sem.replace(/[^a-z0-9]/gi,'_');
           fotosHtml = '<div style="margin-top:12px">' +
-            '<div style="font-size:11px;font-weight:700;color:var(--gris-muted);letter-spacing:.05em;margin-bottom:8px">FOTOGRAFÍAS DE EVIDENCIA</div>' +
-            '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px">' +
-            cierresConFoto.map(function(ci){
-              return '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--borde)">' +
-                '<img src="'+ci.fotoUrl+'" style="width:100%;height:80px;object-fit:cover;display:block" onerror="this.style.display=\'none\'">' +
-                '<div style="padding:4px 6px;font-size:9px;color:var(--gris-muted);background:#f8fafc">' + (ci.descripcion||ci.actividad||'').slice(0,30) + '</div>' +
-                '</div>';
+            '<div style="font-size:11px;font-weight:700;color:var(--gris-muted);letter-spacing:.05em;margin-bottom:8px">📷 FOTOGRAFÍAS (' + cierresConFoto.length + ') — toca para cargar</div>' +
+            '<div id="'+fotosId+'" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(85px,1fr));gap:6px">' +
+            cierresConFoto.slice(0,6).map(function(ci){
+              return '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--borde);background:#f5f7fc">' +
+                '<div onclick="cargarFotoSP(this,\''+ci.fotoUrl+'\')" style="width:100%;height:65px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px">📷</div>' +
+                '<div style="padding:3px 5px;font-size:9px;color:var(--gris-muted)">' + (ci.descripcion||ci.actividad||'').slice(0,20) + '</div>' +
+              '</div>';
             }).join('') +
-            '</div></div>';
+            '</div>' +
+            (cierresConFoto.length>6?'<button onclick="cargarTodasFotos(\''+fotosId+'\',window._reporteData.semanas[\''+sem+'\'].cierres)" style="margin-top:8px;width:100%;padding:7px;background:#f0f4fa;border:1px solid var(--borde);border-radius:8px;font-size:12px;cursor:pointer;font-family:Inter,sans-serif">📷 Ver todas las fotos ('+cierresConFoto.length+')</button>':'') +
+            '</div>';
         }
 
         // Restricciones
@@ -1575,18 +1604,19 @@ async function renderReportes() {
 
         detalle = '<div style="padding:12px 14px 14px;border-top:1px solid var(--borde);background:#fafcfa">' +
           '<div style="overflow-x:auto;margin-bottom:4px">' +
-          '<table style="width:100%;border-collapse:collapse">' +
+          '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
           '<thead><tr style="background:#f0f4fa">' +
-          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:left">Actividad</th>' +
-          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:center">Unidad</th>' +
-          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:center">Plan</th>' +
-          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:center">Real</th>' +
-          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:center">Estado</th>' +
-          '<th style="padding:6px;font-size:10px;font-weight:600;color:var(--gris-muted);text-align:left">Notas</th>' +
+          '<th style="padding:5px 6px;font-size:9px;font-weight:600;color:var(--gris-muted);text-align:left">Actividad</th>' +
+          '<th style="padding:5px 6px;font-size:9px;font-weight:600;color:var(--gris-muted);text-align:center">Unidad</th>' +
+          '<th style="padding:5px 6px;font-size:9px;font-weight:600;color:var(--gris-muted);text-align:center">Plan</th>' +
+          '<th style="padding:5px 6px;font-size:9px;font-weight:600;color:var(--gris-muted);text-align:center">Real</th>' +
+          '<th style="padding:5px 6px;font-size:9px;font-weight:600;color:var(--gris-muted);text-align:center">PPC</th>' +
+          '<th style="padding:5px 6px;font-size:9px;font-weight:600;color:var(--gris-muted);text-align:center">Hora</th>' +
+          '<th style="padding:5px 6px;font-size:9px;font-weight:600;color:var(--gris-muted);text-align:left">Notas</th>' +
           '</tr></thead><tbody>' + filasActs + '</tbody></table></div>' +
           fotosHtml + restHtml +
-          '<div style="margin-top:12px;display:flex;gap:8px">' +
-          '<button onclick="generarPDFSemana(\'' + sem + '\')" style="flex:1;padding:10px;background:var(--azul-oscuro);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:6px">📄 Descargar PDF semana ' + sem + '</button>' +
+          '<div style="margin-top:12px">' +
+          '<button onclick="generarPDFSemana(\'' + sem + '\')" style="width:100%;padding:11px;background:var(--azul-oscuro);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;display:flex;align-items:center;justify-content:center;gap:7px">📄 Descargar PDF — Semana ' + sem + '</button>' +
           '</div>' +
           '</div>';
       }
@@ -1759,6 +1789,41 @@ async function generarPDFSemana(sem){
 
 // helper h2r para el PDF de reportes
 function h2r(h){ h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+
+// Cargar foto de SharePoint con token
+async function cargarFotoSP(el, url){
+  if(!url) return;
+  el.innerHTML = '⏳';
+  try{
+    var token = await getTokenSup();
+    if(!token){ el.innerHTML = '🔒'; return; }
+    var r = await fetch(url, {headers:{'Authorization':'Bearer '+token}});
+    if(!r.ok){ el.innerHTML = '⚠️'; return; }
+    var blob = await r.blob();
+    var objUrl = URL.createObjectURL(blob);
+    var img = document.createElement('img');
+    img.src = objUrl;
+    img.style.cssText = 'width:100%;height:65px;object-fit:cover;display:block;cursor:pointer';
+    img.onclick = function(){ window.open(url,'_blank'); };
+    el.parentNode.replaceChild(img, el);
+  }catch(e){ el.innerHTML = '⚠️'; }
+}
+
+// Cargar todas las fotos de una semana
+async function cargarTodasFotos(containerId, cierres){
+  var container = document.getElementById(containerId);
+  if(!container) return;
+  var btn = container.nextElementSibling;
+  if(btn) btn.style.display = 'none';
+  var conFoto = cierres.filter(function(ci){ return ci.fotoUrl; });
+  container.innerHTML = conFoto.map(function(ci){
+    return '<div style="border-radius:8px;overflow:hidden;border:1px solid var(--borde);background:#f5f7fc">' +
+      '<div onclick="cargarFotoSP(this,\''+ci.fotoUrl+'\')" style="width:100%;height:65px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px">📷</div>' +
+      '<div style="padding:3px 5px;font-size:9px;color:var(--gris-muted)">' + (ci.descripcion||ci.actividad||'').slice(0,20) + '</div>' +
+    '</div>';
+  }).join('');
+}
+
 
 // ======= FAB =======
 function abrirFAB() {
@@ -2293,6 +2358,20 @@ function abrirModalCierre(btn) {
   document.getElementById('avanceFecha').textContent = new Date().toLocaleDateString('es-MX', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   document.getElementById('avanceMeta').textContent = _avanceActual.descripcion + ' · ' + _avanceActual.subfase + ' · Plan: ' + _avanceActual.cantidadPlan + ' ' + _avanceActual.unidad;
   document.getElementById('avanceCantidad').value = '';
+  document.getElementById('avanceObs').value = '';
+  // Poblar avance acumulado
+  var avReal = _avanceActual.avanceSemana || 0;
+  var avPlan = _avanceActual.cantidadPlan || 0;
+  var pct = avPlan > 0 ? Math.min(100, Math.round(avReal/avPlan*100)) : 0;
+  var pctColor = pct>=100?'#10b981':pct>=50?'#2563a8':'#ef4444';
+  var barEl = document.getElementById('avancePctBar');
+  var lblEl = document.getElementById('avancePctLabel');
+  var realEl = document.getElementById('avanceRealLabel');
+  var planEl = document.getElementById('avancePlanLabel');
+  if(barEl){ barEl.style.width=pct+'%'; barEl.style.background=pctColor; }
+  if(lblEl){ lblEl.textContent=pct+'%'; lblEl.style.color=pctColor; }
+  if(realEl) realEl.textContent='Real: '+avReal+' '+_avanceActual.unidad;
+  if(planEl) planEl.textContent='Plan: '+avPlan+' '+_avanceActual.unidad;
   document.getElementById('avanceObs').value = '';
   document.getElementById('causaGroup').style.display = 'none';
   document.getElementById('restriccionGroup').style.display = 'none';
